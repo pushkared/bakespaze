@@ -1,0 +1,239 @@
+/* ------------- Vars & Reset ------------- */
+:root{
+  --green:#36ff4c;
+  --green-2:#1bc536;
+  --bg:#0b0b0b;
+  --panel:#e9e9e9;
+  --muted:#8f8f8f;
+  --accent-blue:#59dff0;
+  --glass: rgba(255,255,255,0.06);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family: "Inter", "Poppins", system-ui, -apple-system, Arial;
+  background:var(--bg);
+  color:#0b0b0b;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ------------- Shell layout ------------- */
+.app-shell{ display:flex; min-height:100vh; }
+
+/* Sidebar (modernized with glow) */
+.sidebar{
+  width:260px;
+  background: linear-gradient(180deg, rgba(12,12,12,0.03), rgba(12,12,12,0.02));
+  padding:26px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  border-right: 1px solid rgba(255,255,255,0.03);
+  backdrop-filter: blur(6px);
+  position:fixed;
+  left:0; top:0; bottom:0;
+  z-index:60;
+  box-shadow: 10px 0 40px rgba(2,6,2,0.55);
+}
+
+/* Logo & brand */
+.sidebar-top{ display:flex; align-items:center; gap:12px; margin-bottom:18px }
+.sidebar-logo{ width:44px; height:44px; object-fit:contain }
+.brand{ color:var(--green); font-weight:700; font-size:18px; text-shadow:0 6px 18px rgba(54,255,76,0.06) }
+
+/* Nav */
+.sidebar-nav ul{ list-style:none; margin-top:14px; padding:0 }
+.sidebar-nav .search-row{ padding:10px 0 }
+.sidebar-nav input[type="search"]{
+  width:100%; padding:10px 12px; border-radius:10px; border:none; outline:none;
+  background: rgba(255,255,255,0.03); color:#fff;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.02);
+}
+.sidebar-nav .nav-item{ margin-top:10px }
+.sidebar-nav a{
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px; border-radius:12px; color:rgba(255,255,255,0.9); text-decoration:none;
+  font-weight:600; letter-spacing:0.2px;
+  transition: all .18s ease;
+  position:relative;
+}
+.sidebar-nav a:hover{
+  transform: translateX(6px);
+  box-shadow: 0 8px 30px rgba(27,197,54,0.06);
+  background: linear-gradient(90deg, rgba(54,255,76,0.06), rgba(255,255,255,0.02));
+}
+.sidebar-nav .nav-item.active a{
+  background: linear-gradient(90deg, rgba(54,255,76,0.12), rgba(255,255,255,0.02));
+  box-shadow: 0 12px 40px rgba(54,255,76,0.08);
+  color: #001703;
+}
+
+/* little dot accent for nav items */
+.nav-dot{
+  width:10px; height:10px; border-radius:50%;
+  background: linear-gradient(180deg,var(--green),var(--green-2));
+  box-shadow: 0 6px 18px rgba(54,255,76,0.12);
+  display:inline-block;
+  margin-right:6px;
+}
+
+/* footer area */
+.sidebar-footer{ color:rgba(255,255,255,0.55); font-size:13px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.02) }
+
+/* ------------- Main content ------------- */
+.main{
+  margin-left:260px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+
+/* topbar */
+.topbar{
+  height:66px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px; background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.03));
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  z-index:40;
+}
+.top-left{ display:flex; align-items:center; gap:14px }
+.hamburger{ display:none; background:none;border:none;color:#fff;font-size:20px; cursor:pointer }
+.company-select{ color:#fff; font-weight:700 }
+.top-right .create-task{
+  background:var(--green); border:none; color:#032008; padding:10px 16px; border-radius:26px; font-weight:700;
+  box-shadow: 0 12px 36px rgba(54,255,76,0.12);
+  cursor:pointer;
+}
+
+/* content area */
+.content-area{
+  padding:28px;
+  min-height: calc(100vh - 66px);
+  background: linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0.01));
+}
+
+/* ------------- Room Stage ------------- */
+.room-root{ position:relative; width:100%; max-width:1400px; margin:0 auto }
+.room-bg{
+  position: absolute; inset:0; z-index:1; pointer-events:none;
+  background: url('/images/bg-dashboard.png') center/cover no-repeat;
+  filter: contrast(.9) brightness(.7);
+  opacity: .98;
+}
+
+/* stage container */
+.room-stage{
+  position:relative; z-index:5; margin:20px auto; padding:28px;
+  display:flex; align-items:center; justify-content:center; min-height:560px;
+}
+
+/* meeting table (centerpiece) */
+.meeting-table{
+  width:260px; height:420px; border-radius:32px;
+  background: linear-gradient(180deg, #f0f0f0, #dbdbdb);
+  box-shadow: 0 28px 60px rgba(2,6,2,0.6), inset 0 2px 6px rgba(255,255,255,0.6);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1);
+  position:relative;
+  overflow:hidden;
+}
+.meeting-text{ text-align:center; line-height:1.05; font-weight:600; color:#222; font-size:22px }
+
+/* seat containers (flex helpers) */
+.seats{ display:flex; gap:14px; align-items:center; justify-content:center }
+.left-column, .right-column{ display:flex; flex-direction:column; gap:18px; align-items:center; justify-content:center }
+.top-row, .bottom-row{ display:flex; gap:18px; align-items:center; justify-content:center }
+
+/* empty chair */
+.empty-chair{ width:100px; height:100px; border-radius:18px; background:#9a9a9a; box-shadow:0 14px 40px rgba(0,0,0,0.45) }
+
+/* ------------- User card ------------- */
+.user-card{
+  width:120px; border-radius:18px; padding:10px; display:flex; flex-direction:column; align-items:center; gap:8px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.45); cursor:pointer; transform-origin:center;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  opacity:0; animation: pop-in .46s forwards cubic-bezier(.2,.9,.2,1);
+  outline:none;
+}
+.user-card:focus{ box-shadow: 0 26px 54px rgba(0,0,0,0.6); transform: translateY(-6px) }
+
+/* avatar */
+.avatar-wrap{ width:64px; height:64px; border-radius:50%; overflow:hidden; border:3px solid rgba(255,255,255,0.6) }
+.user-card img{ width:100%; height:100%; object-fit:cover; display:block }
+
+/* meta */
+.user-card .name{ font-weight:700; color:#032008; font-size:13px }
+.user-card .role{ font-size:11px; color: rgba(3,32,7,0.6); margin-top:-2px }
+
+/* size variations */
+.user-lg{ width:150px; padding:14px; border-radius:22px }
+.user-md{ width:120px }
+.user-sm{ width:100px; padding:8px }
+
+/* themes */
+.user-green{ background: linear-gradient(180deg, #36ff4c, #28d83a); color:#042108 }
+.user-blue{ background: linear-gradient(180deg,#8ff3f7,#59dee8); color:#00363a }
+.user-red{ background: linear-gradient(180deg,#ff8080,#ff5252); color:#2b0000 }
+
+/* hover lift */
+.user-card:hover{ transform: translateY(-8px) scale(1.02); box-shadow: 0 30px 64px rgba(0,0,0,0.6); filter:brightness(1.02) }
+
+/* pop-in */
+@keyframes pop-in{
+  0{ opacity:0; transform: translateY(18px) scale(.98) }
+  60%{ opacity:1; transform: translateY(-6px) scale(1.01) }
+  100%{ opacity:1; transform: translateY(0) scale(1) }
+}
+
+/* Floating icon */
+.floating-task{
+  position:fixed; right:28px; bottom:28px; z-index:70; width:74px; height:74px;
+  border-radius:50%; background:transparent; border:3px solid rgba(54,255,76,0.9);
+  display:flex; align-items:center; justify-content:center; box-shadow: 0 12px 40px rgba(0,0,0,0.6); cursor:pointer;
+}
+.floating-task img{ width:36px; height:36px }
+
+/* ------------- Responsive rules ------------- */
+@media (min-width: 992px) {
+  /* desktop: convert table to horizontal capsule */
+  .meeting-table{ width:680px; height:220px; border-radius:38px; padding:18px }
+  .meeting-text{ font-size:28px; text-align:left }
+
+  .room-stage{ min-height:420px }
+
+  /* absolute seat placement for realistic surrounding */
+  .top-row{ position:absolute; top:32px; left:50%; transform:translateX(-50%); gap:22px }
+  .bottom-row{ position:absolute; bottom:32px; left:50%; transform:translateX(-50%); gap:22px }
+  .left-column{ position:absolute; left:36px; top:50%; transform:translateY(-50%); gap:22px }
+  .right-column{ position:absolute; right:36px; top:50%; transform:translateY(-50%); gap:22px }
+
+  /* larger cards on desktop */
+  .user-card{ width:140px }
+  .user-lg{ width:170px }
+}
+
+@media (max-width: 991px) {
+  /* mobile: hide sidebar, show hamburger */
+  .sidebar{ position:fixed; transform:translateX(-120%); transition: transform .28s ease; width:72px; padding:18px; overflow:visible }
+  .sidebar .brand{ display:none }
+  .sidebar .sidebar-nav a{ padding:8px 10px; font-size:13px }
+  .main{ margin-left:72px }
+  .hamburger{ display:inline-block }
+
+  /* mobile: vertical table */
+  .meeting-table{ width:240px; height:480px; border-radius:30px; padding:18px; }
+  .meeting-text{ font-size:18px; text-align:center }
+
+  /* seat stacking for mobile */
+  .top-row{ order:0; margin-bottom:10px; flex-wrap:nowrap; overflow-x:auto; padding-bottom:6px }
+  .left-column, .right-column{ flex-direction:row; gap:12px; justify-content:center; margin:0 4px }
+  .bottom-row{ margin-top:8px; gap:12px; }
+
+  .floating-task{ right:14px; bottom:14px; width:62px; height:62px }
+}
+
+/* sidebar open state (for mobile) - toggled by JS */
+.sidebar.open{ transform:translateX(0); width:260px; }
