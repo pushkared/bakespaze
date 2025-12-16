@@ -26,23 +26,29 @@ class AppServiceProvider extends ServiceProvider
         // Force HTTPS for URL generation when app URL is HTTPS (helps behind proxies/tunnels)
         $appUrl = config('app.url');
         if (is_string($appUrl) && str_starts_with($appUrl, 'https://')) {
-            URL::forceScheme('https');
+            // URL::forceScheme('https');
         }
 
-        // Share workspace/user data for admin/manager dropdown in layout
+        // Share workspace/user data for layout dropdowns
         View::composer('layouts.app', function ($view) {
             if (!auth()->check()) {
                 return;
             }
             $user = auth()->user();
-            $isManager = in_array($user->role ?? '', ['admin', 'manager']);
-            $workspaces = collect();
-            $workspaceUsers = collect();
-            if ($isManager) {
-                $workspaces = Workspace::orderBy('name')->get(['id','name','slug']);
-                $workspaceUsers = User::orderBy('name')->get(['id','name','email']);
-            }
-            $view->with(compact('workspaces', 'workspaceUsers', 'isManager'));
+            $availableWorkspaces = Workspace::whereHas('memberships', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })->orderBy('name')->get(['id','name','slug']);
+
+            $currentWorkspace = $availableWorkspaces->firstWhere('id', session('current_workspace_id'))
+                ?? $availableWorkspaces->first();
+
+            $workspaceUsers = User::orderBy('name')->get(['id','name','email']);
+
+            $view->with([
+                'availableWorkspaces' => $availableWorkspaces,
+                'currentWorkspace' => $currentWorkspace,
+                'workspaceUsers' => $workspaceUsers,
+            ]);
         });
     }
 }

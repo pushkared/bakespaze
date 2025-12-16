@@ -5,7 +5,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VirtualOfficeController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -17,6 +19,8 @@ Route::get('/login', function () {
     }
     return view('welcome');
 })->name('login');
+
+Route::get('/virtual-office', [VirtualOfficeController::class, 'index'])->middleware(['auth', 'auto.logout'])->name('virtual-office');
 
 Route::get('/dashboard', function () {
     return view('dashboard.index');
@@ -41,8 +45,17 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments.index');
 
+    Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');
+    Route::post('/workspaces/switch', [WorkspaceController::class, 'switch'])->name('workspaces.switch');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
     Route::post('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->name('workspaces.update');
     Route::delete('/workspaces/{workspace}', [WorkspaceController::class, 'destroy'])->name('workspaces.destroy');
     Route::post('/workspaces/assign', [WorkspaceController::class, 'assignUser'])->name('workspaces.assign');
+
+    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::post('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+    Route::post('/tasks/{task}/comment', [TaskController::class, 'comment'])->name('tasks.comment');
+    Route::post('/tasks/{task}/attach', [TaskController::class, 'attach'])->name('tasks.attach');
 });
