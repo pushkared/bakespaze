@@ -96,12 +96,54 @@
   <button class="floating-task" type="button" aria-label="Open tasks">
     <img src="{{ asset('images/tasklist-icon.svg') }}" alt="">
   </button>
+  <div class="floating-panel" id="floating-panel">
+    <div class="floating-head">
+      <div>
+        <div class="eyebrow">Workspace Tasks</div>
+        <div class="floating-title">{{ $currentWorkspace->name ?? 'Tasks' }}</div>
+      </div>
+      <button class="close-floating" type="button" aria-label="Close panel">×</button>
+    </div>
+    <div class="floating-list">
+      @forelse(($panelTasks ?? collect()) as $task)
+        <div class="float-task">
+          <div class="float-main">
+            <div class="float-title">{{ $task->title }}</div>
+            <div class="float-meta">
+              <span>{{ $task->due_date ? $task->due_date->format('d M') : 'No due' }}</span>
+              @if($task->assignees->first())
+                <span class="avatar-chip small">{{ strtoupper(substr($task->assignees->first()->name,0,1)) }}</span>
+              @endif
+            </div>
+          </div>
+          <div class="float-actions">
+            @if($task->status !== 'completed')
+            <form method="POST" action="{{ route('tasks.update', $task) }}">
+              @csrf
+              <input type="hidden" name="title" value="{{ $task->title }}">
+              <input type="hidden" name="description" value="{{ $task->description }}">
+              <input type="hidden" name="due_date" value="{{ $task->due_date }}">
+              <input type="hidden" name="status" value="completed">
+              <input type="hidden" name="assignee_id" value="{{ optional($task->assignees->first())->id }}">
+              <button type="submit" class="pill-btn small">Mark Done</button>
+            </form>
+            @else
+              <span class="status done">Done</span>
+            @endif
+            <a href="{{ route('tasks.index') }}" class="pill-btn small ghost">Details</a>
+          </div>
+        </div>
+      @empty
+        <div class="muted">No tasks found.</div>
+      @endforelse
+    </div>
+  </div>
 
   <script src="{{ asset('js/dashboard.js') }}"></script>
   <script>
-    (function() {
+    document.addEventListener('DOMContentLoaded', () => {
       const hamburger = document.querySelector('.hamburger');
-      const sidebar = document.querySelector('.sidebar');
+      const sidebar = document.querySelector('.vo-sidebar') || document.querySelector('.sidebar');
       const overlay = document.querySelector('.sidebar-overlay');
       const setSidebar = (open) => {
         if (!sidebar) return;
@@ -109,10 +151,19 @@
         document.body.classList.toggle('sidebar-open', open);
         if (overlay) overlay.classList.toggle('open', open);
       };
-      if (hamburger) hamburger.addEventListener('click', () => setSidebar(!sidebar.classList.contains('open')));
+      if (hamburger && sidebar) {
+        hamburger.addEventListener('click', () => setSidebar(!sidebar.classList.contains('open')));
+      }
       if (overlay) overlay.addEventListener('click', () => setSidebar(false));
       window.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSidebar(false); });
-    })();
+
+      const btn = document.querySelector('.floating-task');
+      const panel = document.getElementById('floating-panel');
+      const closeBtn = panel ? panel.querySelector('.close-floating') : null;
+      const toggle = () => panel && panel.classList.toggle('open');
+      if (btn && panel) btn.addEventListener('click', toggle);
+      if (closeBtn) closeBtn.addEventListener('click', toggle);
+    });
   </script>
   @stack('scripts')
 </body>

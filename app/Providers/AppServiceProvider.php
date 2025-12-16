@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use App\Models\Workspace;
 use App\Models\User;
+use App\Models\Task;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
         // Force HTTPS for URL generation when app URL is HTTPS (helps behind proxies/tunnels)
         $appUrl = config('app.url');
         if (is_string($appUrl) && str_starts_with($appUrl, 'https://')) {
-            // URL::forceScheme('https');
+            URL::forceScheme('https');
         }
 
         // Share workspace/user data for layout dropdowns
@@ -44,10 +45,17 @@ class AppServiceProvider extends ServiceProvider
 
             $workspaceUsers = User::orderBy('name')->get(['id','name','email']);
 
+            $panelTasks = Task::with('assignees')
+                ->when($currentWorkspace, fn($q) => $q->where('workspace_id', $currentWorkspace->id))
+                ->orderByRaw('ISNULL(due_date), due_date asc')
+                ->limit(8)
+                ->get();
+
             $view->with([
                 'availableWorkspaces' => $availableWorkspaces,
                 'currentWorkspace' => $currentWorkspace,
                 'workspaceUsers' => $workspaceUsers,
+                'panelTasks' => $panelTasks,
             ]);
         });
     }

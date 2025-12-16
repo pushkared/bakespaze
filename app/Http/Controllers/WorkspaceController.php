@@ -67,17 +67,20 @@ class WorkspaceController extends Controller
     public function assignUser(Request $request)
     {
         $data = $request->validate([
-            'user_id' => ['required','exists:users,id'],
+            'user_id' => ['required','array'],
+            'user_id.*' => ['exists:users,id'],
             'workspace_id' => ['required','exists:workspaces,id'],
             'role' => ['required','in:member,manager,admin'],
         ]);
 
-        Membership::updateOrCreate(
-            ['user_id' => $data['user_id'], 'workspace_id' => $data['workspace_id']],
-            ['role' => $data['role']]
-        );
+        foreach ($data['user_id'] as $uid) {
+            Membership::updateOrCreate(
+                ['user_id' => $uid, 'workspace_id' => $data['workspace_id']],
+                ['role' => $data['role']]
+            );
+        }
 
-        return back()->with('status', 'User assigned to workspace.');
+        return back()->with('status', 'Users assigned to workspace.');
     }
 
     public function index()

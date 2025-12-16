@@ -8,6 +8,7 @@ use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VirtualOfficeController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -22,9 +23,7 @@ Route::get('/login', function () {
 
 Route::get('/virtual-office', [VirtualOfficeController::class, 'index'])->middleware(['auth', 'auto.logout'])->name('virtual-office');
 
-Route::get('/dashboard', function () {
-    return view('dashboard.index');
-})->middleware(['auth', 'auto.logout'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'auto.logout'])->name('dashboard');
 
 Route::post('/logout', function () {
     auth()->logout();

@@ -2,24 +2,29 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Sidebar toggle for mobile
   const hamburger = document.querySelector('.hamburger');
-  const sidebar = document.querySelector('.sidebar');
+  const sidebar = document.querySelector('.vo-sidebar') || document.querySelector('.sidebar');
   const overlay = document.querySelector('.sidebar-overlay');
 
   const setSidebar = (open) => {
     if (!sidebar) return;
-    sidebar.classList.toggle('open', open);
     document.body.classList.toggle('sidebar-open', open);
     if (overlay) overlay.classList.toggle('open', open);
   };
 
   if (hamburger && sidebar) {
-    hamburger.addEventListener('click', () => setSidebar(!sidebar.classList.contains('open')));
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setSidebar(!sidebar.classList.contains('open'));
+    });
   }
   if (overlay) {
     overlay.addEventListener('click', () => setSidebar(false));
   }
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') setSidebar(false);
+  });
+  document.addEventListener('click', (e) => {
+    if (sidebar && !sidebar.contains(e.target) && !hamburger.contains(e.target)) setSidebar(false);
   });
 
   // Mobile splash overlay hide on ready

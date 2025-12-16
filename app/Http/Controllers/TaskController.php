@@ -63,8 +63,7 @@ class TaskController extends Controller
             'title' => ['required','string','max:255'],
             'description' => ['nullable','string'],
             'due_date' => ['nullable','date'],
-            'assignees' => ['array'],
-            'assignees.*' => ['exists:users,id'],
+            'assignee_id' => ['nullable','exists:users,id'],
             'attachments.*' => ['file','max:5120'],
         ]);
 
@@ -77,8 +76,8 @@ class TaskController extends Controller
             'status' => 'open',
         ]);
 
-        if (!empty($data['assignees'])) {
-            $task->assignees()->sync($data['assignees']);
+        if (!empty($data['assignee_id'])) {
+            $task->assignees()->sync([$data['assignee_id']]);
         }
 
         if ($request->hasFile('attachments')) {
@@ -107,8 +106,7 @@ class TaskController extends Controller
             'description' => ['nullable','string'],
             'due_date' => ['nullable','date'],
             'status' => ['nullable','string'],
-            'assignees' => ['array'],
-            'assignees.*' => ['exists:users,id'],
+            'assignee_id' => ['nullable','exists:users,id'],
         ]);
 
         $task->update([
@@ -118,8 +116,8 @@ class TaskController extends Controller
             'status' => $data['status'] ?? $task->status,
         ]);
 
-        if (isset($data['assignees'])) {
-            $task->assignees()->sync($data['assignees']);
+        if (array_key_exists('assignee_id', $data)) {
+            $task->assignees()->sync($data['assignee_id'] ? [$data['assignee_id']] : []);
         }
 
         return back()->with('status', 'Task updated.');

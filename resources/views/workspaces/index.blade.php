@@ -27,11 +27,18 @@
               <div class="ws-name">{{ $ws->name }}</div>
               <div class="ws-slug">#{{ $ws->slug }}</div>
             </div>
-            <form method="POST" action="{{ route('workspaces.switch') }}">
-              @csrf
-              <input type="hidden" name="workspace_id" value="{{ $ws->id }}">
-              <button type="submit" class="pill-btn small">Switch</button>
-            </form>
+            <div class="ws-actions">
+              <form method="POST" action="{{ route('workspaces.switch') }}">
+                @csrf
+                <input type="hidden" name="workspace_id" value="{{ $ws->id }}">
+                <button type="submit" class="pill-btn small">Switch</button>
+              </form>
+              <form method="POST" action="{{ route('workspaces.destroy', $ws) }}" onsubmit="return confirm('Delete workspace?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="pill-btn small ghost">Delete</button>
+              </form>
+            </div>
           </div>
           <div class="ws-members">
             @forelse($ws->memberships as $member)
@@ -63,12 +70,20 @@
       </div>
       <form class="assign-form" method="POST" action="{{ route('workspaces.assign') }}">
         @csrf
-        <select name="user_id" required>
-          <option value="">Select user</option>
-          @foreach($users as $u)
-            <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
-          @endforeach
-        </select>
+        <div class="multi-select">
+          <div class="multi-search">
+            <input type="search" id="user-search" placeholder="Search users" autocomplete="off">
+            <button type="button" id="clear-selection">Clear</button>
+          </div>
+          <div class="multi-options" id="user-options">
+            @foreach($users as $u)
+              <label class="option-row">
+                <input type="checkbox" name="user_id[]" value="{{ $u->id }}">
+                <span>{{ $u->name }} ({{ $u->email }})</span>
+              </label>
+            @endforeach
+          </div>
+        </div>
         <select name="workspace_id" required>
           <option value="">Select workspace</option>
           @foreach($workspaces as $ws)
@@ -85,4 +100,29 @@
     </div>
   </div>
 </section>
+@push('scripts')
+<script>
+  (function(){
+    const search = document.getElementById('user-search');
+    const options = document.querySelectorAll('#user-options .option-row');
+    const clearBtn = document.getElementById('clear-selection');
+    if (search) {
+      search.addEventListener('input', () => {
+        const term = search.value.toLowerCase();
+        options.forEach(opt => {
+          const text = opt.textContent.toLowerCase();
+          opt.style.display = text.includes(term) ? '' : 'none';
+        });
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        document.querySelectorAll('#user-options input[type="checkbox"]').forEach(cb => cb.checked = false);
+        if (search) search.value = '';
+        options.forEach(opt => opt.style.display = '');
+      });
+    }
+  })();
+</script>
+@endpush
 @endsection
