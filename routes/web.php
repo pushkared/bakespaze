@@ -9,6 +9,8 @@ use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VirtualOfficeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\AttendanceController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -57,4 +59,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
     Route::post('/tasks/{task}/comment', [TaskController::class, 'comment'])->name('tasks.comment');
     Route::post('/tasks/{task}/attach', [TaskController::class, 'attach'])->name('tasks.attach');
+
+    Route::get('/calendar', [GoogleCalendarController::class, 'index'])->name('calendar.index');
+    Route::get('/calendar/connect', [GoogleCalendarController::class, 'redirect'])->name('calendar.connect');
+    Route::get('/calendar/callback', [GoogleCalendarController::class, 'callback'])->name('calendar.callback');
+    Route::post('/calendar/events', [GoogleCalendarController::class, 'store'])->name('calendar.events.store');
+
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance/punch-in', [AttendanceController::class, 'punchIn'])->name('attendance.punchin');
+    Route::post('/attendance/punch-out', [AttendanceController::class, 'punchOut'])->name('attendance.punchout');
+    Route::post('/attendance/lunch-start', [AttendanceController::class, 'lunchStart'])->name('attendance.lunchstart');
+    Route::post('/attendance/lunch-end', [AttendanceController::class, 'lunchEnd'])->name('attendance.lunchend');
 });

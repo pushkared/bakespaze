@@ -41,18 +41,40 @@ class TaskController extends Controller
 
     public function index(Request $request)
     {
-        $workspace = $this->currentWorkspace($request);
+        $user = $request->user();
+        $allowedWorkspaceIds = $user->memberships()->pluck('workspace_id')->all();
+
+        $workspaceFilter = $request->input('workspace_id');
+        $search = $request->input('q');
+        $dueFrom = $request->input('due_from');
+        $dueTo = $request->input('due_to');
 
         $tasks = Task::with(['assignees','creator','comments.user','attachments'])
-            ->where('workspace_id', $workspace->id)
-            ->latest()
+            ->whereIn('workspace_id', $allowedWorkspaceIds)
+            ->when($workspaceFilter, fn($q) => $q->where('workspace_id', $workspaceFilter))
+            ->when($search, fn($q) => $q->where('title', 'like', '%'.$search.'%'))
+            ->when($dueFrom, fn($q) => $q->whereDate('due_date', '>=', $dueFrom))
+            ->when($dueTo, fn($q) => $q->whereDate('due_date', '<=', $dueTo))
+            ->orderByRaw('ISNULL(due_date), due_date asc, id desc')
             ->get();
 
-        $members = User::whereHas('memberships', fn($q) => $q->where('workspace_id', $workspace->id))
+        $workspaces = Workspace::whereIn('id', $allowedWorkspaceIds)->orderBy('name')->get();
+
+        $members = User::whereHas('memberships', fn($q) => $q->whereIn('workspace_id', $allowedWorkspaceIds))
             ->orderBy('name')
             ->get(['id','name','email']);
 
-        return view('tasks.index', compact('tasks','workspace','members'));
+        return view('tasks.index', [
+            'tasks' => $tasks,
+            'workspaces' => $workspaces,
+            'members' => $members,
+            'filters' => [
+                'workspace_id' => $workspaceFilter,
+                'q' => $search,
+                'due_from' => $dueFrom,
+                'due_to' => $dueTo,
+            ],
+        ]);
     }
 
     public function store(Request $request)

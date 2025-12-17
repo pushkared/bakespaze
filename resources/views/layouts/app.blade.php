@@ -34,14 +34,21 @@
           <a class="menu-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" href="{{ route('tasks.index') }}"><span class="menu-icon analytics" aria-hidden="true"></span><span class="menu-text">Tasks</span></a>
           <a class="menu-link {{ request()->routeIs('workspaces.index') ? 'active' : '' }}" href="{{ route('workspaces.index') }}"><span class="menu-icon settings" aria-hidden="true"></span><span class="menu-text">Workspaces</span></a>
           <a class="menu-link" href="#"><span class="menu-icon chat" aria-hidden="true"></span><span class="menu-text">Chat</span></a>
-          <a class="menu-link" href="#"><span class="menu-icon calendar" aria-hidden="true"></span><span class="menu-text">Calendar</span></a>
-          <a class="menu-link" href="#"><span class="menu-icon attendance" aria-hidden="true"></span><span class="menu-text">Attendance</span></a>
+          <a class="menu-link" href="/calendar"><span class="menu-icon calendar" aria-hidden="true"></span><span class="menu-text">Calendar</span></a>
+          <a class="menu-link" href="/attendance"><span class="menu-icon attendance" aria-hidden="true"></span><span class="menu-text">Attendance</span></a>
           <a class="menu-link" href="#"><span class="menu-icon analytics" aria-hidden="true"></span><span class="menu-text">Analytics</span></a>
           <a class="menu-link" href="#"><span class="menu-icon settings" aria-hidden="true"></span><span class="menu-text">Settings</span></a>
         </nav>
       </div>
       <div class="sidebar-footer">
         <div class="footer-date">Fri 5 Dec</div>
+        <form method="POST" action="{{ route('logout') }}">
+          @csrf
+          <button type="submit" class="menu-link logout-link">
+            <span class="menu-icon logout" aria-hidden="true"></span>
+            <span class="menu-text">Logout</span>
+          </button>
+        </form>
       </div>
     </aside>
     <div class="sidebar-overlay" aria-hidden="true"></div>
@@ -80,7 +87,7 @@
         </div>
         <div class="top-right">
           <button class="create-task">+ Create Task</button>
-          <div class="top-date">Fri 5 Dec</div>
+          <div class="top-date">{{ \Carbon\Carbon::now()->format('D d M') }}</div>
           <div class="top-logo">
             <img src="{{ asset('images/logo-infinity.svg') }}" alt="Logo">
           </div>

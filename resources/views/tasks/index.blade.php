@@ -9,11 +9,27 @@
     <header class="tasks-head">
       <div>
         <div class="eyebrow">Tasks</div>
-        <h1>{{ $workspace->name }} Tasks</h1>
-        <p class="muted">Create, assign, comment, and attach files just like Asana — styled for our workspace.</p>
+        @php
+          $currentWs = collect($workspaces ?? [])->firstWhere('id', $filters['workspace_id'] ?? null);
+        @endphp
+        <h1>{{ $currentWs->name ?? 'All Workspace Tasks' }}</h1>
+        <p class="muted">Create, assign, comment, and attach files just like Asana - styled for our workspace.</p>
       </div>
       <button class="pill-btn solid" id="open-task-modal">+ New Task</button>
     </header>
+
+    <form class="task-filters" method="GET" action="{{ route('tasks.index') }}">
+      <input type="search" name="q" placeholder="Search title" value="{{ $filters['q'] ?? '' }}">
+      <select name="workspace_id">
+        <option value="">All workspaces</option>
+        @foreach($workspaces as $ws)
+          <option value="{{ $ws->id }}" @selected(($filters['workspace_id'] ?? '') == $ws->id)>{{ $ws->name }}</option>
+        @endforeach
+      </select>
+      <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}">
+      <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}">
+      <button class="pill-btn ghost" type="submit">Filter</button>
+    </form>
 
     <div class="task-table-wrap">
     <div class="task-table">
