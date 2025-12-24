@@ -61,6 +61,15 @@
             @endif
           </div>
           <div class="row-actions">
+            <button
+              type="button"
+              class="pill-btn small task-edit"
+              data-action="{{ route('tasks.update', $task) }}"
+              data-title="{{ $task->title }}"
+              data-desc="{{ e($task->description) }}"
+              data-due="{{ $task->due_date ? $task->due_date->format('Y-m-d') : '' }}"
+              data-assignee="{{ optional($task->assignees->first())->id }}"
+            >Edit</button>
             @if($task->status !== 'completed')
             <form method="POST" action="{{ route('tasks.update', $task) }}" onsubmit="return confirm('Mark complete?')">
               @csrf
@@ -206,11 +215,15 @@
     const toolbar = document.querySelector('.wysiwyg-toolbar');
     const searchInput = document.getElementById('assignee-search');
     const select = document.getElementById('assignee-select');
+    const form = modal ? modal.querySelector('form.task-form') : null;
+    const modalTitle = modal ? modal.querySelector('.modal-head h3') : null;
+    const submitBtn = modal ? modal.querySelector('.form-actions .pill-btn.solid') : null;
 
     function openModal() {
       if (!modal) return;
       modal.classList.add('open');
     }
+    window.openTaskModal = openModal;
     function closeModal() {
       if (!modal) return;
       modal.classList.remove('open');
@@ -227,6 +240,9 @@
       modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
       });
+    }
+    if (window.location.search.includes('open_modal=1')) {
+      openModal();
     }
 
     // basic toolbar actions
@@ -282,6 +298,43 @@
         tOptions.forEach(opt => opt.style.display = '');
       });
     }
+
+    // Edit task: prefill modal and switch action
+    const taskEditButtons = document.querySelectorAll('.task-edit');
+    taskEditButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!form) return;
+        form.action = btn.dataset.action;
+        if (modalTitle) modalTitle.textContent = 'Edit Task';
+        if (submitBtn) submitBtn.textContent = 'Update Task';
+        const titleInput = form.querySelector('input[name=\"title\"]');
+        const dueInput = form.querySelector('input[name=\"due_date\"]');
+        const radios = form.querySelectorAll('input[name=\"assignee_id\"]');
+        if (titleInput) titleInput.value = btn.dataset.title || '';
+        if (editor) editor.innerHTML = decodeURIComponent(btn.dataset.desc || '');
+        if (hidden) hidden.value = editor ? editor.innerHTML : '';
+        if (dueInput) dueInput.value = btn.dataset.due || '';
+        const targetAssignee = btn.dataset.assignee || '';
+        radios.forEach(r => r.checked = (r.value === targetAssignee));
+        openModal();
+      });
+    });
+
+    // Reset to create mode when opening fresh
+    if (openBtn) openBtn.addEventListener('click', () => {
+      if (!form) return;
+      form.action = '{{ route('tasks.store') }}';
+      if (modalTitle) modalTitle.textContent = 'New Task';
+      if (submitBtn) submitBtn.textContent = 'Create Task';
+      const titleInput = form.querySelector('input[name=\"title\"]');
+      const dueInput = form.querySelector('input[name=\"due_date\"]');
+      const radios = form.querySelectorAll('input[name=\"assignee_id\"]');
+      if (titleInput) titleInput.value = '';
+      if (editor) editor.innerHTML = '';
+      if (hidden) hidden.value = '';
+      if (dueInput) dueInput.value = '';
+      radios.forEach((r, idx) => r.checked = idx === 0);
+    }, { once: false });
   })();
 </script>
 @endpush

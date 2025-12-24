@@ -11,6 +11,7 @@ use App\Http\Controllers\VirtualOfficeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\SearchController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -70,4 +71,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/punch-out', [AttendanceController::class, 'punchOut'])->name('attendance.punchout');
     Route::post('/attendance/lunch-start', [AttendanceController::class, 'lunchStart'])->name('attendance.lunchstart');
     Route::post('/attendance/lunch-end', [AttendanceController::class, 'lunchEnd'])->name('attendance.lunchend');
+
+    Route::get('/search', [SearchController::class, 'search'])->name('search.global');
 });

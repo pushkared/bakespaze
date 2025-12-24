@@ -1,41 +1,61 @@
 @extends('layouts.app')
-<script src="{{ asset('js/dashboard.js') }}"></script>
 @section('content')
-<div class="content-area">
-  <h2 style="color:#fff;margin-bottom:16px;">Users & Roles</h2>
-  @if(session('status'))
-    <div style="padding:10px;background:rgba(54,255,76,0.1);color:#9f9;">{{ session('status') }}</div>
-  @endif
-  <div style="display:grid; gap:12px;">
-    @foreach($users as $user)
-      <form method="POST" action="{{ route('users.update', $user) }}" style="padding:12px;border:1px solid rgba(255,255,255,0.06);border-radius:12px;background:rgba(0,0,0,0.4);color:#fff;display:grid;gap:8px;">
-        @csrf
-        <div><strong>{{ $user->name }}</strong> ({{ $user->email }})</div>
-        <label>
-          <div>Name</div>
-          <input type="text" name="name" value="{{ old('name', $user->name) }}" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #333;">
-        </label>
-        <label>
-          <div>Email</div>
-          <input type="email" name="email" value="{{ old('email', $user->email) }}" required style="width:100%;padding:8px;border-radius:8px;border:1px solid #333;">
-        </label>
-        <label>
-          <div>Role</div>
-          <select name="role" style="width:100%;padding:8px;border-radius:8px;border:1px solid #333;">
-            @foreach($roles as $role)
-              <option value="{{ $role }}" @selected($user->role === $role)>{{ ucfirst($role) }}</option>
-            @endforeach
-          </select>
-        </label>
-        <label>
-          <div>Department</div>
-          <input type="text" name="department" value="{{ old('department', $user->department) }}" placeholder="e.g. Engineering" style="width:100%;padding:8px;border-radius:8px;border:1px solid #333;">
-        </label>
-        <div style="display:flex;gap:10px;justify-content:flex-end;">
-          <button type="submit" style="padding:10px 16px;border:none;border-radius:10px;background:linear-gradient(90deg,#36ff4c,#1bc536);color:#032008;font-weight:700;cursor:pointer;">Save</button>
-        </div>
-      </form>
-    @endforeach
+<section class="users-page">
+  <div class="vo-pattern"></div>
+  <div class="users-shell">
+    <header class="users-head">
+      <div>
+        <div class="eyebrow">Team</div>
+        <h1>Users & Roles</h1>
+        <p class="muted">Assign roles with predefined access: Super Admin (full), HR (all attendance), Manager (team attendance), Employee (self).</p>
+      </div>
+      @if(session('status'))
+        <div class="pill success">{{ session('status') }}</div>
+      @endif
+    </header>
+
+    <div class="users-grid">
+      @foreach($users as $user)
+        <form method="POST" action="{{ route('users.update', $user) }}" class="user-card">
+          @csrf
+          <div class="user-card__head">
+            <div class="user-name">{{ $user->name }}</div>
+            <div class="user-email">{{ $user->email }}</div>
+          </div>
+          <label class="field">
+            <span class="label">Name</span>
+            <input type="text" name="name" value="{{ old('name', $user->name) }}" required>
+          </label>
+          <label class="field">
+            <span class="label">Email</span>
+            <input type="email" name="email" value="{{ old('email', $user->email) }}" required>
+          </label>
+          <label class="field">
+            <span class="label">Role</span>
+            <select name="role" required>
+              @foreach($roles as $role)
+                <option value="{{ $role }}" @selected($user->role === $role)>{{ ucwords(str_replace('_',' ', $role)) }}</option>
+              @endforeach
+            </select>
+            <small class="muted">
+              @switch($user->role)
+                @case('super_admin') Full control across app. @break
+                @case('hr') View all attendance. @break
+                @case('manager') View team attendance. @break
+                @default View own attendance.
+              @endswitch
+            </small>
+          </label>
+          <label class="field">
+            <span class="label">Department</span>
+            <input type="text" name="department" value="{{ old('department', $user->department) }}" placeholder="e.g. Engineering">
+          </label>
+          <div class="user-card__actions">
+            <button type="submit" class="pill-btn solid">Save</button>
+          </div>
+        </form>
+      @endforeach
+    </div>
   </div>
-</div>
+</section>
 @endsection

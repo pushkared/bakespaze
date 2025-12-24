@@ -91,7 +91,7 @@ class AttendanceController extends Controller
 
         AttendanceRecord::create([
             'user_id' => $user->id,
-            'workspace_id' => $workspaceId,
+            'workspace_id' => null,
             'work_date' => $now->toDateString(),
             'clock_in' => $now,
         ]);
@@ -150,8 +150,8 @@ class AttendanceController extends Controller
 
     protected function canPunchIn(Carbon $now): bool
     {
-        $start = $now->copy()->setTime(9, 0, 0);
-        $end = $now->copy()->setTime(11, 0, 0);
+        $start = $now->copy()->setTime(13, 0, 0);
+        $end = $now->copy()->setTime(16, 0, 0);
         return $now->between($start, $end, true);
     }
 }

@@ -51,6 +51,10 @@ class TaskController extends Controller
 
         $tasks = Task::with(['assignees','creator','comments.user','attachments'])
             ->whereIn('workspace_id', $allowedWorkspaceIds)
+            ->where(function ($q) use ($user) {
+                $q->where('creator_id', $user->id)
+                  ->orWhereHas('assignees', fn($a) => $a->where('users.id', $user->id));
+            })
             ->when($workspaceFilter, fn($q) => $q->where('workspace_id', $workspaceFilter))
             ->when($search, fn($q) => $q->where('title', 'like', '%'.$search.'%'))
             ->when($dueFrom, fn($q) => $q->whereDate('due_date', '>=', $dueFrom))
@@ -131,11 +135,14 @@ class TaskController extends Controller
             'assignee_id' => ['nullable','exists:users,id'],
         ]);
 
+        $reopen = $task->status === 'completed';
+        $newStatus = $reopen ? 'open' : ($data['status'] ?? $task->status);
+
         $task->update([
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'due_date' => $data['due_date'] ?? null,
-            'status' => $data['status'] ?? $task->status,
+            'status' => $newStatus,
         ]);
 
         if (array_key_exists('assignee_id', $data)) {

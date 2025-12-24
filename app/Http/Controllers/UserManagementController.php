@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class UserManagementController extends Controller
 {
-    protected array $managerRoles = ['admin', 'manager'];
+    protected array $managerRoles = ['super_admin', 'manager'];
 
     protected function authorizeManager()
     {
@@ -19,7 +19,7 @@ class UserManagementController extends Controller
     {
         $this->authorizeManager();
         $users = User::select('id', 'name', 'email', 'role', 'department')->orderBy('name')->get();
-        $roles = ['admin', 'manager', 'employee'];
+        $roles = ['super_admin', 'hr', 'manager', 'employee'];
         return view('users.index', compact('users', 'roles'));
     }
 
@@ -30,7 +30,7 @@ class UserManagementController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'role' => ['required', 'in:admin,manager,employee'],
+            'role' => ['required', 'in:super_admin,hr,manager,employee'],
             'department' => ['nullable', 'string', 'max:255'],
         ]);
 

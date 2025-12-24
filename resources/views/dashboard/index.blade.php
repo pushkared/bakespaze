@@ -11,7 +11,7 @@
       <div class="dash-greeting">
         <div class="greet-line">Hey {{ auth()->user()->name ?? 'there' }},</div>
         <div class="greet-line">{{ $greeting ?? 'Welcome' }}!</div>
-        <div class="muted">{{ $todayDate ?? '' }} - {{ $currentTime ?? '' }}</div>
+        {{-- <div class="muted">{{ $todayDate ?? '' }} - {{ $currentTime ?? '' }}</div> --}}
       </div>
       <button class="create-task solid" onclick="window.location='{{ route('tasks.index') }}'">+ Create Task</button>
     </div>

@@ -16,6 +16,7 @@
   <div class="app-shell vo-shell">
 
     <aside class="sidebar vo-sidebar" aria-label="Main navigation">
+      <div class="sidebar-scroll">
       <div class="sidebar-inner">
         <div class="sidebar-brand">
           <div class="logo-mark">
@@ -23,10 +24,6 @@
           </div>
         </div>
 
-        <label class="sidebar-search">
-          <span class="icon-search" aria-hidden="true"></span>
-          <input type="search" placeholder="Search" aria-label="Search" />
-        </label>
 
         <nav class="sidebar-menu" role="navigation" aria-label="Primary">
           <a class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="menu-icon dashboard" aria-hidden="true"></span><span class="menu-text">Dashboard</span></a>
@@ -50,18 +47,19 @@
           </button>
         </form>
       </div>
+      </div>
     </aside>
     <div class="sidebar-overlay" aria-hidden="true"></div>
 
     <div class="main vo-main">
       <header class="topbar vo-topbar">
         <div class="top-left">
-          <button class="hamburger" type="button" aria-label="Toggle menu">
+          <button class="hamburger desktop-hide" type="button" aria-label="Toggle menu">
             <span></span>
             <span></span>
             <span></span>
           </button>
-          <div class="brand-lockup">
+          <div class="brand-lockup desktop-hide">
             <img src="{{ asset('images/logo-infinity.svg') }}" alt="Logo">
           </div>
           <div class="workspace-switch workspace-menu">
@@ -84,6 +82,14 @@
               <a class="workspace-manage" href="{{ route('workspaces.index') }}">Manage workspaces</a>
             </div>
           </div>
+          <div class="top-search">
+            <span class="icon-search" aria-hidden="true"></span>
+            <input type="search" id="global-search" placeholder="Search users or tasks" aria-label="Search" autocomplete="off" />
+            <div class="search-dropdown" id="global-search-dropdown" hidden></div>
+          </div>
+          <button class="mobile-search-btn" type="button" aria-label="Open search" id="mobile-search-btn">
+            <span class="icon-search" aria-hidden="true"></span>
+          </button>
         </div>
         <div class="top-right">
           <button class="create-task">+ Create Task</button>
@@ -100,16 +106,31 @@
     </div>
   </div>
 
+  <div class="mobile-search-overlay" id="mobile-search-overlay">
+    <div class="search-bar">
+      <span class="icon-search" aria-hidden="true"></span>
+      <input type="search" id="mobile-search-input" placeholder="Search users or tasks" autocomplete="off" />
+      <button class="close-floating" type="button" id="mobile-search-close" aria-label="Close search">×</button>
+    </div>
+    <div class="mobile-search-results" id="mobile-search-results"></div>
+  </div>
+
   <button class="floating-task" type="button" aria-label="Open tasks">
     <img src="{{ asset('images/tasklist-icon.svg') }}" alt="">
   </button>
+  {{-- <button class="floating-task floating-create" type="button" aria-label="Create task" id="floating-create-shortcut">
+    +
+  </button> --}}
   <div class="floating-panel" id="floating-panel">
     <div class="floating-head">
       <div>
         <div class="eyebrow">Workspace Tasks</div>
         <div class="floating-title">{{ $currentWorkspace->name ?? 'Tasks' }}</div>
       </div>
-      <button class="close-floating" type="button" aria-label="Close panel">×</button>
+      <div class="float-actions">
+        <button class="pill-btn small ghost" type="button" id="floating-create-task">+ Create Task</button>
+        <button class="close-floating" type="button" aria-label="Close panel">A-</button>
+      </div>
     </div>
     <div class="floating-list">
       @forelse(($panelTasks ?? collect()) as $task)
@@ -170,6 +191,118 @@
       const toggle = () => panel && panel.classList.toggle('open');
       if (btn && panel) btn.addEventListener('click', toggle);
       if (closeBtn) closeBtn.addEventListener('click', toggle);
+
+      const floatCreate = document.getElementById('floating-create-task');
+      const floatShortcut = document.getElementById('floating-create-shortcut');
+      const handleCreate = () => {
+        if (typeof window.openTaskModal === 'function') {
+          window.openTaskModal();
+          if (panel) panel.classList.add('open');
+        } else {
+          window.location = '{{ route('tasks.index') }}?open_modal=1';
+        }
+      };
+      if (floatCreate) floatCreate.addEventListener('click', handleCreate);
+      if (floatShortcut) floatShortcut.addEventListener('click', handleCreate);
+
+      // Global search with suggestions
+      const searchInput = document.getElementById('global-search');
+      const dropdown = document.getElementById('global-search-dropdown');
+      let searchTimer;
+      const renderResults = (data) => {
+        if (!dropdown) return;
+        const userHtml = (data.users || []).map(u => `
+          <div class="search-item" data-type="user" data-id="${u.id}">
+            <div class="title">${u.name}</div>
+            <div class="meta">${u.email}${u.role ? ' • ' + u.role : ''}</div>
+          </div>
+        `).join('') || '<div class="muted">No users found</div>';
+        const taskHtml = (data.tasks || []).map(t => `
+          <div class="search-item" data-type="task" data-id="${t.id}">
+            <div class="title">${t.title}</div>
+            <div class="meta">${t.workspace} • ${t.due_date || 'No due'} • ${t.status}</div>
+          </div>
+        `).join('') || '<div class="muted">No tasks found</div>';
+        dropdown.innerHTML = `
+          <div class="search-section">
+            <h5>Users</h5>
+            ${userHtml}
+          </div>
+          <div class="search-section">
+            <h5>Tasks</h5>
+            ${taskHtml}
+          </div>
+        `;
+        dropdown.hidden = false;
+      };
+      const hideDropdown = () => { if (dropdown) dropdown.hidden = true; };
+      if (searchInput && dropdown) {
+        searchInput.addEventListener('input', () => {
+          const q = searchInput.value.trim();
+          if (q.length < 2) { hideDropdown(); return; }
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => {
+            fetch(`{{ route('search.global') }}?q=${encodeURIComponent(q)}`)
+              .then(r => r.ok ? r.json() : Promise.reject())
+              .then(renderResults)
+              .catch(() => hideDropdown());
+          }, 180);
+        });
+        document.addEventListener('click', (e) => {
+          if (!dropdown.contains(e.target) && e.target !== searchInput) hideDropdown();
+        });
+        dropdown.addEventListener('click', (e) => {
+          const item = e.target.closest('.search-item');
+          if (!item) return;
+          const type = item.dataset.type;
+          const id = item.dataset.id;
+          if (type === 'task') {
+            window.location = '{{ route('tasks.index') }}#task-' + id;
+          } else {
+            window.location = '{{ route('users.index') }}';
+          }
+        });
+      }
+
+      // Mobile search overlay
+      const mobileBtn = document.getElementById('mobile-search-btn');
+      const mobileOverlay = document.getElementById('mobile-search-overlay');
+      const mobileInput = document.getElementById('mobile-search-input');
+      const mobileClose = document.getElementById('mobile-search-close');
+      const mobileResults = document.getElementById('mobile-search-results');
+      const renderMobileResults = (data) => {
+        if (!mobileResults) return;
+        const userHtml = (data.users || []).map(u => `<div class="search-item"><div class="title">${u.name}</div><div class="meta">${u.email}</div></div>`).join('') || '<div class="muted">No users</div>';
+        const taskHtml = (data.tasks || []).map(t => `<div class="search-item"><div class="title">${t.title}</div><div class="meta">${t.workspace} • ${t.due_date || 'No due'} • ${t.status}</div></div>`).join('') || '<div class="muted">No tasks</div>';
+        mobileResults.innerHTML = `<div class="search-section"><h5>Users</h5>${userHtml}</div><div class="search-section"><h5>Tasks</h5>${taskHtml}</div>`;
+      };
+      const closeMobile = () => {
+        if (mobileOverlay) mobileOverlay.classList.remove('open');
+      };
+      const openMobile = () => {
+        if (mobileOverlay) {
+          mobileOverlay.classList.add('open');
+          if (mobileInput) mobileInput.focus();
+        }
+      };
+      if (mobileBtn) mobileBtn.addEventListener('click', openMobile);
+      if (mobileClose) mobileClose.addEventListener('click', closeMobile);
+      if (mobileOverlay) mobileOverlay.addEventListener('click', (e) => {
+        if (e.target === mobileOverlay) closeMobile();
+      });
+      if (mobileInput) {
+        mobileInput.addEventListener('input', () => {
+          const q = mobileInput.value.trim();
+          if (q.length < 2) { if (mobileResults) mobileResults.innerHTML = ''; return; }
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => {
+            fetch(`{{ route('search.global') }}?q=${encodeURIComponent(q)}`)
+              .then(r => r.ok ? r.json() : Promise.reject())
+              .then(renderMobileResults)
+              .catch(() => { if (mobileResults) mobileResults.innerHTML = '<div class="muted">No results</div>'; });
+          }, 180);
+        });
+      }
     });
   </script>
   @stack('scripts')

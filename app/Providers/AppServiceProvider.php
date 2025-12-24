@@ -46,6 +46,10 @@ class AppServiceProvider extends ServiceProvider
             $workspaceUsers = User::orderBy('name')->get(['id','name','email']);
 
             $panelTasks = Task::with('assignees')
+                ->where(function ($q) use ($user) {
+                    $q->where('creator_id', $user->id)
+                      ->orWhereHas('assignees', fn($a) => $a->where('users.id', $user->id));
+                })
                 ->when($currentWorkspace, fn($q) => $q->where('workspace_id', $currentWorkspace->id))
                 ->orderByRaw('ISNULL(due_date), due_date asc')
                 ->limit(8)
