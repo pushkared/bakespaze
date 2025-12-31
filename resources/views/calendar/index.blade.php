@@ -193,12 +193,7 @@
         </div>
       </div>
     </div>
-    @else
-      <div class="empty-state">
-        <div class="eyebrow">Not connected</div>
-        <p class="muted">Connect Google Calendar to sync events.</p>
-        <a class="pill-btn solid" href="{{ route('calendar.connect') }}">Connect Google Calendar</a>
-      </div>
+    
     @endif
   </div>
 </section>
