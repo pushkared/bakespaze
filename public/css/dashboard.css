@@ -783,13 +783,16 @@ a{text-decoration:none;color:inherit;}
     grid-template-columns:1fr 1.05fr 1fr;
     gap:14px;
   }
-  .seat-card{width:128px;height:128px;}
-  .seat-boss{width:140px;height:140px;}
+  .seat-card{width:100px;height:100px;}
+  .seat-boss{width:100px;height:100px;}
   .board-table{width:100%; min-height:440px;}
   .table-message{display:block;}
   .vo-stage{padding:28px 14px 90px;}
   .create-task{font-size:14px;}
   .brand-lockup{font-size:18px;}
+  .seat-card .avatar{width: 24px;height: 24px;}
+  .seat-card .name {font-size: 10px;}
+  .seat-card .role {font-size: 9px;}
 }
 
 /* ---------- Dashboard screen ---------- */
