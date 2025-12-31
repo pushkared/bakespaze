@@ -251,7 +251,7 @@ a{text-decoration:none;color:inherit;}
 }
 .mobile-search-btn{
   display:none;
-  width:44px;
+  width:185px;
   height:44px;
   border-radius:12px;
   border:1px solid rgba(255,255,255,0.18);
@@ -316,7 +316,7 @@ a{text-decoration:none;color:inherit;}
   padding:10px 12px;
   border-radius:14px;
   cursor:pointer;
-  min-width:160px;
+  min-width:70px;
 }
 .workspace-name{font-weight:700;}
 .workspace-caret{font-size:12px; opacity:0.8;}
@@ -1264,7 +1264,7 @@ a{text-decoration:none;color:inherit;}
   .task-row > div{font-size:14px;}
   .modal-card{max-width:520px;}
   .top-right .create-task{display:none;}
-  .top-date{font-size:14px;}
+  .top-date{display:none;}
   .hamburger{display:inline-flex; z-index:160;}
   .dash-task-card{padding:16px; border-radius:14px;}
   .dash-task-title{font-size:17px;}
