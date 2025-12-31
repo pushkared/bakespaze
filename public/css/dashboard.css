@@ -793,6 +793,7 @@ a{text-decoration:none;color:inherit;}
   .seat-card .avatar{width: 24px;height: 24px;}
   .seat-card .name {font-size: 10px;}
   .seat-card .role {font-size: 9px;}
+  .table-message {font-size: 20px;}
 }
 
 /* ---------- Dashboard screen ---------- */
