@@ -8,6 +8,7 @@ use App\Models\Membership;
 use App\Models\User;
 use App\Models\TaskComment;
 use App\Models\TaskAttachment;
+use App\Notifications\TaskAssignedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -104,6 +105,14 @@ class TaskController extends Controller
 
         if (!empty($data['assignee_id'])) {
             $task->assignees()->sync([$data['assignee_id']]);
+            $assignee = User::find($data['assignee_id']);
+            if ($assignee) {
+                try {
+                    $assignee->notify(new TaskAssignedNotification($task));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
         }
 
         if ($request->hasFile('attachments')) {
@@ -137,6 +146,7 @@ class TaskController extends Controller
 
         $reopen = $task->status === 'completed';
         $newStatus = $reopen ? 'open' : ($data['status'] ?? $task->status);
+        $previousAssigneeId = $task->assignees()->first()?->id;
 
         $task->update([
             'title' => $data['title'],
@@ -147,6 +157,16 @@ class TaskController extends Controller
 
         if (array_key_exists('assignee_id', $data)) {
             $task->assignees()->sync($data['assignee_id'] ? [$data['assignee_id']] : []);
+            if (!empty($data['assignee_id']) && $data['assignee_id'] !== $previousAssigneeId) {
+                $assignee = User::find($data['assignee_id']);
+                if ($assignee) {
+                    try {
+                        $assignee->notify(new TaskAssignedNotification($task));
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
+            }
         }
 
         return back()->with('status', 'Task updated.');

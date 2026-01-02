@@ -12,6 +12,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\NotificationSubscriptionController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -27,6 +29,7 @@ Route::get('/login', function () {
 Route::get('/virtual-office', [VirtualOfficeController::class, 'index'])->middleware(['auth', 'auto.logout'])->name('virtual-office');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'auto.logout'])->name('dashboard');
+Route::get('/chat', [ChatController::class, 'index'])->middleware(['auth', 'auto.logout'])->name('chat.index');
 
 Route::post('/logout', function () {
     auth()->logout();
@@ -73,4 +76,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/lunch-end', [AttendanceController::class, 'lunchEnd'])->name('attendance.lunchend');
 
     Route::get('/search', [SearchController::class, 'search'])->name('search.global');
+
+    Route::get('/chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations');
+    Route::post('/chat/conversations', [ChatController::class, 'storeConversation'])->name('chat.conversations.store');
+    Route::get('/chat/conversations/{conversation}', [ChatController::class, 'messages'])->name('chat.messages');
+    Route::post('/chat/conversations/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chat.messages.store');
+    Route::post('/chat/conversations/{conversation}/read', [ChatController::class, 'markRead'])->name('chat.read');
+    Route::post('/chat/messages/{message}/reactions', [ChatController::class, 'react'])->name('chat.reactions.store');
+    Route::delete('/chat/messages/{message}/reactions', [ChatController::class, 'unreact'])->name('chat.reactions.destroy');
+    Route::get('/chat/attachments/{attachment}', [ChatController::class, 'downloadAttachment'])->name('chat.attachments.download');
+
+    Route::post('/notifications/subscribe', [NotificationSubscriptionController::class, 'store'])->name('notifications.subscribe');
+    Route::delete('/notifications/subscribe', [NotificationSubscriptionController::class, 'destroy'])->name('notifications.unsubscribe');
 });

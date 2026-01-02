@@ -1,10 +1,11 @@
-﻿const CACHE_NAME = 'bakespaze-pwa-v3';
+const CACHE_NAME = 'bakespaze-pwa-v4';
 const PRECACHE_URLS = [
   '/',
   '/manifest.webmanifest',
   '/css/dashboard.css',
   '/js/dashboard.js',
-  '/js/app.js',
+  '/js/chat.js',
+  '/js/push.js',
   '/images/logo.svg',
   '/images/logo.png',
   '/images/icon-180.png',
@@ -39,6 +40,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const accept = event.request.headers.get('accept') || '';
+  if (event.request.mode === 'navigate' || accept.includes('text/html')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -48,4 +55,21 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => caches.match(event.request))
   );
+});
+
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'Notification';
+  const options = {
+    body: data.body || '',
+    icon: data.icon || '/images/icon-192.png',
+    data: data.data || {},
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(clients.openWindow(url));
 });

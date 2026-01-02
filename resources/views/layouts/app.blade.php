@@ -4,15 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>@yield('title', 'Virtual Office')</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
   <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
   <meta name="theme-color" content="#0b0b0b">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" href="{{ asset('images/icon-180.png') }}">
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
   @stack('head')
 </head>
-<body class="vo-body">
+<body class="vo-body {{ request()->routeIs('dashboard') ? 'vo-body--dashboard' : '' }}">
   <div class="app-shell vo-shell">
 
     <aside class="sidebar vo-sidebar" aria-label="Main navigation">
@@ -30,7 +33,7 @@
           <a class="menu-link {{ request()->routeIs('virtual-office') ? 'active' : '' }}" href="{{ route('virtual-office') }}"><span class="menu-icon virtual" aria-hidden="true"></span><span class="menu-text">Virtual Office</span></a>
           <a class="menu-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" href="{{ route('tasks.index') }}"><span class="menu-icon analytics" aria-hidden="true"></span><span class="menu-text">Tasks</span></a>
           <a class="menu-link {{ request()->routeIs('workspaces.index') ? 'active' : '' }}" href="{{ route('workspaces.index') }}"><span class="menu-icon settings" aria-hidden="true"></span><span class="menu-text">Workspaces</span></a>
-          <a class="menu-link" href="#"><span class="menu-icon chat" aria-hidden="true"></span><span class="menu-text">Chat</span></a>
+          <a class="menu-link {{ request()->routeIs('chat.*') ? 'active' : '' }}" href="{{ route('chat.index') }}"><span class="menu-icon chat" aria-hidden="true"></span><span class="menu-text">Chat</span></a>
           <a class="menu-link" href="/calendar"><span class="menu-icon calendar" aria-hidden="true"></span><span class="menu-text">Calendar</span></a>
           <a class="menu-link" href="/attendance"><span class="menu-icon attendance" aria-hidden="true"></span><span class="menu-text">Attendance</span></a>
           <a class="menu-link" href="#"><span class="menu-icon analytics" aria-hidden="true"></span><span class="menu-text">Analytics</span></a>
@@ -163,6 +166,7 @@
     </div>
   </div>
 
+  <script src="{{ asset('js/push.js') }}"></script>
   <script src="{{ asset('js/dashboard.js') }}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {

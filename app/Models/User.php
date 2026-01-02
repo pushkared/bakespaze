@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasPushSubscriptions;
 
     /**
      * The attributes that are mass assignable.
@@ -70,5 +71,17 @@ class User extends Authenticatable
     {
         return $this->hasManyThrough(Team::class, Membership::class, 'user_id', 'id', 'id', 'team_id')
             ->whereNotNull('team_id');
+    }
+
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot(['role', 'joined_at', 'last_read_message_id'])
+            ->withTimestamps();
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
     }
 }
