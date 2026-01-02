@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
   @stack('head')
 </head>
-<body class="vo-body {{ request()->routeIs('dashboard') ? 'vo-body--dashboard' : '' }}">
+<body class="vo-body">
   <div class="app-shell vo-shell">
 
     <aside class="sidebar vo-sidebar" aria-label="Main navigation">
