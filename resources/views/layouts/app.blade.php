@@ -82,11 +82,6 @@
               <a class="workspace-manage" href="{{ route('workspaces.index') }}">Manage workspaces</a>
             </div>
           </div>
-          <div class="top-search">
-            <span class="icon-search" aria-hidden="true"></span>
-            <input type="search" id="global-search" placeholder="Search users or tasks" aria-label="Search" autocomplete="off" />
-            <div class="search-dropdown" id="global-search-dropdown" hidden></div>
-          </div>
           <button class="mobile-search-btn" type="button" aria-label="Open search" id="mobile-search-btn">
             <span class="icon-search" aria-hidden="true"></span>
           </button>
@@ -94,6 +89,9 @@
         <div class="top-right">
           <button class="create-task">+ Create Task</button>
           <div class="top-date">{{ \Carbon\Carbon::now()->format('D d M') }}</div>
+          <div class="top-logo">
+            <img src="{{ asset('images/BakeSapze - Mobile - Logo.png') }}" alt="Logo">
+          </div>
           
         </div>
       </header>
