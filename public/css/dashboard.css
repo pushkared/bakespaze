@@ -30,6 +30,11 @@ img{display:block;max-width:100%}
 a{text-decoration:none;color:inherit}
 .hidden{display:none}
 
+/* Prevent iOS input auto-zoom by ensuring >=16px font size */
+input, select, textarea, button{
+  font-size:16px;
+}
+
 /* =========================
    Shell
 ========================= */
