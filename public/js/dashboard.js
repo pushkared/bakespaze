@@ -72,6 +72,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Floating task interaction handled in layout script.
 
+  // Dashboard quick complete
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  document.querySelectorAll('.dash-task-item .dash-task-box').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const item = btn.closest('.dash-task-item');
+      if (!item || item.classList.contains('is-done')) return;
+      const updateUrl = item.dataset.updateUrl;
+      if (!updateUrl) return;
+
+      item.classList.add('is-completing');
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append('_token', csrfToken);
+      formData.append('title', item.dataset.taskTitle || 'Task');
+      formData.append('description', item.dataset.taskDesc || '');
+      if (item.dataset.taskDue) formData.append('due_date', item.dataset.taskDue);
+      formData.append('status', 'completed');
+      if (item.dataset.taskAssignee) formData.append('assignee_id', item.dataset.taskAssignee);
+
+      try {
+        const response = await fetch(updateUrl, {
+          method: 'POST',
+          body: formData,
+          credentials: 'same-origin',
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update task');
+        }
+        item.classList.add('is-done');
+        setTimeout(() => {
+          item.classList.add('is-fade');
+          setTimeout(() => item.remove(), 500);
+        }, 300);
+      } catch (err) {
+        item.classList.remove('is-completing');
+        btn.disabled = false;
+      }
+    });
+  });
+
   // User menu toggle
   const userMenu = document.querySelector('.user-menu');
   const userTrigger = document.querySelector('.user-menu__trigger');

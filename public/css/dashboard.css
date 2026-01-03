@@ -900,6 +900,34 @@ input, select, textarea, button{
   border:3px solid var(--lime);
   border-radius:6px;
   box-shadow:0 0 0 2px rgba(0,0,0,0.35);
+  background:transparent;
+  position:relative;
+  cursor:pointer;
+}
+.dash-task-item.is-done .dash-task-box{
+  background:var(--lime);
+  border-color:var(--lime);
+}
+.dash-task-item.is-done .dash-task-box::after{
+  content:"";
+  position:absolute;
+  left:9px;
+  top:5px;
+  width:8px;
+  height:14px;
+  border-right:3px solid #063600;
+  border-bottom:3px solid #063600;
+  transform:rotate(45deg);
+}
+.dash-task-item.is-completing .dash-task-box{
+  animation:dash-check .4s ease forwards;
+}
+.dash-task-item.is-completing .dash-task-pill{
+  border-color:var(--lime);
+  box-shadow:0 0 0 2px rgba(56,255,43,0.25);
+}
+.dash-task-item.is-fade{
+  animation:dash-fade .5s ease forwards;
 }
 
 .dash-task-pill{
@@ -914,6 +942,16 @@ input, select, textarea, button{
   letter-spacing:0.2px;
   background:rgba(0,0,0,0.25);
   box-shadow:0 14px 30px rgba(0,0,0,0.35);
+}
+
+@keyframes dash-check{
+  0%{transform:scale(1)}
+  60%{transform:scale(1.15)}
+  100%{transform:scale(1)}
+}
+@keyframes dash-fade{
+  0%{opacity:1;transform:translateY(0)}
+  100%{opacity:0;transform:translateY(-12px)}
 }
 
 .with-avatar{display:flex;align-items:center;gap:6px}
