@@ -856,10 +856,10 @@ input, select, textarea, button{
   flex-wrap:wrap;
 }
 .dash-header .create-task{
-  padding:10px 18px;
+  padding:8px 14px;
   border-radius:999px;
-  font-size:14px;
-  min-width:140px;
+  font-size:13px;
+  min-width:110px;
   align-self:flex-end;
 }
 .dash-greeting{
@@ -969,10 +969,11 @@ input, select, textarea, button{
   justify-content:flex-end;
 }
 .task-actions .pill-btn{
-  padding:10px 18px;
+  padding:8px 14px;
   border-radius:999px;
-  font-size:14px;
-  min-width:140px;
+  font-size:11px;
+  min-width:110px;
+  text-align: center;
 }
 
 .pill-btn{
@@ -1007,9 +1008,9 @@ input, select, textarea, button{
 }
 .punch-actions-row{display:flex;gap:10px;align-items:center}
 .punch-actions .pill-btn{
-  padding:10px 18px;
-  font-size:14px;
-  min-width:140px;
+  padding:8px 14px;
+  font-size:11px;
+  min-width:110px;
   text-align:center;
 }
 
@@ -2354,7 +2355,6 @@ input, select, textarea, button{
   .dash-task-box{width:30px;height:30px}
   .dash-task-pill{min-height:50px}
   .task-actions{justify-content:flex-start}
-  .punch-actions{justify-content:center}
   .pill-btn{padding:12px 20px}
   .vo-body--dashboard .workspace-switch{display:none}
   .vo-body--dashboard .mobile-search-btn{display:none}
