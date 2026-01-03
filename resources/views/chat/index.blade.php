@@ -10,27 +10,36 @@
     <aside class="chat-sidebar">
       <div class="chat-sidebar-head">
         <div class="chat-title">Chats</div>
-        <button class="chat-new-btn" type="button" id="chat-new-btn">New</button>
+        <button class="chat-new-btn" type="button">New</button>
       </div>
       <div class="chat-search">
         <input type="search" id="chat-search" placeholder="Search chats or people" autocomplete="off">
       </div>
       <div class="chat-list" id="chat-list"></div>
     </aside>
+    <button class="chat-fab chat-new-btn" type="button" aria-label="New chat">+</button>
 
     <div class="chat-main">
       <div class="chat-empty" id="chat-empty">
         <div class="chat-empty-title">Select a conversation</div>
         <div class="chat-empty-sub">Start a new chat to begin messaging.</div>
+        <button class="chat-new-btn chat-new-btn--empty" type="button">New Chat</button>
       </div>
       <div class="chat-thread hidden" id="chat-thread">
         <div class="chat-thread-head">
-          <div>
-            <div class="chat-thread-title" id="chat-thread-title"></div>
-            <div class="chat-thread-meta" id="chat-thread-meta"></div>
+          <div class="chat-thread-user">
+            <div class="chat-thread-avatar" id="chat-thread-avatar">U</div>
+            <div class="chat-thread-name">
+              <div class="chat-thread-title" id="chat-thread-title"></div>
+              <div class="chat-thread-meta" id="chat-thread-meta"></div>
+            </div>
           </div>
           <div class="chat-thread-actions">
-            <button class="chat-action-btn" type="button" id="chat-add-people">Add people</button>
+            <button class="chat-icon-btn chat-back" type="button" id="chat-back" aria-label="Back"></button>
+            <button class="chat-icon-btn chat-call" type="button" aria-label="Call"></button>
+            <button class="chat-icon-btn chat-video" type="button" aria-label="Video call"></button>
+            <button class="chat-icon-btn chat-add" type="button" id="chat-add-people" aria-label="Add people"></button>
+            <button class="chat-icon-btn chat-plus chat-new-btn" type="button" aria-label="New chat"></button>
           </div>
         </div>
         <div class="chat-messages" id="chat-messages"></div>
@@ -40,13 +49,14 @@
           <button type="button" class="chat-reply-cancel" id="chat-reply-cancel">Cancel</button>
         </div>
         <form class="chat-composer" id="chat-form">
-          <label class="chat-attach-btn">
-            <input type="file" id="chat-attachments" multiple>
-            <span>Attach</span>
-          </label>
-          <button type="button" class="chat-emoji-btn" id="chat-emoji-btn">Emoji</button>
-          <textarea id="chat-input" placeholder="Type a message" rows="1"></textarea>
-          <button type="submit" class="chat-send-btn">Send</button>
+          <div class="chat-composer-bar">
+            <textarea id="chat-input" placeholder="Type your message..." rows="1"></textarea>
+            <label class="chat-icon-btn chat-attach">
+              <input type="file" id="chat-attachments" multiple>
+            </label>
+            <button type="button" class="chat-icon-btn chat-emoji" id="chat-emoji-btn" aria-label="Emoji"></button>
+            <button type="submit" class="chat-icon-btn chat-send" aria-label="Send"></button>
+          </div>
         </form>
         <div class="chat-emoji-picker hidden" id="chat-emoji-picker"></div>
       </div>

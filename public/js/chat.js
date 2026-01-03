@@ -19,10 +19,11 @@
   const emojiPicker = document.getElementById('chat-emoji-picker');
   const modal = document.getElementById('chat-modal');
   const modalClose = document.getElementById('chat-modal-close');
-  const modalOpen = document.getElementById('chat-new-btn');
+  const modalOpenButtons = document.querySelectorAll('.chat-new-btn');
   const modalCreate = document.getElementById('chat-create-btn');
   const groupNameInput = document.getElementById('chat-group-name');
   const addPeopleBtn = document.getElementById('chat-add-people');
+  const backBtn = document.getElementById('chat-back');
 
   const state = {
     conversations: [],
@@ -145,14 +146,16 @@
       : '';
 
     wrapper.innerHTML = `
-      <div class="chat-msg-meta">${message.sender || 'You'} • ${formatTime(message.created_at)}</div>
-      ${message.reply_to ? `<div class="chat-reply">${message.reply_to.sender || ''}: ${message.reply_to.body || 'Attachment'}</div>` : ''}
-      ${message.body ? `<div class="chat-bubble">${message.body}</div>` : ''}
-      ${attachmentsHtml}
-      ${reactionHtml}
-      <div class="chat-msg-actions">
-        <button class="chat-msg-action" data-action="reply">Reply</button>
-        <button class="chat-msg-action" data-action="react">React</button>
+      <div class="chat-msg-time">${formatTime(message.created_at)}</div>
+      <div class="chat-msg-body">
+        ${message.reply_to ? `<div class="chat-reply">${message.reply_to.sender || ''}: ${message.reply_to.body || 'Attachment'}</div>` : ''}
+        ${message.body ? `<div class="chat-bubble">${message.body}</div>` : ''}
+        ${attachmentsHtml}
+        ${reactionHtml}
+        <div class="chat-msg-actions">
+          <button class="chat-msg-action reply" data-action="reply" aria-label="Reply"></button>
+          <button class="chat-msg-action react" data-action="react" aria-label="React"></button>
+        </div>
       </div>
     `;
 
@@ -231,9 +234,15 @@
     if (conv) {
       titleEl.textContent = conv.title;
       metaEl.textContent = conv.participants.map(p => p.name).join(', ');
+      const initial = (conv.title || 'U').trim().charAt(0).toUpperCase();
+      const avatar = document.getElementById('chat-thread-avatar');
+      if (avatar) avatar.textContent = initial;
     }
     emptyEl.style.display = 'none';
     threadEl.classList.remove('hidden');
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      document.body.classList.add('chat-mobile-thread-open');
+    }
     const messages = await fetchJson(`/chat/conversations/${id}`);
     renderMessages(messages);
     subscribeConversation(id);
@@ -329,10 +338,17 @@
   });
 
   replyCancelEl.addEventListener('click', clearReply);
-  modalOpen.addEventListener('click', () => modal.classList.remove('hidden'));
+  modalOpenButtons.forEach((btn) => {
+    btn.addEventListener('click', () => modal.classList.remove('hidden'));
+  });
   modalClose.addEventListener('click', () => modal.classList.add('hidden'));
   modalCreate.addEventListener('click', createConversation);
   addPeopleBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      document.body.classList.remove('chat-mobile-thread-open');
+    });
+  }
 
   renderEmojiPicker();
   loadConversations();
