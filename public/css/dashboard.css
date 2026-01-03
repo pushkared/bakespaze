@@ -1342,7 +1342,10 @@ input, select, textarea, button{
 }
 
 .chat-composer{
-  padding:10px 6px 0;
+  padding:10px 6px 12px;
+  position:sticky;
+  bottom:0;
+  background:linear-gradient(180deg, rgba(7,7,7,0) 0%, rgba(7,7,7,0.85) 35%, rgba(7,7,7,0.95) 100%);
 }
 .chat-composer-bar{
   display:flex;
