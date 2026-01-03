@@ -233,10 +233,12 @@
           originX = rect.left;
           originY = rect.top;
           btn.setPointerCapture(e.pointerId);
+          btn.style.touchAction = 'none';
         });
 
         btn.addEventListener('pointermove', (e) => {
           if (!btn.hasPointerCapture(e.pointerId)) return;
+          e.preventDefault();
           const dx = e.clientX - startX;
           const dy = e.clientY - startY;
           if (Math.abs(dx) + Math.abs(dy) > 6) {
@@ -251,6 +253,7 @@
           if (btn.hasPointerCapture(e.pointerId)) {
             btn.releasePointerCapture(e.pointerId);
           }
+          btn.style.touchAction = '';
           if (isDragging) {
             const rect = btn.getBoundingClientRect();
             localStorage.setItem(storageKey, JSON.stringify({ x: rect.left, y: rect.top }));
