@@ -33,7 +33,7 @@ class DashboardController extends Controller
             })
             ->where('status', '!=', 'completed')
             ->orderByRaw('ISNULL(due_date), due_date asc')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
         $now = Carbon::now('Asia/Kolkata');
