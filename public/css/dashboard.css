@@ -717,6 +717,7 @@ input, select, textarea, button{
   justify-content:center;
   box-shadow:0 16px 36px rgba(0,0,0,0.55);
   cursor:pointer;
+  z-index: 9999999999;
 }
 .floating-task img{
   width:40px;
