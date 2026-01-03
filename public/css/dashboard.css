@@ -852,13 +852,14 @@ input, select, textarea, button{
   display:flex;
   align-items:flex-start;
   justify-content:flex-end;
-  gap:80px;
+  gap:64px;
   flex-wrap:wrap;
 }
 .dash-header .create-task{
-  padding:11px 16px;
+  padding:10px 18px;
   border-radius:999px;
   font-size:14px;
+  min-width:140px;
   align-self:flex-end;
 }
 .dash-greeting{
@@ -930,9 +931,10 @@ input, select, textarea, button{
   justify-content:flex-end;
 }
 .task-actions .pill-btn{
-  padding:8px 16px;
+  padding:10px 18px;
   border-radius:999px;
   font-size:14px;
+  min-width:140px;
 }
 
 .pill-btn{
@@ -961,11 +963,17 @@ input, select, textarea, button{
 
 .punch-actions{
   display:flex;
-  justify-content:center;
+  justify-content:flex-end;
   gap:16px;
-  margin-top:18px;
+  margin-top:28px;
 }
 .punch-actions-row{display:flex;gap:10px;align-items:center}
+.punch-actions .pill-btn{
+  padding:10px 18px;
+  font-size:14px;
+  min-width:140px;
+  text-align:center;
+}
 
 /* =========================
    Chat
@@ -2446,4 +2454,3 @@ input, select, textarea, button{
   .att-grid{grid-template-columns:1fr}
   .att-activity-pill{min-width:100px}
 }
-
