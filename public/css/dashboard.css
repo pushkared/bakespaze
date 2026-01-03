@@ -2398,7 +2398,7 @@ input, select, textarea, button{
   .dash-task-box{width:28px;height:28px;border-width:2px}
   .dash-task-pill{min-height:48px;padding:8px 16px}
   .task-actions{justify-content:flex-end}
-  .punch-actions{margin-top:18px}
+  .punch-actions{margin-top:36px}
   .dash-task-pill{font-size:14px}
 
   /* Chat */
