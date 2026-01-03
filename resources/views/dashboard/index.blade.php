@@ -34,36 +34,39 @@
     </div>
 
     <div class="punch-actions">
-      @if(empty($punchState['punched_in']))
-        @if(!empty($punchState['can_punch_in']))
-          <form method="POST" action="{{ route('attendance.punchin') }}">
-            @csrf
-            <button class="pill-btn">Punch In</button>
-          </form>
-        @else
-          <div class="muted">Punch in available 9:00 AM – 11:00 AM IST.</div>
-        @endif
-      @else
-        <div class="muted">Punched in at {{ $punchState['punched_at'] }}</div>
-        <div class="punch-actions-row">
-          <form method="POST" action="{{ route('attendance.punchout') }}">
-            @csrf
-            <button class="pill-btn">Punch Out</button>
-          </form>
-          @if(empty($punchState['lunch_started']))
-            <form method="POST" action="{{ route('attendance.lunchstart') }}">
-              @csrf
-              <button class="pill-btn ghost">Lunch Start</button>
-            </form>
-          @elseif(empty($punchState['lunch_ended']))
-            <form method="POST" action="{{ route('attendance.lunchend') }}">
-              @csrf
-              <button class="pill-btn ghost">Lunch End</button>
-            </form>
-          @endif
-        </div>
+  @php
+    $canPunchIn = !empty($punchState['can_punch_in']);
+    $punchedIn = !empty($punchState['punched_in']);
+    $disablePunchIn = !$canPunchIn || $punchedIn;
+    $disablePunchOut = !$punchedIn || !$canPunchIn;
+  @endphp
+  <div class="punch-actions-row">
+    <form method="POST" action="{{ route('attendance.punchin') }}">
+      @csrf
+      <button class="pill-btn {{ $disablePunchIn ? 'is-disabled' : '' }}" {{ $disablePunchIn ? 'disabled' : '' }}>Punch In</button>
+    </form>
+    <form method="POST" action="{{ route('attendance.punchout') }}">
+      @csrf
+      <button class="pill-btn {{ $disablePunchOut ? 'is-disabled' : '' }}" {{ $disablePunchOut ? 'disabled' : '' }}>Punch Out</button>
+    </form>
+  </div>
+  @if($punchedIn && $canPunchIn)
+    <div class="punch-actions-row">
+      @if(empty($punchState['lunch_started']))
+        <form method="POST" action="{{ route('attendance.lunchstart') }}">
+          @csrf
+          <button class="pill-btn ghost">Lunch Start</button>
+        </form>
+      @elseif(empty($punchState['lunch_ended']))
+        <form method="POST" action="{{ route('attendance.lunchend') }}">
+          @csrf
+          <button class="pill-btn ghost">Lunch End</button>
+        </form>
       @endif
     </div>
+  @endif
+</div>
   </div>
 </section>
 @endsection
+

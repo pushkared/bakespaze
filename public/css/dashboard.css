@@ -945,6 +945,13 @@ input, select, textarea, button{
   cursor:pointer;
   box-shadow:0 12px 28px rgba(0,0,0,0.22);
 }
+.pill-btn:disabled,
+.pill-btn.is-disabled{
+  opacity:0.45;
+  cursor:not-allowed;
+  box-shadow:none;
+  filter:grayscale(0.2);
+}
 .pill-btn.small{padding:8px 12px;border-radius:14px;font-size:13px}
 .pill-btn.ghost{
   background:rgba(255,255,255,0.08);
