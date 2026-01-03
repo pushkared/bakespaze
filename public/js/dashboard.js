@@ -70,15 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Floating task icon interaction
-  const floating = document.querySelector('.floating-task');
-  if (floating) {
-    floating.addEventListener('click', () => {
-      floating.classList.add('pulse');
-      setTimeout(() => floating.classList.remove('pulse'), 600);
-      // TODO: open task modal/panel here
-    });
-  }
+  // Floating task interaction handled in layout script.
 
   // User menu toggle
   const userMenu = document.querySelector('.user-menu');

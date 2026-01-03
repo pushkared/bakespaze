@@ -128,7 +128,6 @@
       </div>
       <div class="float-actions">
         <button class="pill-btn small ghost" type="button" id="floating-create-task">+ Create Task</button>
-        <button class="close-floating" type="button" aria-label="Close panel">A-</button>
       </div>
     </div>
     <div class="floating-list">
@@ -138,9 +137,6 @@
             <div class="float-title">{{ $task->title }}</div>
             <div class="float-meta">
               <span>{{ $task->due_date ? $task->due_date->format('d M') : 'No due' }}</span>
-              @if($task->assignees->first())
-                <span class="avatar-chip small">{{ strtoupper(substr($task->assignees->first()->name,0,1)) }}</span>
-              @endif
             </div>
           </div>
           <div class="float-actions">
@@ -188,9 +184,95 @@
       const btn = document.querySelector('.floating-task');
       const panel = document.getElementById('floating-panel');
       const closeBtn = panel ? panel.querySelector('.close-floating') : null;
-      const toggle = () => panel && panel.classList.toggle('open');
-      if (btn && panel) btn.addEventListener('click', toggle);
-      if (closeBtn) closeBtn.addEventListener('click', toggle);
+      const storageKey = 'floating_task_pos';
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let originX = 0;
+      let originY = 0;
+
+      const applyPosition = (x, y) => {
+        if (!btn) return;
+        const maxX = window.innerWidth - btn.offsetWidth;
+        const maxY = window.innerHeight - btn.offsetHeight;
+        const clampedX = Math.max(0, Math.min(x, maxX));
+        const clampedY = Math.max(0, Math.min(y, maxY));
+        btn.style.left = `${clampedX}px`;
+        btn.style.top = `${clampedY}px`;
+        btn.style.right = 'auto';
+        btn.style.bottom = 'auto';
+      };
+
+      const restorePosition = () => {
+        if (!btn) return;
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) return;
+        try {
+          const pos = JSON.parse(saved);
+          if (typeof pos.x === 'number' && typeof pos.y === 'number') {
+            applyPosition(pos.x, pos.y);
+          }
+        } catch (e) {
+          localStorage.removeItem(storageKey);
+        }
+      };
+
+      const togglePanel = (open) => {
+        if (!panel) return;
+        panel.classList.toggle('open', open ?? !panel.classList.contains('open'));
+      };
+
+      if (btn && panel) {
+        restorePosition();
+
+        btn.addEventListener('pointerdown', (e) => {
+          isDragging = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          const rect = btn.getBoundingClientRect();
+          originX = rect.left;
+          originY = rect.top;
+          btn.setPointerCapture(e.pointerId);
+        });
+
+        btn.addEventListener('pointermove', (e) => {
+          if (!btn.hasPointerCapture(e.pointerId)) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (Math.abs(dx) + Math.abs(dy) > 6) {
+            isDragging = true;
+          }
+          if (isDragging) {
+            applyPosition(originX + dx, originY + dy);
+          }
+        });
+
+        btn.addEventListener('pointerup', (e) => {
+          if (btn.hasPointerCapture(e.pointerId)) {
+            btn.releasePointerCapture(e.pointerId);
+          }
+          if (isDragging) {
+            const rect = btn.getBoundingClientRect();
+            localStorage.setItem(storageKey, JSON.stringify({ x: rect.left, y: rect.top }));
+            return;
+          }
+          togglePanel();
+        });
+
+        window.addEventListener('resize', () => {
+          const rect = btn.getBoundingClientRect();
+          if (rect.left || rect.top) {
+            applyPosition(rect.left, rect.top);
+          }
+        });
+      }
+
+      if (closeBtn) closeBtn.addEventListener('click', () => togglePanel(false));
+      document.addEventListener('click', (e) => {
+        if (!panel || !panel.classList.contains('open')) return;
+        if (panel.contains(e.target) || btn.contains(e.target)) return;
+        togglePanel(false);
+      });
 
       const floatCreate = document.getElementById('floating-create-task');
       const floatShortcut = document.getElementById('floating-create-shortcut');
