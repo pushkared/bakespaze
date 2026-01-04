@@ -475,7 +475,7 @@ input, select, textarea, button{
   position:relative;
   padding:42px 32px 70px;
   min-height:calc(100vh - 78px);
-  background:#070707;
+  background:#070707 url("../images/mobile-bg.png") center/cover no-repeat;
   overflow:hidden;
 }
 
@@ -1742,7 +1742,7 @@ input, select, textarea, button{
   position:relative;
   padding:42px 26px 80px;
   min-height:calc(100vh - 78px);
-  background:#080808;
+  background:#080808 url("../images/mobile-bg.png") center/cover no-repeat;
   overflow:hidden;
 }
 
@@ -1764,7 +1764,7 @@ input, select, textarea, button{
   position:relative;
   padding:42px 26px 80px;
   min-height:calc(100vh - 78px);
-  background:#080808;
+  background:#080808 url("../images/mobile-bg.png") center/cover no-repeat;
   overflow:hidden;
 }
 .settings-shell{
@@ -1986,7 +1986,7 @@ input, select, textarea, button{
   position:relative;
   padding:42px 26px 80px;
   min-height:calc(100vh - 78px);
-  background:#080808;
+  background:#080808 url("../images/mobile-bg.png") center/cover no-repeat;
   overflow:hidden;
 }
 
@@ -2061,7 +2061,7 @@ input, select, textarea, button{
   position:relative;
   padding:42px 26px 80px;
   min-height:calc(100vh - 78px);
-  background:#070707;
+  background:#070707 url("../images/mobile-bg.png") center/cover no-repeat;
   overflow:hidden;
 }
 
@@ -2176,7 +2176,7 @@ input, select, textarea, button{
   position:relative;
   padding:42px 26px 80px;
   min-height:calc(100vh - 78px);
-  background:#080808;
+  background:#080808 url("../images/mobile-bg.png") center/cover no-repeat;
   overflow:hidden;
 }
 
