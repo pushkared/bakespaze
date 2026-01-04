@@ -225,6 +225,19 @@ class ChatController extends Controller
         return Storage::disk('public')->download($attachment->path, $attachment->original_name);
     }
 
+    public function previewAttachment(Request $request, MessageAttachment $attachment)
+    {
+        $conversation = $attachment->message->conversation;
+        $this->ensureParticipant($request->user(), $conversation);
+
+        $disk = Storage::disk('public');
+        abort_unless($disk->exists($attachment->path), 404);
+        $path = $disk->path($attachment->path);
+        $mime = $disk->mimeType($attachment->path) ?: 'application/octet-stream';
+
+        return response()->file($path, ['Content-Type' => $mime]);
+    }
+
     protected function ensureParticipant(User $user, Conversation $conversation): void
     {
         if (!$conversation->participants()->where('users.id', $user->id)->exists()) {
@@ -251,6 +264,7 @@ class ChatController extends Controller
                 'name' => $att->original_name,
                 'mime' => $att->mime_type,
                 'size' => $att->size,
+                'preview_url' => route('chat.attachments.preview', $att),
                 'url' => route('chat.attachments.download', $att),
             ])->values(),
             'reactions' => $message->reactions->map(fn($reaction) => [

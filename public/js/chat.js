@@ -147,13 +147,14 @@
       ? `<div class="chat-attachments">${attachments.map(att => {
           const name = att.name || 'Attachment';
           const url = att.url || '#';
+          const previewUrl = att.preview_url || url;
           const ext = (name.split('.').pop() || '').toLowerCase();
           const isImage = ['jpg','jpeg','png','gif','webp','bmp'].includes(ext);
           if (isImage) {
             return `
               <div class="chat-attachment image">
-                <a class="chat-attachment-thumb" href="${url}" target="_blank" rel="noopener">
-                  <img src="${url}" alt="${name}">
+                <a class="chat-attachment-thumb" href="${previewUrl}" target="_blank" rel="noopener">
+                  <img src="${previewUrl}" alt="${name}">
                 </a>
                 <div class="chat-attachment-meta">
                   <span>${name}</span>

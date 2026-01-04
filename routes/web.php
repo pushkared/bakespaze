@@ -92,6 +92,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/chat/conversations/{conversation}/read', [ChatController::class, 'markRead'])->name('chat.read');
     Route::post('/chat/messages/{message}/reactions', [ChatController::class, 'react'])->name('chat.reactions.store');
     Route::delete('/chat/messages/{message}/reactions', [ChatController::class, 'unreact'])->name('chat.reactions.destroy');
+    Route::get('/chat/attachments/{attachment}/preview', [ChatController::class, 'previewAttachment'])->name('chat.attachments.preview');
     Route::get('/chat/attachments/{attachment}', [ChatController::class, 'downloadAttachment'])->name('chat.attachments.download');
 
     Route::post('/notifications/subscribe', [NotificationSubscriptionController::class, 'store'])->name('notifications.subscribe');
