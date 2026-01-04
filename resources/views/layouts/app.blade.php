@@ -23,7 +23,7 @@
       <div class="sidebar-inner">
         <div class="sidebar-brand">
           <div class="logo-mark">
-            <img src="{{ asset('images/logo-infinity.svg') }}" alt="Logo">
+            <img src="{{ asset('images/BakeSapze - Mobile - Logo.png') }}" alt="Logo">
           </div>
         </div>
 
