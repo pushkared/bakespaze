@@ -26,6 +26,10 @@
           <option value="{{ $ws->id }}" @selected(($filters['workspace_id'] ?? '') == $ws->id)>{{ $ws->name }}</option>
         @endforeach
       </select>
+      <select name="status">
+        <option value="ongoing" @selected(($filters['status'] ?? 'ongoing') === 'ongoing')>Ongoing</option>
+        <option value="completed" @selected(($filters['status'] ?? '') === 'completed')>Completed</option>
+      </select>
       <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}">
       <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}">
       <button class="pill-btn ghost" type="submit">Filter</button>

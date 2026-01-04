@@ -49,6 +49,7 @@ class TaskController extends Controller
         $search = $request->input('q');
         $dueFrom = $request->input('due_from');
         $dueTo = $request->input('due_to');
+        $statusFilter = $request->input('status', 'ongoing');
 
         $tasks = Task::with(['assignees','creator','comments.user','attachments'])
             ->whereIn('workspace_id', $allowedWorkspaceIds)
@@ -60,6 +61,8 @@ class TaskController extends Controller
             ->when($search, fn($q) => $q->where('title', 'like', '%'.$search.'%'))
             ->when($dueFrom, fn($q) => $q->whereDate('due_date', '>=', $dueFrom))
             ->when($dueTo, fn($q) => $q->whereDate('due_date', '<=', $dueTo))
+            ->when($statusFilter === 'completed', fn($q) => $q->where('status', 'completed'))
+            ->when($statusFilter !== 'completed', fn($q) => $q->where('status', '!=', 'completed'))
             ->orderByRaw('ISNULL(due_date), due_date asc, id desc')
             ->get();
 
@@ -78,6 +81,7 @@ class TaskController extends Controller
                 'q' => $search,
                 'due_from' => $dueFrom,
                 'due_to' => $dueTo,
+                'status' => $statusFilter,
             ],
         ]);
     }
