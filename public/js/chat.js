@@ -17,6 +17,7 @@
   const replyCancelEl = document.getElementById('chat-reply-cancel');
   const emojiBtn = document.getElementById('chat-emoji-btn');
   const emojiPicker = document.getElementById('chat-emoji-picker');
+  const attachPreviewEl = document.getElementById('chat-attach-preview');
   const modal = document.getElementById('chat-modal');
   const modalClose = document.getElementById('chat-modal-close');
   const modalOpenButtons = document.querySelectorAll('.chat-new-btn');
@@ -33,6 +34,7 @@
     channelName: null,
     emojiMode: 'input',
     reactionMessageId: null,
+    previewUrls: [],
   };
 
   const emojis = ['😀','😁','😂','🤣','😊','😍','😎','🤝','👏','🔥','🎉','👍','🙏','✅','❤️','😅','😮','😢','😡'];
@@ -142,7 +144,31 @@
 
     const attachments = message.attachments || [];
     const attachmentsHtml = attachments.length
-      ? `<div class="chat-attachments">${attachments.map(att => `<div class="chat-attachment"><span>${att.name}</span><a href="${att.url}" target="_blank" rel="noopener">Download</a></div>`).join('')}</div>`
+      ? `<div class="chat-attachments">${attachments.map(att => {
+          const name = att.name || 'Attachment';
+          const url = att.url || '#';
+          const ext = (name.split('.').pop() || '').toLowerCase();
+          const isImage = ['jpg','jpeg','png','gif','webp','bmp'].includes(ext);
+          if (isImage) {
+            return `
+              <div class="chat-attachment image">
+                <a class="chat-attachment-thumb" href="${url}" target="_blank" rel="noopener">
+                  <img src="${url}" alt="${name}">
+                </a>
+                <div class="chat-attachment-meta">
+                  <span>${name}</span>
+                  <a href="${url}" download>Download</a>
+                </div>
+              </div>
+            `;
+          }
+          return `
+            <div class="chat-attachment file">
+              <span>${name}</span>
+              <a href="${url}" target="_blank" rel="noopener" download>Download</a>
+            </div>
+          `;
+        }).join('')}</div>`
       : '';
 
     wrapper.innerHTML = `
@@ -183,6 +209,34 @@
       messagesEl.appendChild(renderMessage(message));
     });
     messagesEl.scrollTop = messagesEl.scrollHeight;
+  };
+
+  const renderAttachmentPreview = (files) => {
+    if (!attachPreviewEl) return;
+    state.previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    state.previewUrls = [];
+    if (!files || files.length === 0) {
+      attachPreviewEl.innerHTML = '';
+      attachPreviewEl.classList.add('hidden');
+      return;
+    }
+    const items = Array.from(files).map((file) => {
+      const isImage = file.type.startsWith('image/');
+      let thumb = `<span class="file-ext">${(file.name.split('.').pop() || '').toUpperCase()}</span>`;
+      if (isImage) {
+        const url = URL.createObjectURL(file);
+        state.previewUrls.push(url);
+        thumb = `<img src="${url}" alt="${file.name}">`;
+      }
+      return `
+        <div class="chat-attach-item">
+          <div class="chat-attach-thumb">${thumb}</div>
+          <div class="chat-attach-name">${file.name}</div>
+        </div>
+      `;
+    }).join('');
+    attachPreviewEl.innerHTML = items;
+    attachPreviewEl.classList.remove('hidden');
   };
 
   const connectEcho = () => {
@@ -309,6 +363,7 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
     inputEl.value = '';
     attachEl.value = '';
+    renderAttachmentPreview([]);
     clearReply();
   });
 
@@ -338,6 +393,12 @@
   });
 
   replyCancelEl.addEventListener('click', clearReply);
+
+  if (attachEl) {
+    attachEl.addEventListener('change', (e) => {
+      renderAttachmentPreview(e.target.files);
+    });
+  }
   modalOpenButtons.forEach((btn) => {
     btn.addEventListener('click', () => modal.classList.remove('hidden'));
   });

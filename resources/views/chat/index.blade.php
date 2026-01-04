@@ -49,6 +49,7 @@
           <button type="button" class="chat-reply-cancel" id="chat-reply-cancel">Cancel</button>
         </div>
         <form class="chat-composer" id="chat-form">
+          <div class="chat-attach-preview hidden" id="chat-attach-preview"></div>
           <div class="chat-composer-bar">
             <textarea id="chat-input" placeholder="Type your message..." rows="1"></textarea>
             <label class="chat-icon-btn chat-attach">

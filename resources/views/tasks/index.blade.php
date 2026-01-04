@@ -30,8 +30,8 @@
         <option value="ongoing" @selected(($filters['status'] ?? 'ongoing') === 'ongoing')>Ongoing</option>
         <option value="completed" @selected(($filters['status'] ?? '') === 'completed')>Completed</option>
       </select>
-      <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}">
-      <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}">
+      <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" placeholder="Start date">
+      <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" placeholder="End date">
       <button class="pill-btn ghost" type="submit">Filter</button>
     </form>
 
