@@ -48,13 +48,13 @@
     $canPunchIn = !empty($punchState['can_punch_in']);
     $punchedIn = !empty($punchState['punched_in']);
     $disablePunchIn = !$canPunchIn || $punchedIn;
-    $disablePunchOut = !$punchedIn || !$canPunchIn;
+    $disablePunchOut = !$punchedIn;
   @endphp
       <div class="punch-actions-row">
         <form method="POST" action="{{ route('attendance.punchin') }}">
           @csrf
           <button class="pill-btn {{ $disablePunchIn ? 'is-disabled' : '' }}" {{ $disablePunchIn ? 'disabled' : '' }}>
-            {{ $punchedIn && $punchState['punched_at'] ? 'Punched In ' . $punchState['punched_at'] : 'Punch In' }}
+            {{ $punchedIn && $punchState['punched_at'] ? $punchState['punched_at'] : 'Punch In' }}
           </button>
         </form>
         <form method="POST" action="{{ route('attendance.punchout') }}">
@@ -62,28 +62,6 @@
       <button class="pill-btn {{ $disablePunchOut ? 'is-disabled' : '' }}" {{ $disablePunchOut ? 'disabled' : '' }}>Punch Out</button>
     </form>
   </div>
-  @if($punchedIn)
-    <div class="punch-actions-row">
-      @php
-        $breakUsed = (int)($punchState['break_used'] ?? 0);
-        $breakLimit = (int)($punchState['break_limit'] ?? 0);
-        $breakExhausted = $breakLimit > 0 && $breakUsed >= $breakLimit;
-      @endphp
-      @if(!empty($punchState['break_active']))
-        <form method="POST" action="{{ route('attendance.lunchend') }}">
-          @csrf
-          <button class="pill-btn ghost">End Break</button>
-        </form>
-      @elseif($breakExhausted)
-        <button class="pill-btn ghost is-disabled" disabled>Break Used</button>
-      @else
-        <form method="POST" action="{{ route('attendance.lunchstart') }}">
-          @csrf
-          <button class="pill-btn ghost">Take Break</button>
-        </form>
-      @endif
-    </div>
-  @endif
 </div>
   </div>
 </section>
