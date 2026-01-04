@@ -19,7 +19,7 @@
   @if($member)
     @php
       $summary = $summaries[$member->user->id] ?? ['logged_today' => false, 'currently_in' => false, 'status_label' => 'Not Logged In', 'punch_in_time' => null, 'hours_today' => '0h 0m', 'tasks' => [], 'break_active' => false, 'break_exhausted' => false, 'break_minutes' => 0, 'break_limit' => 0];
-      $theme = $summary['logged_today'] ? 'seat-green' : 'seat-red';
+      $theme = !empty($summary['break_active']) ? 'seat-blue' : ($summary['logged_today'] ? 'seat-green' : 'seat-red');
       $viewer = auth()->user();
       $canViewAttendance = $viewer && ($viewer->id === $member->user->id || in_array($viewer->role, ['admin','super_admin','hr','manager'], true));
     @endphp
