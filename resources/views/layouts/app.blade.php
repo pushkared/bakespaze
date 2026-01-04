@@ -399,6 +399,7 @@
       const banner = document.getElementById('permission-banner');
       const allowBtn = document.getElementById('permission-allow');
       const dismissBtn = document.getElementById('permission-dismiss');
+      const dismissKey = 'permission_banner_dismissed';
       const ensureHidden = () => {
         if (Notification.permission !== 'default' && banner) {
           banner.classList.add('hidden');
@@ -406,6 +407,7 @@
       };
       const shouldPrompt = () => {
         if (!('Notification' in window)) return false;
+        if (localStorage.getItem(dismissKey) === '1') return false;
         if (Notification.permission !== 'default') return false;
         return true;
       };
@@ -422,6 +424,7 @@
       }
       if (dismissBtn) {
         dismissBtn.addEventListener('click', () => {
+          localStorage.setItem(dismissKey, '1');
           if (banner) banner.classList.add('hidden');
         });
       }
