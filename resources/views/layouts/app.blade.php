@@ -113,6 +113,13 @@
     </div>
     <div class="mobile-search-results" id="mobile-search-results"></div>
   </div>
+  <div class="permission-banner hidden" id="permission-banner">
+    <div class="permission-text">Enable notifications to get chat and task alerts.</div>
+    <div class="permission-actions">
+      <button class="pill-btn solid" type="button" id="permission-allow">Allow</button>
+      <button class="pill-btn ghost" type="button" id="permission-dismiss">Not now</button>
+    </div>
+  </div>
 
   <button class="floating-task" type="button" aria-label="Open tasks">
     <img src="{{ asset('images/tasklist-icon.svg') }}" alt="">
@@ -386,6 +393,31 @@
               .then(renderMobileResults)
               .catch(() => { if (mobileResults) mobileResults.innerHTML = '<div class="muted">No results</div>'; });
           }, 180);
+        });
+      }
+
+      const banner = document.getElementById('permission-banner');
+      const allowBtn = document.getElementById('permission-allow');
+      const dismissBtn = document.getElementById('permission-dismiss');
+      const shouldPrompt = () => {
+        if (!('Notification' in window)) return false;
+        if (Notification.permission !== 'default') return false;
+        return true;
+      };
+      if (shouldPrompt() && banner) {
+        banner.classList.remove('hidden');
+      }
+      if (allowBtn) {
+        allowBtn.addEventListener('click', async () => {
+          if (typeof window.requestPushPermission === 'function') {
+            await window.requestPushPermission();
+          }
+          if (banner) banner.classList.add('hidden');
+        });
+      }
+      if (dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+          if (banner) banner.classList.add('hidden');
         });
       }
     });

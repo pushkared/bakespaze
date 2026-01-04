@@ -45,7 +45,7 @@
     await sendSubscription(newSubscription.toJSON());
   };
 
-  const init = async () => {
+  const requestPermissionAndSync = async () => {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') return;
@@ -55,5 +55,16 @@
     }
   };
 
+  const init = async () => {
+    try {
+      if (Notification.permission === 'granted') {
+        await syncSubscription();
+      }
+    } catch (err) {
+      console.error('Push subscription failed:', err);
+    }
+  };
+
+  window.requestPushPermission = requestPermissionAndSync;
   window.addEventListener('load', init);
 })();
