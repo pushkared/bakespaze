@@ -166,12 +166,14 @@ class GoogleCalendarController extends Controller
         }
 
         if (!empty($data['create_meet'])) {
-            $event->setConferenceData([
-                'createRequest' => [
-                    'requestId' => Str::uuid()->toString(),
-                    'conferenceSolutionKey' => ['type' => 'hangoutsMeet'],
-                ],
-            ]);
+            $conferenceData = new \Google\Service\Calendar\ConferenceData();
+            $conferenceSolutionKey = new \Google\Service\Calendar\ConferenceSolutionKey();
+            $conferenceSolutionKey->setType('hangoutsMeet');
+            $createRequest = new \Google\Service\Calendar\CreateConferenceRequest();
+            $createRequest->setRequestId(Str::uuid()->toString());
+            $createRequest->setConferenceSolutionKey($conferenceSolutionKey);
+            $conferenceData->setCreateRequest($createRequest);
+            $event->setConferenceData($conferenceData);
         }
 
         $service->events->insert('primary', $event, ['conferenceDataVersion' => !empty($data['create_meet']) ? 1 : 0]);
