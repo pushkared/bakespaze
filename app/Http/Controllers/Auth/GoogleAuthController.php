@@ -49,26 +49,7 @@ class GoogleAuthController extends Controller
             $user->save();
         }
 
-        $workspace = Workspace::first();
-        if (!$workspace) {
-            $org = Organization::firstOrCreate(
-                ['slug' => 'bakespaze'],
-                ['name' => 'Bakespaze', 'plan' => 'free']
-            );
-
-            $workspace = Workspace::create([
-                'organization_id' => $org->id,
-                'name' => 'HQ',
-                'slug' => 'hq',
-                'timezone' => 'UTC',
-                'is_default' => true,
-            ]);
-        }
-
-        Membership::firstOrCreate(
-            ['user_id' => $user->id, 'workspace_id' => $workspace->id],
-            ['role' => 'member']
-        );
+        // Do not auto-assign new users to a workspace.
 
         Auth::login($user, remember: true);
         $request->session()->regenerate();
