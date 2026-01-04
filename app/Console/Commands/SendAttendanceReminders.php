@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\AttendanceRecord;
 use App\Models\User;
 use App\Notifications\AttendanceWindowClosingNotification;
+use App\Models\AppSetting;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -16,9 +17,11 @@ class SendAttendanceReminders extends Command
 
     public function handle(): int
     {
-        $now = Carbon::now('Asia/Kolkata');
-        $start = $now->copy()->setTime(9, 0);
-        $end = $now->copy()->setTime(11, 0);
+        $settings = AppSetting::current();
+        $timezone = $settings->timezone ?? 'Asia/Kolkata';
+        $now = Carbon::now($timezone);
+        $start = $now->copy()->setTimeFromTimeString($settings->punch_in_start ?? '09:00:00');
+        $end = $now->copy()->setTimeFromTimeString($settings->punch_in_end ?? '11:00:00');
         $remindAt = $end->copy()->subMinutes(30);
 
         if (!$now->between($remindAt, $end)) {

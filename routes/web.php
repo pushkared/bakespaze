@@ -14,6 +14,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotificationSubscriptionController;
+use App\Http\Controllers\SettingsController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -76,6 +77,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/lunch-end', [AttendanceController::class, 'lunchEnd'])->name('attendance.lunchend');
 
     Route::get('/search', [SearchController::class, 'search'])->name('search.global');
+
+    Route::get('/settings', [SettingsController::class, 'index'])->middleware('admin')->name('settings.index');
+    Route::post('/settings', [SettingsController::class, 'update'])->middleware('admin')->name('settings.update');
 
     Route::get('/chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations');
     Route::post('/chat/conversations', [ChatController::class, 'storeConversation'])->name('chat.conversations.store');

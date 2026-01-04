@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'workspace.member' => \App\Http\Middleware\EnsureWorkspaceMember::class,
             'auto.logout' => \App\Http\Middleware\AutoLogout::class,
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

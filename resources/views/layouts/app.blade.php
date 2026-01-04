@@ -37,7 +37,7 @@
           <a class="menu-link" href="/calendar"><span class="menu-icon calendar" aria-hidden="true"></span><span class="menu-text">Calendar</span></a>
           <a class="menu-link" href="/attendance"><span class="menu-icon attendance" aria-hidden="true"></span><span class="menu-text">Attendance</span></a>
           <a class="menu-link" href="#"><span class="menu-icon analytics" aria-hidden="true"></span><span class="menu-text">Analytics</span></a>
-          <a class="menu-link" href="#"><span class="menu-icon settings" aria-hidden="true"></span><span class="menu-text">Settings</span></a>
+          <a class="menu-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.index') }}"><span class="menu-icon settings" aria-hidden="true"></span><span class="menu-text">Settings</span></a>
         </nav>
       </div>
       <div class="sidebar-footer">

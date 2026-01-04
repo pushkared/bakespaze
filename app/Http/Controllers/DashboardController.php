@@ -7,6 +7,7 @@ use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\AttendanceRecord;
+use App\Models\AppSetting;
 
 class DashboardController extends Controller
 {
@@ -36,7 +37,8 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $now = Carbon::now('Asia/Kolkata');
+        $timezone = AppSetting::current()->timezone ?? 'Asia/Kolkata';
+        $now = Carbon::now($timezone);
         $hour = (int)$now->format('H');
         $greeting = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Evening');
 
@@ -66,8 +68,11 @@ class DashboardController extends Controller
 
     protected function canPunchIn(Carbon $now): bool
     {
-        $start = $now->copy()->setTime(9, 0, 0);
-        $end = $now->copy()->setTime(11, 0, 0);
+        $settings = AppSetting::current();
+        $startTime = $settings->punch_in_start ?? '09:00:00';
+        $endTime = $settings->punch_in_end ?? '11:00:00';
+        $start = $now->copy()->setTimeFromTimeString($startTime);
+        $end = $now->copy()->setTimeFromTimeString($endTime);
         return $now->between($start, $end, true);
     }
 }

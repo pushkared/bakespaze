@@ -24,6 +24,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Apply dynamic app timezone if settings exist.
+        try {
+            $settings = \App\Models\AppSetting::current();
+            if (!empty($settings->timezone)) {
+                config(['app.timezone' => $settings->timezone]);
+                date_default_timezone_set($settings->timezone);
+            }
+        } catch (\Throwable $e) {
+            // Ignore if settings table is not migrated yet.
+        }
+
         // Force HTTPS for URL generation when app URL is HTTPS (helps behind proxies/tunnels)
         $appUrl = config('app.url');
         if (is_string($appUrl) && str_starts_with($appUrl, 'https://')) {

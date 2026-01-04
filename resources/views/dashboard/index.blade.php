@@ -50,13 +50,15 @@
     $disablePunchIn = !$canPunchIn || $punchedIn;
     $disablePunchOut = !$punchedIn || !$canPunchIn;
   @endphp
-  <div class="punch-actions-row">
-    <form method="POST" action="{{ route('attendance.punchin') }}">
-      @csrf
-      <button class="pill-btn {{ $disablePunchIn ? 'is-disabled' : '' }}" {{ $disablePunchIn ? 'disabled' : '' }}>Punch In</button>
-    </form>
-    <form method="POST" action="{{ route('attendance.punchout') }}">
-      @csrf
+      <div class="punch-actions-row">
+        <form method="POST" action="{{ route('attendance.punchin') }}">
+          @csrf
+          <button class="pill-btn {{ $disablePunchIn ? 'is-disabled' : '' }}" {{ $disablePunchIn ? 'disabled' : '' }}>
+            {{ $punchedIn && $punchState['punched_at'] ? 'Punched In ' . $punchState['punched_at'] : 'Punch In' }}
+          </button>
+        </form>
+        <form method="POST" action="{{ route('attendance.punchout') }}">
+          @csrf
       <button class="pill-btn {{ $disablePunchOut ? 'is-disabled' : '' }}" {{ $disablePunchOut ? 'disabled' : '' }}>Punch Out</button>
     </form>
   </div>
