@@ -399,6 +399,11 @@
       const banner = document.getElementById('permission-banner');
       const allowBtn = document.getElementById('permission-allow');
       const dismissBtn = document.getElementById('permission-dismiss');
+      const ensureHidden = () => {
+        if (Notification.permission !== 'default' && banner) {
+          banner.classList.add('hidden');
+        }
+      };
       const shouldPrompt = () => {
         if (!('Notification' in window)) return false;
         if (Notification.permission !== 'default') return false;
@@ -412,7 +417,7 @@
           if (typeof window.requestPushPermission === 'function') {
             await window.requestPushPermission();
           }
-          if (banner) banner.classList.add('hidden');
+          ensureHidden();
         });
       }
       if (dismissBtn) {
