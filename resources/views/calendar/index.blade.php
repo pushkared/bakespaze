@@ -75,7 +75,16 @@
         <h3>Upcoming Events</h3>
         <div class="calendar-events">
           @forelse($events as $event)
-            <div class="event-row">
+            <div class="event-row detail-trigger"
+              data-id="{{ $event['id'] }}"
+              data-title="{{ $event['title'] }}"
+              data-start="{{ $event['start'] }}"
+              data-end="{{ $event['end'] }}"
+              data-meet="{{ $event['hangoutLink'] ?? '' }}"
+              data-desc="{{ $event['description'] ?? '' }}"
+              data-attendees="{{ implode(',', (array)($event['attendees'] ?? [])) }}"
+              data-organizer="{{ !empty($event['isOrganizer']) ? '1' : '0' }}"
+            >
               <div class="event-title">{{ $event['title'] }}</div>
               <div class="event-time">
                 {{ \Carbon\Carbon::parse($event['start'])->setTimezone('Asia/Kolkata')->format('D d M, h:i A') }}
@@ -112,12 +121,14 @@
           @endphp
           @forelse($dayEvents as $event)
             <div class="event-row detail-trigger"
+              data-id="{{ $event['id'] }}"
               data-title="{{ $event['title'] }}"
               data-start="{{ $event['start'] }}"
               data-end="{{ $event['end'] }}"
               data-meet="{{ $event['hangoutLink'] ?? '' }}"
               data-desc="{{ $event['description'] ?? '' }}"
               data-attendees="{{ implode(',', (array)($event['attendees'] ?? [])) }}"
+              data-organizer="{{ !empty($event['isOrganizer']) ? '1' : '0' }}"
             >
               <div class="event-title">{{ $event['title'] }}</div>
               <div class="event-time">
@@ -144,12 +155,14 @@
                 <div class="week-day-title">{{ $day->format('D d M') }}</div>
                 @forelse($dayEvents as $event)
                   <div class="event-chip-row detail-trigger"
+                    data-id="{{ $event['id'] }}"
                     data-title="{{ $event['title'] }}"
                     data-start="{{ $event['start'] }}"
                     data-end="{{ $event['end'] }}"
                     data-meet="{{ $event['hangoutLink'] ?? '' }}"
                     data-desc="{{ $event['description'] ?? '' }}"
                     data-attendees="{{ implode(',', (array)($event['attendees'] ?? [])) }}"
+                    data-organizer="{{ !empty($event['isOrganizer']) ? '1' : '0' }}"
                   >{{ $event['title'] }}</div>
                 @empty
                   <div class="muted tiny">No events</div>
@@ -176,12 +189,14 @@
                 <div class="month-date">{{ $date->format('d') }}</div>
                 @foreach($dayEvents->take(2) as $event)
                   <div class="event-chip-row detail-trigger"
+                    data-id="{{ $event['id'] }}"
                     data-title="{{ $event['title'] }}"
                     data-start="{{ $event['start'] }}"
                     data-end="{{ $event['end'] }}"
                     data-meet="{{ $event['hangoutLink'] ?? '' }}"
                     data-desc="{{ $event['description'] ?? '' }}"
                     data-attendees="{{ implode(',', (array)($event['attendees'] ?? [])) }}"
+                    data-organizer="{{ !empty($event['isOrganizer']) ? '1' : '0' }}"
                   >{{ $event['title'] }}</div>
                 @endforeach
                 @if($dayEvents->count() > 2)
@@ -208,6 +223,38 @@
       <div id="event-modal-meet" class="event-link"></div>
       <div id="event-modal-desc" class="muted"></div>
       <div id="event-modal-attendees" class="event-attendees"></div>
+      <div class="event-actions" id="event-modal-actions" hidden>
+        <button type="button" class="pill-btn small ghost" id="event-edit-toggle">Edit</button>
+        <form method="POST" id="event-delete-form" data-action-template="{{ route('calendar.events.destroy', 'EVENT_ID') }}" onsubmit="return confirm('Delete this event?')">
+          @csrf
+          @method('DELETE')
+          <button type="submit" class="pill-btn small">Delete</button>
+        </form>
+      </div>
+      <form method="POST" id="event-edit-form" data-action-template="{{ route('calendar.events.update', 'EVENT_ID') }}" hidden>
+        @csrf
+        @method('PUT')
+        <label>
+          <span>Title</span>
+          <input type="text" name="title" required maxlength="255">
+        </label>
+        <label>
+          <span>Start</span>
+          <input type="datetime-local" name="start" required>
+        </label>
+        <label>
+          <span>End</span>
+          <input type="datetime-local" name="end" required>
+        </label>
+        <label>
+          <span>Description</span>
+          <textarea name="description" rows="3"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="pill-btn ghost" id="event-edit-cancel">Cancel</button>
+          <button type="submit" class="pill-btn solid">Update</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -251,6 +298,23 @@
     const detailAtt = document.getElementById('event-modal-attendees');
     const detailMeet = document.getElementById('event-modal-meet');
     const closeDetail = document.getElementById('event-modal-close');
+    const actionWrap = document.getElementById('event-modal-actions');
+    const editToggle = document.getElementById('event-edit-toggle');
+    const editForm = document.getElementById('event-edit-form');
+    const editCancel = document.getElementById('event-edit-cancel');
+    const deleteForm = document.getElementById('event-delete-form');
+
+    const toLocalInput = (value) => {
+      if (!value) return '';
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return '';
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    const applyAction = (form, id) => {
+      if (!form || !form.dataset.actionTemplate || !id) return;
+      form.action = form.dataset.actionTemplate.replace('EVENT_ID', encodeURIComponent(id));
+    };
 
     document.querySelectorAll('.detail-trigger').forEach(row => {
       row.addEventListener('click', () => {
@@ -265,11 +329,39 @@
         } else {
           detailMeet.innerHTML = '<span class="muted">No meet link</span>';
         }
+        const isOrganizer = row.dataset.organizer === '1';
+        if (actionWrap) actionWrap.hidden = !isOrganizer;
+        if (editForm) editForm.hidden = true;
+        if (isOrganizer && editForm) {
+          const titleInput = editForm.querySelector('input[name="title"]');
+          const startInput = editForm.querySelector('input[name="start"]');
+          const endInput = editForm.querySelector('input[name="end"]');
+          const descInput = editForm.querySelector('textarea[name="description"]');
+          if (titleInput) titleInput.value = row.dataset.title || '';
+          if (startInput) startInput.value = toLocalInput(row.dataset.start);
+          if (endInput) endInput.value = toLocalInput(row.dataset.end);
+          if (descInput) descInput.value = row.dataset.desc || '';
+          applyAction(editForm, row.dataset.id);
+          applyAction(deleteForm, row.dataset.id);
+        }
         detailModal.classList.add('open');
       });
     });
+    if (editToggle && editForm) {
+      editToggle.addEventListener('click', () => {
+        editForm.hidden = !editForm.hidden;
+      });
+    }
+    if (editCancel && editForm) {
+      editCancel.addEventListener('click', () => {
+        editForm.hidden = true;
+      });
+    }
     if (closeDetail) {
-      closeDetail.addEventListener('click', () => detailModal.classList.remove('open'));
+      closeDetail.addEventListener('click', () => {
+        detailModal.classList.remove('open');
+        if (editForm) editForm.hidden = true;
+      });
     }
   })();
 </script>

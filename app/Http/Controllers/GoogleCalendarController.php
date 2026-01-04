@@ -37,12 +37,16 @@ class GoogleCalendarController extends Controller
             $events = $this->fetchEvents($user)->take(25);
         }
 
-        $eventData = $events->map(function ($event) {
+        $eventData = $events->map(function ($event) use ($user) {
             $startRaw = optional($event->getStart())->getDateTime() ?? optional($event->getStart())->getDate();
             $endRaw = optional($event->getEnd())->getDateTime() ?? optional($event->getEnd())->getDate();
             $start = $startRaw ? Carbon::parse($startRaw)->setTimezone('Asia/Kolkata') : null;
             $end = $endRaw ? Carbon::parse($endRaw)->setTimezone('Asia/Kolkata') : null;
             $attendees = collect($event->getAttendees() ?? [])->map(fn($a) => $a->getEmail())->filter()->values()->all();
+            $organizerEmail = optional($event->getOrganizer())->getEmail() ?? optional($event->getCreator())->getEmail();
+            $isOrganizer = $organizerEmail && $user->email
+                ? strtolower($organizerEmail) === strtolower($user->email)
+                : false;
             return [
                 'id' => $event->getId(),
                 'title' => $event->getSummary() ?: 'Untitled event',
@@ -52,6 +56,8 @@ class GoogleCalendarController extends Controller
                 'description' => $event->getDescription(),
                 'location' => $event->getLocation(),
                 'attendees' => $attendees,
+                'organizerEmail' => $organizerEmail,
+                'isOrganizer' => $isOrganizer,
             ];
         });
 
@@ -181,6 +187,42 @@ class GoogleCalendarController extends Controller
         return redirect()->route('calendar.index')->with('status', 'Event created and synced to Google Calendar.');
     }
 
+    public function update(Request $request, string $event)
+    {
+        $data = $request->validate([
+            'title' => ['required','string','max:255'],
+            'description' => ['nullable','string'],
+            'start' => ['required','date'],
+            'end' => ['required','date','after_or_equal:start'],
+        ]);
+
+        $user = $request->user();
+        $client = $this->googleClient($user);
+        $service = new Calendar($client);
+
+        $googleEvent = $this->ensureOrganizer($service, $event, $user);
+        $googleEvent->setSummary($data['title']);
+        $googleEvent->setDescription($data['description'] ?? '');
+        $googleEvent->setStart(['dateTime' => Carbon::parse($data['start'])->toIso8601String()]);
+        $googleEvent->setEnd(['dateTime' => Carbon::parse($data['end'])->toIso8601String()]);
+
+        $service->events->update('primary', $googleEvent->getId(), $googleEvent);
+
+        return redirect()->route('calendar.index')->with('status', 'Event updated and synced to Google Calendar.');
+    }
+
+    public function destroy(Request $request, string $event)
+    {
+        $user = $request->user();
+        $client = $this->googleClient($user);
+        $service = new Calendar($client);
+
+        $googleEvent = $this->ensureOrganizer($service, $event, $user);
+        $service->events->delete('primary', $googleEvent->getId());
+
+        return redirect()->route('calendar.index')->with('status', 'Event deleted from Google Calendar.');
+    }
+
     protected function googleClient($user): GoogleClient
     {
         $client = new GoogleClient();
@@ -225,5 +267,16 @@ class GoogleCalendarController extends Controller
         } catch (\Throwable $e) {
             return collect();
         }
+    }
+
+    protected function ensureOrganizer(Calendar $service, string $eventId, User $user): Event
+    {
+        $event = $service->events->get('primary', $eventId);
+        $organizerEmail = optional($event->getOrganizer())->getEmail() ?? optional($event->getCreator())->getEmail();
+        abort_unless(
+            $organizerEmail && $user->email && strtolower($organizerEmail) === strtolower($user->email),
+            403
+        );
+        return $event;
     }
 }

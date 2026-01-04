@@ -150,7 +150,7 @@ class VirtualOfficeController extends Controller
             $summaries[$userId] = [
                 'logged_today' => $loggedToday,
                 'currently_in' => $currentlyIn,
-                'status_label' => $currentlyIn ? 'Active' : ($loggedToday ? 'Logged Today' : 'Not Logged In'),
+                'status_label' => $breakActive ? 'On Break' : ($currentlyIn ? 'Active' : ($loggedToday ? 'Logged Today' : 'Not Logged In')),
                 'punch_in_time' => $record && $record->clock_in ? Carbon::parse($record->clock_in)->timezone($timezone)->format('h:i A') : null,
                 'punch_out_time' => $record && $record->clock_out ? Carbon::parse($record->clock_out)->timezone($timezone)->format('h:i A') : null,
                 'break_active' => $breakActive,

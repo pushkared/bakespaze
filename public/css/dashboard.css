@@ -1,4 +1,4 @@
-/* =========================
+﻿/* =========================
    Base
 ========================= */
 :root{
@@ -2687,7 +2687,7 @@ input, select, textarea, button{
   .att-activity-pill{min-width:100px}
 }
 
-/* <= 768px attendance-only (kept because it’s specific) */
+/* <= 768px attendance-only (kept because itâ€™s specific) */
 @media (max-width:768px){
   .attendance-page{padding:32px 16px 80px}
   .att-grid{grid-template-columns:1fr 1fr}
@@ -2699,4 +2699,30 @@ input, select, textarea, button{
 @media (max-width:540px){
   .att-grid{grid-template-columns:1fr}
   .att-activity-pill{min-width:100px}
+}
+
+/* Loading state for submit buttons */
+button.is-loading,
+.pill-btn.is-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.85;
+  padding-right: 2.2rem;
+}
+button.is-loading::after,
+.pill-btn.is-loading::after {
+  content: '';
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-top: -0.425rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+}
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
 }

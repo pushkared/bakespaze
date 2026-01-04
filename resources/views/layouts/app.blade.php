@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="utf-8" />
@@ -109,7 +109,7 @@
     <div class="search-bar">
       <span class="icon-search" aria-hidden="true"></span>
       <input type="search" id="mobile-search-input" placeholder="Search users or tasks" autocomplete="off" />
-      <button class="close-floating" type="button" id="mobile-search-close" aria-label="Close search">×</button>
+      <button class="close-floating" type="button" id="mobile-search-close" aria-label="Close search">Ã—</button>
     </div>
     <div class="mobile-search-results" id="mobile-search-results"></div>
   </div>
@@ -309,13 +309,13 @@
         const userHtml = (data.users || []).map(u => `
           <div class="search-item" data-type="user" data-id="${u.id}">
             <div class="title">${u.name}</div>
-            <div class="meta">${u.email}${u.role ? ' • ' + u.role : ''}</div>
+            <div class="meta">${u.email}${u.role ? ' â€¢ ' + u.role : ''}</div>
           </div>
         `).join('') || '<div class="muted">No users found</div>';
         const taskHtml = (data.tasks || []).map(t => `
           <div class="search-item" data-type="task" data-id="${t.id}">
             <div class="title">${t.title}</div>
-            <div class="meta">${t.workspace} • ${t.due_date || 'No due'} • ${t.status}</div>
+            <div class="meta">${t.workspace} â€¢ ${t.due_date || 'No due'} â€¢ ${t.status}</div>
           </div>
         `).join('') || '<div class="muted">No tasks found</div>';
         dropdown.innerHTML = `
@@ -368,7 +368,7 @@
       const renderMobileResults = (data) => {
         if (!mobileResults) return;
         const userHtml = (data.users || []).map(u => `<div class="search-item"><div class="title">${u.name}</div><div class="meta">${u.email}</div></div>`).join('') || '<div class="muted">No users</div>';
-        const taskHtml = (data.tasks || []).map(t => `<div class="search-item"><div class="title">${t.title}</div><div class="meta">${t.workspace} • ${t.due_date || 'No due'} • ${t.status}</div></div>`).join('') || '<div class="muted">No tasks</div>';
+        const taskHtml = (data.tasks || []).map(t => `<div class="search-item"><div class="title">${t.title}</div><div class="meta">${t.workspace} â€¢ ${t.due_date || 'No due'} â€¢ ${t.status}</div></div>`).join('') || '<div class="muted">No tasks</div>';
         mobileResults.innerHTML = `<div class="search-section"><h5>Users</h5>${userHtml}</div><div class="search-section"><h5>Tasks</h5>${taskHtml}</div>`;
       };
       const closeMobile = () => {
@@ -399,6 +399,30 @@
         });
       }
 
+      // Prevent double submit: disable button and show loading
+      const setLoading = (btn) => {
+        if (!btn || btn.dataset.loading === '1') return;
+        btn.dataset.loading = '1';
+        btn.classList.add('is-loading');
+        if (btn.tagName.toLowerCase() === 'input') {
+          btn.dataset.originalValue = btn.value;
+          btn.value = btn.dataset.loadingText || 'Processing...';
+        } else {
+          const text = btn.textContent || '';
+          if (text.trim().length) {
+            btn.dataset.originalText = text;
+            btn.textContent = btn.dataset.loadingText || 'Processing...';
+          }
+        }
+        btn.disabled = true;
+      };
+
+      document.querySelectorAll('form').forEach((form) => {
+        form.addEventListener('submit', () => {
+          const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+          if (submitBtn) setLoading(submitBtn);
+        });
+      });
       const banner = document.getElementById('permission-banner');
       const allowBtn = document.getElementById('permission-allow');
       const dismissBtn = document.getElementById('permission-dismiss');
@@ -436,3 +460,8 @@
   @stack('scripts')
 </body>
 </html>
+
+
+
+
+

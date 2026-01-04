@@ -70,6 +70,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/calendar/connect', [GoogleCalendarController::class, 'redirect'])->name('calendar.connect');
     Route::get('/calendar/callback', [GoogleCalendarController::class, 'callback'])->name('calendar.callback');
     Route::post('/calendar/events', [GoogleCalendarController::class, 'store'])->name('calendar.events.store');
+    Route::put('/calendar/events/{event}', [GoogleCalendarController::class, 'update'])->name('calendar.events.update');
+    Route::delete('/calendar/events/{event}', [GoogleCalendarController::class, 'destroy'])->name('calendar.events.destroy');
 
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance/punch-in', [AttendanceController::class, 'punchIn'])->name('attendance.punchin');
