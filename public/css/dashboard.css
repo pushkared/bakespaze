@@ -2685,6 +2685,11 @@ input, select, textarea, button{
   /* Attendance */
   .att-grid{grid-template-columns:1fr}
   .att-activity-pill{min-width:100px}
+  .attendance-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .profile-pill{width:100%}
+  .att-date{align-self:flex-start}
+  .att-user-filter{width:100%;justify-content:flex-start}
+  .att-user-filter select{width:100%}
 }
 
 /* <= 768px attendance-only (kept because itâ€™s specific) */

@@ -263,3 +263,11 @@ button.is-loading::after,
 @keyframes btn-spin {
   to { transform: rotate(360deg); }
 }
+
+@media (max-width:640px){
+  .attendance-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .profile-pill{width:100%}
+  .att-date{align-self:flex-start}
+  .att-user-filter{width:100%;justify-content:flex-start}
+  .att-user-filter select{width:100%}
+}
