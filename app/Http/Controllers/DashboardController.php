@@ -46,13 +46,20 @@ class DashboardController extends Controller
             ->whereDate('work_date', $now->toDateString())
             ->latest()
             ->first();
+        $settings = AppSetting::current();
+        $breakLimit = (int)($settings->break_duration_minutes ?? 30);
+        $breakUsed = (int)($todayRecord?->break_minutes_used ?? 0);
+        $breakActive = $todayRecord && $todayRecord->lunch_start && !$todayRecord->lunch_end;
+        if ($breakActive) {
+            $live = Carbon::parse($todayRecord->lunch_start)->timezone($timezone)->diffInMinutes($now);
+            $breakUsed = min($breakLimit, $breakUsed + $live);
+        }
         $punchState = [
             'punched_in' => $todayRecord && !$todayRecord->clock_out,
             'punched_at' => $todayRecord && $todayRecord->clock_in ? Carbon::parse($todayRecord->clock_in)->format('h:i A') : null,
-            'lunch_started' => $todayRecord && $todayRecord->lunch_start,
-            'lunch_ended' => $todayRecord && $todayRecord->lunch_end,
-            'lunch_start_at' => $todayRecord && $todayRecord->lunch_start ? Carbon::parse($todayRecord->lunch_start)->format('h:i A') : null,
-            'lunch_end_at' => $todayRecord && $todayRecord->lunch_end ? Carbon::parse($todayRecord->lunch_end)->format('h:i A') : null,
+            'break_active' => $breakActive,
+            'break_used' => $breakUsed,
+            'break_limit' => $breakLimit,
             'can_punch_in' => !$todayRecord || $todayRecord->clock_out ? $this->canPunchIn($now) : false,
         ];
 

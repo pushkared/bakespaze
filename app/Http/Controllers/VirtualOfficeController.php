@@ -10,6 +10,7 @@ use Google\Service\Calendar;
 use Carbon\Carbon;
 use App\Models\Task;
 use App\Models\AttendanceRecord;
+use App\Models\AppSetting;
 
 class VirtualOfficeController extends Controller
 {
@@ -36,8 +37,9 @@ class VirtualOfficeController extends Controller
         abort_unless($workspace, 403);
 
         $members = $workspace->memberships->take(10);
-        $summaries = $this->buildMemberSummaries($workspace);
-        $nextMeeting = $this->nextCalendarEvent($user);
+        $settings = AppSetting::current();
+        $summaries = $this->buildMemberSummaries($workspace, $settings);
+        $nextMeeting = $this->nextCalendarEvent($user, $settings);
 
         return view('virtual-office.index', [
             'workspace' => $workspace,
@@ -47,7 +49,7 @@ class VirtualOfficeController extends Controller
         ]);
     }
 
-    protected function nextCalendarEvent($user): ?array
+    protected function nextCalendarEvent($user, AppSetting $settings): ?array
     {
         if (empty($user->google_access_token)) {
             return null;
@@ -69,7 +71,8 @@ class VirtualOfficeController extends Controller
             }
 
             $service = new Calendar($client);
-            $now = Carbon::now('Asia/Kolkata')->toRfc3339String();
+            $timezone = $settings->timezone ?? 'Asia/Kolkata';
+            $now = Carbon::now($timezone)->toRfc3339String();
             $events = $service->events->listEvents('primary', [
                 'timeMin' => $now,
                 'maxResults' => 1,
@@ -79,7 +82,7 @@ class VirtualOfficeController extends Controller
             $item = $events->getItems()[0] ?? null;
             if (!$item) return null;
             $start = optional($item->getStart())->getDateTime() ?? optional($item->getStart())->getDate();
-            $parsed = Carbon::parse($start)->setTimezone('Asia/Kolkata');
+            $parsed = Carbon::parse($start)->setTimezone($timezone);
             return [
                 'title' => $item->getSummary() ?: 'Upcoming meeting',
                 'time' => $parsed->format('D d M, h:i A'),
@@ -90,15 +93,15 @@ class VirtualOfficeController extends Controller
         }
     }
 
-    protected function buildMemberSummaries(Workspace $workspace): array
+    protected function buildMemberSummaries(Workspace $workspace, AppSetting $settings): array
     {
-        $today = Carbon::now('Asia/Kolkata')->toDateString();
+        $timezone = $settings->timezone ?? 'Asia/Kolkata';
+        $today = Carbon::now($timezone)->toDateString();
         $memberIds = $workspace->memberships->pluck('user_id');
 
         $tasksByUser = Task::select('tasks.*', 'task_user.user_id')
             ->join('task_user', 'tasks.id', '=', 'task_user.task_id')
             ->where('tasks.workspace_id', $workspace->id)
-            ->whereDate('tasks.due_date', $today)
             ->orderBy('tasks.due_date')
             ->get()
             ->groupBy('user_id');
@@ -120,25 +123,42 @@ class VirtualOfficeController extends Controller
             $minutes = $record?->minutes_worked ?? 0;
 
             if ($record && $record->clock_in && !$record->clock_out) {
-                $clockIn = Carbon::parse($record->clock_in)->timezone('Asia/Kolkata');
-                $now = Carbon::now('Asia/Kolkata');
+                $clockIn = Carbon::parse($record->clock_in)->timezone($timezone);
+                $now = Carbon::now($timezone);
                 $liveMinutes = $clockIn->diffInMinutes($now);
-                $lunchStart = $record->lunch_start ? Carbon::parse($record->lunch_start)->timezone('Asia/Kolkata') : null;
-                $lunchEnd = $record->lunch_end ? Carbon::parse($record->lunch_end)->timezone('Asia/Kolkata') : null;
+                $lunchStart = $record->lunch_start ? Carbon::parse($record->lunch_start)->timezone($timezone) : null;
+                $lunchEnd = $record->lunch_end ? Carbon::parse($record->lunch_end)->timezone($timezone) : null;
                 if ($lunchStart && $lunchEnd) {
                     $liveMinutes -= $lunchStart->diffInMinutes($lunchEnd);
+                } elseif ($lunchStart) {
+                    $liveMinutes -= $lunchStart->diffInMinutes($now);
                 }
+                $liveMinutes -= (int)($record->break_minutes_used ?? 0);
+                $liveMinutes = max(0, $liveMinutes);
                 $minutes = max($minutes, $liveMinutes);
             }
+
+            $breakLimit = (int)($settings->break_duration_minutes ?? 30);
+            $breakMinutes = (int)($record?->break_minutes_used ?? 0);
+            $breakActive = $record && $record->lunch_start && !$record->lunch_end;
+            if ($breakActive) {
+                $breakMinutes = min($breakLimit, $breakMinutes + Carbon::parse($record->lunch_start)->timezone($timezone)->diffInMinutes(Carbon::now($timezone)));
+            }
+            $breakMinutes = (int) round($breakMinutes);
+            $breakLimit = (int) round($breakLimit);
 
             $summaries[$userId] = [
                 'logged_today' => $loggedToday,
                 'currently_in' => $currentlyIn,
                 'status_label' => $currentlyIn ? 'Active' : ($loggedToday ? 'Logged Today' : 'Not Logged In'),
-                'punch_in_time' => $record && $record->clock_in ? Carbon::parse($record->clock_in)->timezone('Asia/Kolkata')->format('h:i A') : null,
-                'punch_out_time' => $record && $record->clock_out ? Carbon::parse($record->clock_out)->timezone('Asia/Kolkata')->format('h:i A') : null,
+                'punch_in_time' => $record && $record->clock_in ? Carbon::parse($record->clock_in)->timezone($timezone)->format('h:i A') : null,
+                'punch_out_time' => $record && $record->clock_out ? Carbon::parse($record->clock_out)->timezone($timezone)->format('h:i A') : null,
+                'break_active' => $breakActive,
+                'break_exhausted' => $breakMinutes >= $breakLimit,
+                'break_minutes' => $breakMinutes,
+                'break_limit' => $breakLimit,
                 'hours_today' => $this->formatMinutes($minutes),
-                'tasks' => collect($tasksByUser->get($userId))->take(3)->map(function ($task) {
+                'tasks' => collect($tasksByUser->get($userId))->take(4)->map(function ($task) {
                     return [
                         'title' => $task->title,
                         'status' => $task->status ?? 'open',

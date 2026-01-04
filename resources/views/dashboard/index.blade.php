@@ -62,17 +62,24 @@
       <button class="pill-btn {{ $disablePunchOut ? 'is-disabled' : '' }}" {{ $disablePunchOut ? 'disabled' : '' }}>Punch Out</button>
     </form>
   </div>
-  @if($punchedIn && $canPunchIn)
+  @if($punchedIn)
     <div class="punch-actions-row">
-      @if(empty($punchState['lunch_started']))
-        <form method="POST" action="{{ route('attendance.lunchstart') }}">
-          @csrf
-          <button class="pill-btn ghost">Lunch Start</button>
-        </form>
-      @elseif(empty($punchState['lunch_ended']))
+      @php
+        $breakUsed = (int)($punchState['break_used'] ?? 0);
+        $breakLimit = (int)($punchState['break_limit'] ?? 0);
+        $breakExhausted = $breakLimit > 0 && $breakUsed >= $breakLimit;
+      @endphp
+      @if(!empty($punchState['break_active']))
         <form method="POST" action="{{ route('attendance.lunchend') }}">
           @csrf
-          <button class="pill-btn ghost">Lunch End</button>
+          <button class="pill-btn ghost">End Break</button>
+        </form>
+      @elseif($breakExhausted)
+        <button class="pill-btn ghost is-disabled" disabled>Break Used</button>
+      @else
+        <form method="POST" action="{{ route('attendance.lunchstart') }}">
+          @csrf
+          <button class="pill-btn ghost">Take Break</button>
         </form>
       @endif
     </div>

@@ -68,15 +68,17 @@
           @csrf
           <button class="pill-btn ghost" type="submit">Punch Out</button>
         </form>
-        @if(!$todayRecord->lunch_start)
-          <form method="POST" action="{{ route('attendance.lunchstart') }}">
-            @csrf
-            <button class="pill-btn solid" type="submit">Lunch Start</button>
-          </form>
-        @elseif(!$todayRecord->lunch_end)
+        @if($breakActive)
           <form method="POST" action="{{ route('attendance.lunchend') }}">
             @csrf
-            <button class="pill-btn solid" type="submit">Lunch End</button>
+            <button class="pill-btn solid" type="submit">End Break</button>
+          </form>
+        @elseif($breakLimit > 0 && $breakUsed >= $breakLimit)
+          <button class="pill-btn solid is-disabled" disabled>Break Used</button>
+        @else
+          <form method="POST" action="{{ route('attendance.lunchstart') }}">
+            @csrf
+            <button class="pill-btn solid" type="submit">Take Break</button>
           </form>
         @endif
       @endif

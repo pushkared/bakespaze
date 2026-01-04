@@ -20,6 +20,14 @@ class AttendanceController extends Controller
             ->whereDate('work_date', $now->toDateString())
             ->latest()
             ->first();
+        $settings = AppSetting::current();
+        $breakLimit = (int)($settings->break_duration_minutes ?? 30);
+        $breakUsed = (int)($todayRecord?->break_minutes_used ?? 0);
+        $breakActive = $todayRecord && $todayRecord->lunch_start && !$todayRecord->lunch_end;
+        if ($breakActive) {
+            $live = Carbon::parse($todayRecord->lunch_start)->timezone($timezone)->diffInMinutes($now);
+            $breakUsed = min($breakLimit, $breakUsed + $live);
+        }
 
         $recentRecords = AttendanceRecord::where('user_id', $user->id)
             ->whereDate('work_date', '>=', $now->copy()->subDays(6)->toDateString())
@@ -54,7 +62,11 @@ class AttendanceController extends Controller
             $lunchEnd = $todayRecord->lunch_end ? \Carbon\Carbon::parse($todayRecord->lunch_end) : null;
             if ($lunchStart && $lunchEnd) {
                 $liveMinutes -= $lunchStart->diffInMinutes($lunchEnd);
+            } elseif ($lunchStart) {
+                $liveMinutes -= $lunchStart->diffInMinutes($now);
             }
+            $liveMinutes -= (int)($todayRecord->break_minutes_used ?? 0);
+            $liveMinutes = max(0, $liveMinutes);
             $todayMinutes = max($todayMinutes, $liveMinutes);
         }
 
@@ -71,6 +83,9 @@ class AttendanceController extends Controller
             'recent' => $recent,
             'todayRecord' => $todayRecord,
             'canPunchIn' => $this->canPunchIn($now),
+            'breakLimit' => $breakLimit,
+            'breakUsed' => $breakUsed,
+            'breakActive' => $breakActive,
         ]);
     }
 
@@ -104,10 +119,20 @@ class AttendanceController extends Controller
     public function punchOut(Request $request)
     {
         $user = $request->user();
-        $now = Carbon::now('Asia/Kolkata');
+        $settings = AppSetting::current();
+        $timezone = $settings->timezone ?? 'Asia/Kolkata';
+        $now = Carbon::now($timezone);
 
         $open = AttendanceRecord::where('user_id', $user->id)->whereNull('clock_out')->latest()->first();
         if ($open) {
+            if ($open->lunch_start && !$open->lunch_end) {
+                $limit = (int)($settings->break_duration_minutes ?? 30);
+                $lunchStart = Carbon::parse($open->lunch_start)->timezone($timezone);
+                $duration = $lunchStart->diffInMinutes($now);
+                $open->break_minutes_used = min($limit, (int)($open->break_minutes_used ?? 0) + $duration);
+                $open->lunch_start = null;
+                $open->lunch_end = null;
+            }
             $open->clock_out = $now;
             $open->minutes_worked = $open->computeMinutes();
             $open->save();
@@ -119,28 +144,45 @@ class AttendanceController extends Controller
     public function lunchStart(Request $request)
     {
         $user = $request->user();
-        $now = Carbon::now('Asia/Kolkata');
+        $timezone = AppSetting::current()->timezone ?? 'Asia/Kolkata';
+        $now = Carbon::now($timezone);
 
         $open = AttendanceRecord::where('user_id', $user->id)->whereNull('clock_out')->latest()->first();
-        if ($open && !$open->lunch_start) {
+        if ($open && $open->lunch_start && !$open->lunch_end) {
+            return back()->withErrors('Break already in progress.');
+        }
+        if ($open) {
+            $limit = (int)(AppSetting::current()->break_duration_minutes ?? 30);
+            $used = (int)($open->break_minutes_used ?? 0);
+            if ($used >= $limit) {
+                return back()->withErrors('Break limit reached.');
+            }
             $open->lunch_start = $now;
+            $open->lunch_end = null;
             $open->save();
         }
-        return back()->with('status', 'Lunch started.');
+        return back()->with('status', 'Break started.');
     }
 
     public function lunchEnd(Request $request)
     {
         $user = $request->user();
-        $now = Carbon::now('Asia/Kolkata');
+        $settings = AppSetting::current();
+        $timezone = $settings->timezone ?? 'Asia/Kolkata';
+        $now = Carbon::now($timezone);
 
         $open = AttendanceRecord::where('user_id', $user->id)->whereNull('clock_out')->latest()->first();
         if ($open && $open->lunch_start && !$open->lunch_end) {
-            $open->lunch_end = $now;
+            $limit = (int)($settings->break_duration_minutes ?? 30);
+            $lunchStart = Carbon::parse($open->lunch_start)->timezone($timezone);
+            $duration = $lunchStart->diffInMinutes($now);
+            $open->break_minutes_used = min($limit, (int)($open->break_minutes_used ?? 0) + $duration);
+            $open->lunch_start = null;
+            $open->lunch_end = null;
             $open->minutes_worked = $open->computeMinutes();
             $open->save();
         }
-        return back()->with('status', 'Lunch ended.');
+        return back()->with('status', 'Break ended.');
     }
 
     protected function formatMinutes(int $minutes): string

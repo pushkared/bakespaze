@@ -18,6 +18,7 @@ class AttendanceRecord extends Model
         'clock_out',
         'lunch_start',
         'lunch_end',
+        'break_minutes_used',
         'minutes_worked',
     ];
 
@@ -41,11 +42,15 @@ class AttendanceRecord extends Model
             return 0;
         }
         $minutes = $clockIn->diffInMinutes($clockOut);
+        $deduct = 0;
         $lunchStart = $this->lunch_start ? \Carbon\Carbon::parse($this->lunch_start) : null;
         $lunchEnd = $this->lunch_end ? \Carbon\Carbon::parse($this->lunch_end) : null;
         if ($lunchStart && $lunchEnd) {
-            $minutes -= $lunchStart->diffInMinutes($lunchEnd);
+            $deduct += $lunchStart->diffInMinutes($lunchEnd);
+        } elseif ($lunchStart) {
+            $deduct += $lunchStart->diffInMinutes($clockOut);
         }
-        return max(0, $minutes);
+        $deduct += (int) ($this->break_minutes_used ?? 0);
+        return max(0, $minutes - $deduct);
     }
 }
