@@ -6,6 +6,7 @@ use App\Models\Workspace;
 use App\Models\Membership;
 use App\Models\User;
 use App\Models\Organization;
+use App\Notifications\WorkspaceAssignedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -73,11 +74,21 @@ class WorkspaceController extends Controller
             'role' => ['required','in:member,manager,admin'],
         ]);
 
+        $workspace = Workspace::find($data['workspace_id']);
+
         foreach ($data['user_id'] as $uid) {
             Membership::updateOrCreate(
                 ['user_id' => $uid, 'workspace_id' => $data['workspace_id']],
                 ['role' => $data['role']]
             );
+            $user = User::find($uid);
+            if ($user && $workspace) {
+                try {
+                    $user->notify(new WorkspaceAssignedNotification($workspace));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
         }
 
         return back()->with('status', 'Users assigned to workspace.');

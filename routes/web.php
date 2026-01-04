@@ -54,9 +54,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');
     Route::post('/workspaces/switch', [WorkspaceController::class, 'switch'])->name('workspaces.switch');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
+    Route::post('/workspaces/assign', [WorkspaceController::class, 'assignUser'])->name('workspaces.assign');
     Route::post('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->name('workspaces.update');
     Route::delete('/workspaces/{workspace}', [WorkspaceController::class, 'destroy'])->name('workspaces.destroy');
-    Route::post('/workspaces/assign', [WorkspaceController::class, 'assignUser'])->name('workspaces.assign');
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');

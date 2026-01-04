@@ -12,6 +12,9 @@
         <h1>Manage Workspaces</h1>
         <p class="muted">Create new spaces, switch between them, and assign teammates.</p>
       </div>
+      @if(session('status'))
+        <div class="pill success">{{ session('status') }}</div>
+      @endif
       <form class="workspace-create" method="POST" action="{{ route('workspaces.store') }}">
         @csrf
         <input type="text" name="name" placeholder="Workspace name" required>
