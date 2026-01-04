@@ -18,6 +18,15 @@
       </div>
       <div class="att-date">{{ $now->format('D d M') }}</div>
     </div>
+    @if(!empty($isAdmin))
+      <form method="GET" action="{{ route('attendance.index') }}" class="att-user-filter">
+        <select name="user_id" onchange="this.form.submit()">
+          @foreach(($users ?? collect()) as $u)
+            <option value="{{ $u->id }}" @selected(($selectedUserId ?? 0) == $u->id)>{{ $u->name }} ({{ $u->email }})</option>
+          @endforeach
+        </select>
+      </form>
+    @endif
 
     <div class="att-grid">
       <div class="att-card">
@@ -53,36 +62,38 @@
       </div>
     </div>
 
-    <div class="att-actions">
-      @if(!$todayRecord || $todayRecord->clock_out)
-        @if($canPunchIn)
-          <form method="POST" action="{{ route('attendance.punchin') }}">
-            @csrf
-            <button class="pill-btn solid" type="submit">Punch In</button>
-          </form>
+    @if(($viewer->id ?? null) == ($user->id ?? null))
+      <div class="att-actions">
+        @if(!$todayRecord || $todayRecord->clock_out)
+          @if($canPunchIn)
+            <form method="POST" action="{{ route('attendance.punchin') }}">
+              @csrf
+              <button class="pill-btn solid" type="submit">Punch In</button>
+            </form>
+          @else
+            <div class="muted small">Punch in available 9:00 AM - 11:00 AM IST.</div>
+          @endif
         @else
-          <div class="muted small">Punch in available 9:00 AM – 11:00 AM IST.</div>
-        @endif
-      @else
-        <form method="POST" action="{{ route('attendance.punchout') }}">
-          @csrf
-          <button class="pill-btn ghost" type="submit">Punch Out</button>
-        </form>
-        @if($breakActive)
-          <form method="POST" action="{{ route('attendance.lunchend') }}">
+          <form method="POST" action="{{ route('attendance.punchout') }}">
             @csrf
-            <button class="pill-btn solid" type="submit">End Break</button>
+            <button class="pill-btn ghost" type="submit">Punch Out</button>
           </form>
-        @elseif($breakLimit > 0 && $breakUsed >= $breakLimit)
-          <button class="pill-btn solid is-disabled" disabled>Break Used</button>
-        @else
-          <form method="POST" action="{{ route('attendance.lunchstart') }}">
-            @csrf
-            <button class="pill-btn solid" type="submit">Take Break</button>
-          </form>
+          @if($breakActive)
+            <form method="POST" action="{{ route('attendance.lunchend') }}">
+              @csrf
+              <button class="pill-btn solid" type="submit">End Break</button>
+            </form>
+          @elseif($breakLimit > 0 && $breakUsed >= $breakLimit)
+            <button class="pill-btn solid is-disabled" disabled>Break Used</button>
+          @else
+            <form method="POST" action="{{ route('attendance.lunchstart') }}">
+              @csrf
+              <button class="pill-btn solid" type="submit">Take Break</button>
+            </form>
+          @endif
         @endif
-      @endif
-    </div>
+      </div>
+    @endif
   </div>
 </section>
 @endsection

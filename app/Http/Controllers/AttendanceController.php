@@ -6,17 +6,31 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\AttendanceRecord;
 use App\Models\Workspace;
+use App\Models\User;
 use App\Models\AppSetting;
 
 class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
+        $viewer = $request->user();
+        $isAdmin = in_array($viewer->role, ['admin', 'super_admin'], true);
+        $workspaceId = session('current_workspace_id');
+        $availableUsers = collect();
+        if ($isAdmin) {
+            $availableUsers = User::when($workspaceId, fn($q) => $q->whereHas('memberships', fn($m) => $m->where('workspace_id', $workspaceId)))
+                ->orderBy('name')
+                ->get(['id','name','email']);
+        }
+        $selectedUserId = $isAdmin ? (int)($request->input('user_id') ?: $viewer->id) : $viewer->id;
+        $selectedUser = $isAdmin
+            ? ($availableUsers->firstWhere('id', $selectedUserId) ?? $viewer)
+            : $viewer;
+
         $timezone = AppSetting::current()->timezone ?? 'Asia/Kolkata';
         $now = Carbon::now($timezone);
 
-        $todayRecord = AttendanceRecord::where('user_id', $user->id)
+        $todayRecord = AttendanceRecord::where('user_id', $selectedUser->id)
             ->whereDate('work_date', $now->toDateString())
             ->latest()
             ->first();
@@ -29,7 +43,7 @@ class AttendanceController extends Controller
             $breakUsed = min($breakLimit, $breakUsed + $live);
         }
 
-        $recentRecords = AttendanceRecord::where('user_id', $user->id)
+        $recentRecords = AttendanceRecord::where('user_id', $selectedUser->id)
             ->whereDate('work_date', '>=', $now->copy()->subDays(6)->toDateString())
             ->orderBy('work_date', 'desc')
             ->get()
@@ -73,11 +87,15 @@ class AttendanceController extends Controller
         $stats = [
             'today_hours' => $this->formatMinutes($todayMinutes),
             'week_hours' => $this->formatMinutes($weekMinutes),
-            'sessions' => AttendanceRecord::where('user_id', $user->id)->whereDate('work_date', $now->toDateString())->count(),
+            'sessions' => AttendanceRecord::where('user_id', $selectedUser->id)->whereDate('work_date', $now->toDateString())->count(),
         ];
 
         return view('attendance.index', [
-            'user' => $user,
+            'user' => $selectedUser,
+            'viewer' => $viewer,
+            'isAdmin' => $isAdmin,
+            'users' => $availableUsers,
+            'selectedUserId' => $selectedUser->id,
             'now' => $now,
             'stats' => $stats,
             'recent' => $recent,
