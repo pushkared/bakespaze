@@ -1887,6 +1887,14 @@ input, select, textarea, button{
   flex-direction:column;
   gap:14px;
 }
+.settings-card.danger{
+  border-color:rgba(255,59,59,0.4);
+  box-shadow:0 12px 28px rgba(255,59,59,0.08);
+}
+.pill-btn.danger{
+  background:#ff3b3b;
+  color:#fff;
+}
 .settings-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit, minmax(220px,1fr));

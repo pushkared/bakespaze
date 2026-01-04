@@ -12,11 +12,14 @@ class SettingsController extends Controller
         $settings = AppSetting::current();
         $timezones = \DateTimeZone::listIdentifiers();
         $breakOptions = [30, 60, 90, 120];
+        $user = auth()->user();
+        $isAdmin = $user && in_array($user->role, ['admin', 'super_admin'], true);
 
         return view('settings.index', [
             'settings' => $settings,
             'timezones' => $timezones,
             'breakOptions' => $breakOptions,
+            'isAdmin' => $isAdmin,
         ]);
     }
 

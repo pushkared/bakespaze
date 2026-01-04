@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 class WorkspaceController extends Controller
 {
     protected array $managerRoles = ['admin','manager'];
+    protected array $workspaceAdminRoles = ['admin'];
 
     public function store(Request $request)
     {
@@ -33,11 +34,11 @@ class WorkspaceController extends Controller
             'is_default' => false,
         ]);
 
-        // auto-add creator to the workspace
+        // auto-add creator to the workspace as admin
         if ($user = auth()->user()) {
             Membership::firstOrCreate(
                 ['user_id' => $user->id, 'workspace_id' => $workspace->id],
-                ['role' => $user->role === 'admin' ? 'admin' : 'manager']
+                ['role' => 'admin']
             );
         }
 
@@ -57,9 +58,9 @@ class WorkspaceController extends Controller
 
     public function destroy(Workspace $workspace)
     {
-        // allow deletion only if user belongs to workspace
         $user = auth()->user();
-        abort_unless($user && $workspace->memberships()->where('user_id', $user->id)->exists(), 403);
+        $membership = $user ? $workspace->memberships()->where('user_id', $user->id)->first() : null;
+        abort_unless($membership && in_array($membership->role, $this->workspaceAdminRoles, true), 403);
         $workspace->delete();
 
         return back()->with('status', 'Workspace deleted.');
@@ -75,6 +76,7 @@ class WorkspaceController extends Controller
         ]);
 
         $workspace = Workspace::find($data['workspace_id']);
+        $this->ensureWorkspaceAdmin($workspace, $request->user());
 
         foreach ($data['user_id'] as $uid) {
             Membership::updateOrCreate(
@@ -127,5 +129,20 @@ class WorkspaceController extends Controller
         session(['current_workspace_id' => $data['workspace_id']]);
 
         return back()->with('status', 'Workspace switched.');
+    }
+
+    public function removeUser(Workspace $workspace, User $user, Request $request)
+    {
+        $this->ensureWorkspaceAdmin($workspace, $request->user());
+        $workspace->memberships()->where('user_id', $user->id)->delete();
+
+        return back()->with('status', 'User removed from workspace.');
+    }
+
+    protected function ensureWorkspaceAdmin(?Workspace $workspace, ?User $user): void
+    {
+        abort_unless($workspace && $user, 403);
+        $membership = $workspace->memberships()->where('user_id', $user->id)->first();
+        abort_unless($membership && in_array($membership->role, $this->workspaceAdminRoles, true), 403);
     }
 }

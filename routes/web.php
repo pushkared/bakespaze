@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/workspaces/switch', [WorkspaceController::class, 'switch'])->name('workspaces.switch');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
     Route::post('/workspaces/assign', [WorkspaceController::class, 'assignUser'])->name('workspaces.assign');
+    Route::delete('/workspaces/{workspace}/members/{user}', [WorkspaceController::class, 'removeUser'])->name('workspaces.members.remove');
     Route::post('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->name('workspaces.update');
     Route::delete('/workspaces/{workspace}', [WorkspaceController::class, 'destroy'])->name('workspaces.destroy');
 
@@ -78,8 +79,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/search', [SearchController::class, 'search'])->name('search.global');
 
-    Route::get('/settings', [SettingsController::class, 'index'])->middleware('admin')->name('settings.index');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->middleware('admin')->name('settings.update');
+    Route::delete('/account', [ProfileController::class, 'destroy'])->name('account.destroy');
 
     Route::get('/chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations');
     Route::post('/chat/conversations', [ChatController::class, 'storeConversation'])->name('chat.conversations.store');

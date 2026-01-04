@@ -13,7 +13,6 @@
           $currentWs = collect($workspaces ?? [])->firstWhere('id', $filters['workspace_id'] ?? null);
         @endphp
         <h1>{{ $currentWs->name ?? 'All Workspace Tasks' }}</h1>
-        <p class="muted">Create, assign, comment, and attach files just like Asana - styled for our workspace.</p>
       </div>
       <button class="pill-btn solid" id="open-task-modal">+ New Task</button>
     </header>
