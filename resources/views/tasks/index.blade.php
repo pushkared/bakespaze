@@ -45,6 +45,9 @@
         <div>Actions</div>
       </div>
       @forelse($tasks as $task)
+        @php
+          $isAssignee = $task->assignees->contains(auth()->id());
+        @endphp
         <div class="task-row task-toggle" data-task="{{ $task->id }}">
           <div>{{ $task->title }}</div>
           <div class="line-clamp">{!! Str::limit(strip_tags($task->description), 90) !!}</div>
@@ -74,6 +77,7 @@
               data-assignee="{{ optional($task->assignees->first())->id }}"
             >Edit</button>
             @if($task->status !== 'completed')
+            @if($isAssignee)
             <form method="POST" action="{{ route('tasks.update', $task) }}" onsubmit="return confirm('Mark complete?')">
               @csrf
               <input type="hidden" name="title" value="{{ $task->title }}">
@@ -83,6 +87,7 @@
               <input type="hidden" name="assignee_id" value="{{ optional($task->assignees->first())->id }}">
               <button class="pill-btn small ghost" type="submit">Mark Complete</button>
             </form>
+            @endif
             @endif
             <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete task?')">
               @csrf

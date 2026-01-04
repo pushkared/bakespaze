@@ -22,6 +22,7 @@
         @forelse(($tasks ?? collect()) as $task)
           @php
             $assigneeId = optional($task->assignees->first())->id;
+            $isAssignee = $task->assignees->contains(auth()->id());
           @endphp
           <div class="dash-task-item {{ $task->status === 'completed' ? 'is-done' : '' }}"
                data-task-id="{{ $task->id }}"
@@ -31,7 +32,7 @@
                data-task-due="{{ $task->due_date }}"
                data-task-assignee="{{ $assigneeId }}"
                data-task-status="{{ $task->status }}">
-            <button class="dash-task-box" type="button" aria-label="Mark task complete" {{ $task->status === 'completed' ? 'disabled' : '' }}></button>
+            <button class="dash-task-box" type="button" aria-label="Mark task complete" {{ (!$isAssignee || $task->status === 'completed') ? 'disabled' : '' }}></button>
             <a class="dash-task-pill" href="{{ route('tasks.index') }}">{{ Str::limit($task->title, 48) }}</a>
           </div>
         @empty

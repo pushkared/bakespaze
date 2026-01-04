@@ -148,6 +148,15 @@ class TaskController extends Controller
             'assignee_id' => ['nullable','exists:users,id'],
         ]);
 
+        $currentAssigneeId = $task->assignees()->first()?->id;
+        $targetAssigneeId = array_key_exists('assignee_id', $data) ? $data['assignee_id'] : $currentAssigneeId;
+        if (
+            ($data['status'] ?? null) === 'completed'
+            && (int) $targetAssigneeId !== (int) $request->user()->id
+        ) {
+            abort(403);
+        }
+
         $reopen = $task->status === 'completed';
         $newStatus = $reopen ? 'open' : ($data['status'] ?? $task->status);
         $previousAssigneeId = $task->assignees()->first()?->id;

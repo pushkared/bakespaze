@@ -28,10 +28,7 @@ class DashboardController extends Controller
 
         $tasks = Task::with('assignees')
             ->when($workspace, fn($q) => $q->where('workspace_id', $workspace->id))
-            ->where(function ($q) use ($request) {
-                $q->where('creator_id', $request->user()->id)
-                  ->orWhereHas('assignees', fn($a) => $a->where('users.id', $request->user()->id));
-            })
+            ->whereHas('assignees', fn($a) => $a->where('users.id', $request->user()->id))
             ->where('status', '!=', 'completed')
             ->orderByRaw('ISNULL(due_date), due_date asc')
             ->limit(5)

@@ -139,6 +139,9 @@
     </div>
     <div class="floating-list">
       @forelse(($panelTasks ?? collect()) as $task)
+        @php
+          $isAssignee = $task->assignees->contains(auth()->id());
+        @endphp
         <div class="float-task">
           <div class="float-main">
             <div class="float-title">{{ $task->title }}</div>
@@ -147,7 +150,7 @@
             </div>
           </div>
           <div class="float-actions">
-            @if($task->status !== 'completed')
+            @if($task->status !== 'completed' && $isAssignee)
             <form method="POST" action="{{ route('tasks.update', $task) }}">
               @csrf
               <input type="hidden" name="title" value="{{ $task->title }}">
