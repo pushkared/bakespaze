@@ -12,7 +12,9 @@
         <h1>Attendance & Timezone</h1>
         <p class="muted">Only admins can change attendance windows and time settings.</p>
       </div>
-      <a class="pill-btn ghost" href="{{ route('profile.edit') }}">Update Profile</a>
+      <div class="settings-actions">
+        <a class="pill-btn ghost" href="{{ route('profile.edit') }}">Update Profile</a>
+      </div>
     </header>
 
     @php
