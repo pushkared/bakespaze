@@ -309,9 +309,22 @@
     });
   };
 
+  const openFromQuery = async () => {
+    if (state.activeId) return;
+    const params = new URLSearchParams(window.location.search);
+    const rawId = params.get('conversation');
+    const conversationId = rawId ? parseInt(rawId, 10) : null;
+    if (!conversationId) return;
+    const match = state.conversations.find((c) => c.id === conversationId);
+    if (match) {
+      await setActiveConversation(match.id);
+    }
+  };
+
   const loadConversations = async () => {
     state.conversations = await fetchJson('/chat/conversations');
     renderConversations();
+    await openFromQuery();
   };
 
   const collectParticipants = () => {

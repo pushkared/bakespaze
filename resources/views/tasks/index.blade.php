@@ -61,7 +61,7 @@
           </div>
           <div>
             @if($task->assignees->first())
-              <span class="avatar-chip">{{ strtoupper(substr($task->assignees->first()->name,0,1)) }}</span>
+              
             @else
               <span class="muted">Unassigned</span>
             @endif

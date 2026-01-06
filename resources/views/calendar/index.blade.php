@@ -363,6 +363,16 @@
         if (editForm) editForm.hidden = true;
       });
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const eventId = params.get('event');
+    if (eventId) {
+      const safeId = window.CSS && CSS.escape ? CSS.escape(eventId) : eventId.replace(/"/g, '\\"');
+      const target = document.querySelector(`.detail-trigger[data-id="${safeId}"]`);
+      if (target) {
+        target.click();
+      }
+    }
   })();
 </script>
 @endpush
