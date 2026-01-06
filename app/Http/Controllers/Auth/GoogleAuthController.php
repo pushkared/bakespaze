@@ -36,12 +36,16 @@ class GoogleAuthController extends Controller
             [
                 'name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'User',
                 'email' => $googleUser->getEmail(),
-                'avatar_url' => $googleUser->getAvatar(),
                 'provider' => 'google',
                 'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
             ]
         );
+
+        if (!$user->avatar_url && $googleUser->getAvatar()) {
+            $user->avatar_url = $googleUser->getAvatar();
+            $user->save();
+        }
 
         // Set a default role if missing (first user becomes admin, others employee)
         if (!$user->role) {
