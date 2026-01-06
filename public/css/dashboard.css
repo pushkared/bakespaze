@@ -2730,7 +2730,9 @@ input, select, textarea, button{
 .profile-avatar{width:92px;height:92px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center}
 .profile-avatar img{width:100%;height:100%;object-fit:cover}
 .profile-avatar .avatar-fallback{font-size:32px;font-weight:700;color:#fff}
+.profile-info{min-width:0}
 .profile-info h1{margin:6px 0 4px;font-size:32px}
+.profile-info .muted{overflow-wrap:anywhere}
 .profile-meta-row{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
 .profile-meta{display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,0.05);padding:10px 12px;border-radius:12px}
 .profile-meta .label{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#a0a0a0}
@@ -2758,6 +2760,26 @@ input, select, textarea, button{
 }
 @media (max-width: 600px){
   .profile-page{padding:24px 16px 80px}
+}
+
+@media (max-width: 600px){
+  .vo-main{overflow-x:hidden}
+  .content-area{overflow-x:hidden}
+  .vo-topbar{padding:0 12px;overflow:hidden}
+  .top-left{min-width:0}
+  .top-right{min-width:0;gap:10px}
+  .top-logo{width:32px;height:32px;flex:0 0 auto}
+  .workspace-switch{max-width:160px}
+  .profile-shell{width:100%;box-sizing:border-box}
+  .profile-card{width:100%;box-sizing:border-box}
+  .profile-grid{width:100%;box-sizing:border-box}
+}
+
+@media (max-width: 900px){
+  .vo-topbar{padding:0 14px}
+  .top-logo{display:flex}
+  .workspace-name{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .top-date{font-size:14px}
 }
 
 /* Loading state for submit buttons */
