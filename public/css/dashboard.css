@@ -397,6 +397,7 @@ input, select, textarea, button{
   top:110%;
   left:0;
   min-width:200px;
+  max-height:140px;
   background-color:#000;
   background-image:none;
   opacity:1;
@@ -410,6 +411,7 @@ input, select, textarea, button{
   padding:10px;
   display:none;
   z-index:300;
+  overflow-y:auto;
 }
 .workspace-panel.open{display:block}
 
