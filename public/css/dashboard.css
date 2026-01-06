@@ -2531,7 +2531,12 @@ input, select, textarea, button{
 /* <= 900px */
 @media (max-width:900px){
   .top-left{gap:10px}
-  .vo-topbar{padding:0 16px}
+  .vo-topbar{padding:0 16px;width:100%;box-sizing:border-box}
+  .vo-main{width:100%;overflow-x:hidden}
+  .vo-stage,
+  .workspace-page{width:100%;box-sizing:border-box;overflow-x:hidden}
+  .vo-board,
+  .workspace-inner{width:100%;max-width:100%}
 
   .desktop-hide{display:flex}
   .create-task{padding:10px 14px}
