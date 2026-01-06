@@ -71,7 +71,7 @@ input, select, textarea, button{
    Sidebar
 ========================= */
 .vo-sidebar{
-  background:var(--lime);
+  background:linear-gradient(90deg,var(--forest),var(--forest-2));
   color:var(--text-dark);
   padding:26px 22px;
   display:flex;
@@ -220,7 +220,7 @@ input, select, textarea, button{
   border-radius:18px;
   font-size:18px;
   font-weight:700;
-  color:#0b2608;
+  color:white;
   transition:transform .18s ease, background .18s ease, box-shadow .18s ease;
 }
 
@@ -247,7 +247,7 @@ input, select, textarea, button{
 .sidebar-footer{
   padding-top:10px;
   font-weight:700;
-  color:#0c2d0a;
+  color:white;
   opacity:0.8;
 }
 
@@ -842,7 +842,7 @@ input, select, textarea, button{
 .sidebar-overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.5);
+  background:rgba(15,96,18,0.75);
   opacity:0;
   visibility:hidden;
   pointer-events:none;
