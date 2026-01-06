@@ -12,6 +12,7 @@ use App\Notifications\ChatMessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
@@ -29,7 +30,7 @@ class ChatController extends Controller
         $user = $request->user();
 
         $conversations = $user->conversations()
-            ->with(['participants:id,name', 'messages' => function ($q) {
+            ->with(['participants:id,name,avatar_url', 'messages' => function ($q) {
                 $q->latest()->limit(1);
             }])
             ->get()
@@ -46,6 +47,7 @@ class ChatController extends Controller
                     'participants' => $conversation->participants->map(fn($p) => [
                         'id' => $p->id,
                         'name' => $p->name,
+                        'avatar_url' => $this->avatarUrl($p->avatar_url),
                     ])->values(),
                     'last_message' => $lastMessage ? [
                         'body' => $lastMessage->body,
@@ -252,6 +254,7 @@ class ChatController extends Controller
             'conversation_id' => $message->conversation_id,
             'user_id' => $message->user_id,
             'sender' => $message->sender?->name,
+            'sender_avatar' => $this->avatarUrl($message->sender?->avatar_url),
             'body' => $message->body,
             'created_at' => $message->created_at->toDateTimeString(),
             'reply_to' => $message->replyTo ? [
@@ -272,5 +275,16 @@ class ChatController extends Controller
                 'user_id' => $reaction->user_id,
             ])->values(),
         ];
+    }
+
+    protected function avatarUrl(?string $avatar): ?string
+    {
+        if (!$avatar) {
+            return null;
+        }
+        if (Str::startsWith($avatar, ['http://', 'https://'])) {
+            return $avatar;
+        }
+        return Storage::url($avatar);
     }
 }

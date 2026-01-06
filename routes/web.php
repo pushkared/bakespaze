@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}', [ProfileController::class, 'show'])->name('users.show');
     Route::post('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
 
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments.index');

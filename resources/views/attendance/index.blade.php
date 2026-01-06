@@ -6,10 +6,16 @@
 <section class="attendance-page">
   <div class="vo-pattern"></div>
   <div class="attendance-inner">
+    @php
+      $profileAvatar = $user->avatar_url ?? null;
+      if ($profileAvatar && \Illuminate\Support\Str::startsWith($profileAvatar, ['http://', 'https://']) === false) {
+        $profileAvatar = \Illuminate\Support\Facades\Storage::url($profileAvatar);
+      }
+    @endphp
     <div class="attendance-header">
       <div class="profile-pill">
         <div class="avatar">
-          <img src="{{ asset('images/user-icon.svg') }}" alt="{{ $user->name ?? 'User' }}">
+          <img src="{{ $profileAvatar ?: asset('images/user-icon.svg') }}" alt="{{ $user->name ?? 'User' }}">
         </div>
         <div class="profile-meta">
           <div class="name">{{ $user->name ?? 'User' }}</div>
@@ -31,7 +37,7 @@
     <div class="att-grid">
       <div class="att-card">
         <div class="avatar large">
-          <img src="{{ asset('images/user-icon.svg') }}" alt="{{ $user->name ?? 'User' }}">
+          <img src="{{ $profileAvatar ?: asset('images/user-icon.svg') }}" alt="{{ $user->name ?? 'User' }}">
         </div>
         <div class="att-title">{{ $user->name ?? 'User' }}</div>
         <div class="att-sub">{{ $user->role ?? 'Member' }}</div>

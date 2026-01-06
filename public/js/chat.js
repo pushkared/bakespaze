@@ -291,7 +291,21 @@
       metaEl.textContent = conv.participants.map(p => p.name).join(', ');
       const initial = (conv.title || 'U').trim().charAt(0).toUpperCase();
       const avatar = document.getElementById('chat-thread-avatar');
-      if (avatar) avatar.textContent = initial;
+      if (avatar) {
+        const peer = conv.type === 'direct'
+          ? conv.participants.find((p) => p.id !== config.userId)
+          : null;
+        const imageUrl = peer?.avatar_url || '';
+        if (imageUrl) {
+          avatar.textContent = '';
+          avatar.style.backgroundImage = `url("${imageUrl}")`;
+          avatar.classList.add('has-image');
+        } else {
+          avatar.textContent = initial;
+          avatar.style.backgroundImage = '';
+          avatar.classList.remove('has-image');
+        }
+      }
     }
     emptyEl.style.display = 'none';
     threadEl.classList.remove('hidden');
@@ -314,10 +328,34 @@
     const params = new URLSearchParams(window.location.search);
     const rawId = params.get('conversation');
     const conversationId = rawId ? parseInt(rawId, 10) : null;
-    if (!conversationId) return;
-    const match = state.conversations.find((c) => c.id === conversationId);
-    if (match) {
-      await setActiveConversation(match.id);
+    if (conversationId) {
+      const match = state.conversations.find((c) => c.id === conversationId);
+      if (match) {
+        await setActiveConversation(match.id);
+        return;
+      }
+    }
+
+    const rawUser = params.get('user');
+    const userId = rawUser ? parseInt(rawUser, 10) : null;
+    if (!userId || userId === config.userId) return;
+    const directMatch = state.conversations.find((c) => c.type === 'direct' && c.participants.some((p) => p.id === userId));
+    if (directMatch) {
+      await setActiveConversation(directMatch.id);
+      return;
+    }
+    try {
+      const response = await fetchJson('/chat/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'direct', participant_ids: [userId] }),
+      });
+      await loadConversations();
+      if (response.id) {
+        await setActiveConversation(response.id);
+      }
+    } catch (err) {
+      // Ignore failures to avoid breaking chat load.
     }
   };
 

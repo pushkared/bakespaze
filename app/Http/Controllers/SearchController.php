@@ -77,10 +77,15 @@ class SearchController extends Controller
                 $title = $conversation->type === 'group'
                     ? ($conversation->name ?: 'Group Chat')
                     : $conversation->participants->firstWhere('id', '!=', $user->id)?->name;
+                $peer = $conversation->type === 'direct'
+                    ? $conversation->participants->firstWhere('id', '!=', $user->id)
+                    : null;
 
                 return [
                     'id' => $conversation->id,
                     'title' => $title ?: 'Direct Chat',
+                    'type' => $conversation->type,
+                    'peer_id' => $peer?->id,
                     'participants' => $conversation->participants->pluck('name')->values(),
                     'last_message' => $lastMessage?->body,
                 ];

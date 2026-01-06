@@ -61,7 +61,17 @@
           </div>
           <div>
             @if($task->assignees->first())
-              
+              @php
+                $assignee = $task->assignees->first();
+                $assigneeAvatar = $assignee->avatar_url ?? null;
+                if ($assigneeAvatar && \Illuminate\Support\Str::startsWith($assigneeAvatar, ['http://', 'https://']) === false) {
+                  $assigneeAvatar = \Illuminate\Support\Facades\Storage::url($assigneeAvatar);
+                }
+              @endphp
+              <div class="assignee-chip">
+                <img src="{{ $assigneeAvatar ?: asset('images/user-icon.svg') }}" alt="{{ $assignee->name }}">
+                <span>{{ $assignee->name }}</span>
+              </div>
             @else
               <span class="muted">Unassigned</span>
             @endif
@@ -252,6 +262,17 @@
     if (window.location.search.includes('open_modal=1')) {
       openModal();
     }
+    const params = new URLSearchParams(window.location.search);
+    const assignTo = params.get('assign_to');
+    const applyAssignee = (assigneeId) => {
+      if (!assigneeId) return;
+      const radios = document.querySelectorAll('input[name="assignee_id"]');
+      radios.forEach(r => r.checked = (r.value === assigneeId));
+    };
+    if (assignTo) {
+      openModal();
+      applyAssignee(assignTo);
+    }
 
     // basic toolbar actions
     if (toolbar && editor) {
@@ -342,6 +363,7 @@
       if (hidden) hidden.value = '';
       if (dueInput) dueInput.value = '';
       radios.forEach((r, idx) => r.checked = idx === 0);
+      if (assignTo) applyAssignee(assignTo);
     }, { once: false });
   })();
 </script>

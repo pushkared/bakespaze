@@ -319,7 +319,7 @@
           </div>
         `).join('') || '<div class="muted">No tasks found</div>';
         const chatHtml = (data.chats || []).map(c => `
-          <div class="search-item" data-type="chat" data-id="${c.id}">
+          <div class="search-item" data-type="chat" data-id="${c.id}" data-peer-id="${c.peer_id || ''}" data-chat-type="${c.type || ''}">
             <div class="title">${c.title}</div>
             <div class="meta">${(c.participants || []).join(', ')}${c.last_message ? ' - ' + c.last_message : ''}</div>
           </div>
@@ -374,11 +374,16 @@
           if (type === 'task') {
             window.location = '{{ route('tasks.index') }}#task-' + id;
           } else if (type === 'chat') {
-            window.location = '{{ route('chat.index') }}?conversation=' + id;
+            const peerId = item.dataset.peerId || '';
+            if (peerId) {
+              window.location = '{{ route('chat.index') }}?user=' + peerId;
+            } else {
+              window.location = '{{ route('chat.index') }}?conversation=' + id;
+            }
           } else if (type === 'meeting') {
             window.location = '{{ route('calendar.index') }}?event=' + encodeURIComponent(id);
           } else {
-            window.location = '{{ route('users.index') }}';
+            window.location = '{{ url('/users') }}/' + id;
           }
         });
       }
@@ -391,9 +396,9 @@
       const mobileResults = document.getElementById('mobile-search-results');
       const renderMobileResults = (data) => {
         if (!mobileResults) return;
-        const userHtml = (data.users || []).map(u => `<div class="search-item"><div class="title">${u.name}</div><div class="meta">${u.email}</div></div>`).join('') || '<div class="muted">No users</div>';
+        const userHtml = (data.users || []).map(u => `<div class="search-item" data-type="user" data-id="${u.id}"><div class="title">${u.name}</div><div class="meta">${u.email}</div></div>`).join('') || '<div class="muted">No users</div>';
         const taskHtml = (data.tasks || []).map(t => `<div class="search-item" data-type="task" data-id="${t.id}"><div class="title">${t.title}</div><div class="meta">${t.workspace} - ${t.assigned_to || 'Unassigned'} - ${t.due_date || 'No due'} - ${t.status}</div></div>`).join('') || '<div class="muted">No tasks</div>';
-        const chatHtml = (data.chats || []).map(c => `<div class="search-item" data-type="chat" data-id="${c.id}"><div class="title">${c.title}</div><div class="meta">${(c.participants || []).join(', ')}${c.last_message ? ' - ' + c.last_message : ''}</div></div>`).join('') || '<div class="muted">No chats</div>';
+        const chatHtml = (data.chats || []).map(c => `<div class="search-item" data-type="chat" data-id="${c.id}" data-peer-id="${c.peer_id || ''}" data-chat-type="${c.type || ''}"><div class="title">${c.title}</div><div class="meta">${(c.participants || []).join(', ')}${c.last_message ? ' - ' + c.last_message : ''}</div></div>`).join('') || '<div class="muted">No chats</div>';
         const meetingHtml = (data.meetings || []).map(m => `<div class="search-item" data-type="meeting" data-id="${m.id}"><div class="title">${m.title}</div><div class="meta">${m.start || 'No time'}${m.end ? ' - ' + m.end : ''}</div></div>`).join('') || '<div class="muted">No meetings</div>';
         mobileResults.innerHTML = `<div class="search-section"><h5>Users</h5>${userHtml}</div><div class="search-section"><h5>Tasks</h5>${taskHtml}</div><div class="search-section"><h5>Chats</h5>${chatHtml}</div><div class="search-section"><h5>Meetings</h5>${meetingHtml}</div>`;
       };
@@ -433,9 +438,16 @@
           if (type === 'task') {
             window.location = '{{ route('tasks.index') }}#task-' + id;
           } else if (type === 'chat') {
-            window.location = '{{ route('chat.index') }}?conversation=' + id;
+            const peerId = item.dataset.peerId || '';
+            if (peerId) {
+              window.location = '{{ route('chat.index') }}?user=' + peerId;
+            } else {
+              window.location = '{{ route('chat.index') }}?conversation=' + id;
+            }
           } else if (type === 'meeting') {
             window.location = '{{ route('calendar.index') }}?event=' + encodeURIComponent(id);
+          } else if (type === 'user') {
+            window.location = '{{ url('/users') }}/' + id;
           } else {
             window.location = '{{ route('users.index') }}';
           }
@@ -503,6 +515,5 @@
   @stack('scripts')
 </body>
 </html>
-
 
 

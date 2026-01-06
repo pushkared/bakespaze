@@ -29,8 +29,14 @@
       data-role="{{ ucfirst($member->role ?? 'Member') }}"
       data-punched="{{ $summary['logged_today'] ? '1' : '0' }}"
     >
+      @php
+        $memberAvatar = $member->user->avatar_url;
+        if ($memberAvatar && \Illuminate\Support\Str::startsWith($memberAvatar, ['http://', 'https://']) === false) {
+          $memberAvatar = \Illuminate\Support\Facades\Storage::url($memberAvatar);
+        }
+      @endphp
       <div class="avatar">
-        <img src="{{ asset('images/user-icon.svg') }}" alt="{{ $member->user->name }}">
+        <img src="{{ $memberAvatar ?: asset('images/user-icon.svg') }}" alt="{{ $member->user->name }}">
       </div>
       <div class="name">{{ $member->user->name }}</div>
       <div class="role">{{ ucfirst($member->role ?? 'Member') }}</div>
@@ -222,5 +228,4 @@
 </script>
 @endpush
 @endsection
-
 

@@ -1,8 +1,15 @@
-@props(['name'=>'User','role'=>'Member','avatar'=>'avatar.jpg','theme'=>'green','size'=>'md','seat'=>null])
+@props(['name'=>'User','role'=>'Member','avatar'=>null,'theme'=>'green','size'=>'md','seat'=>null])
+
+@php
+  $avatarSrc = $avatar;
+  if ($avatarSrc && \Illuminate\Support\Str::startsWith($avatarSrc, ['http://', 'https://']) === false) {
+    $avatarSrc = \Illuminate\Support\Facades\Storage::url($avatarSrc);
+  }
+@endphp
 
 <div class="user-card user-{{ $theme }} user-{{ $size }}" data-seat="{{ $seat }}" tabindex="0" role="group" aria-label="{{ $name }} - {{ $role }}">
   <div class="avatar-wrap">
-    <img src="{{ asset('images/' . $avatar) }}" alt="{{ $name }}" onerror="this.src='{{ asset('images/user-icon.svg') }}'">
+    <img src="{{ $avatarSrc ?: asset('images/user-icon.svg') }}" alt="{{ $name }}" onerror="this.src='{{ asset('images/user-icon.svg') }}'">
   </div>
   <div class="meta">
     <div class="name">{{ $name }}</div>
