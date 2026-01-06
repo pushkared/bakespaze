@@ -221,6 +221,7 @@
     <div class="event-modal__body">
       <div id="event-modal-time" class="event-time"></div>
       <div id="event-modal-meet" class="event-link"></div>
+      <button type="button" class="pill-btn small ghost" id="event-copy-link" hidden>Copy Meet Link</button>
       <div id="event-modal-desc" class="muted"></div>
       <div id="event-modal-attendees" class="event-attendees"></div>
       <div class="event-actions" id="event-modal-actions" hidden>
@@ -297,6 +298,7 @@
     const detailDesc = document.getElementById('event-modal-desc');
     const detailAtt = document.getElementById('event-modal-attendees');
     const detailMeet = document.getElementById('event-modal-meet');
+    const copyBtn = document.getElementById('event-copy-link');
     const closeDetail = document.getElementById('event-modal-close');
     const actionWrap = document.getElementById('event-modal-actions');
     const editToggle = document.getElementById('event-edit-toggle');
@@ -326,8 +328,17 @@
         detailAtt.innerHTML = attendees.length ? attendees.map(a => `<span class="event-chip">${a}</span>`).join(' ') : '<span class="muted">No attendees</span>';
         if (row.dataset.meet) {
           detailMeet.innerHTML = `<a href="${row.dataset.meet}" target="_blank">Join Google Meet</a>`;
+          if (copyBtn) {
+            copyBtn.hidden = false;
+            copyBtn.dataset.link = row.dataset.meet;
+            copyBtn.textContent = 'Copy Meet Link';
+          }
         } else {
           detailMeet.innerHTML = '<span class="muted">No meet link</span>';
+          if (copyBtn) {
+            copyBtn.hidden = true;
+            copyBtn.dataset.link = '';
+          }
         }
         const isOrganizer = row.dataset.organizer === '1';
         if (actionWrap) actionWrap.hidden = !isOrganizer;
@@ -363,6 +374,69 @@
         if (editForm) editForm.hidden = true;
       });
     }
+
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        const link = copyBtn.dataset.link || '';
+        if (!link) return;
+        try {
+          await navigator.clipboard.writeText(link);
+          copyBtn.textContent = 'Copied';
+          setTimeout(() => { copyBtn.textContent = 'Copy Meet Link'; }, 1200);
+        } catch (err) {
+          const temp = document.createElement('textarea');
+          temp.value = link;
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand('copy');
+          temp.remove();
+          copyBtn.textContent = 'Copied';
+          setTimeout(() => { copyBtn.textContent = 'Copy Meet Link'; }, 1200);
+        }
+      });
+    }
+
+    const scheduleReminders = () => {
+      if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted') return;
+      const rows = document.querySelectorAll('.detail-trigger');
+      const events = new Map();
+      rows.forEach((row) => {
+        const id = row.dataset.id;
+        const start = row.dataset.start;
+        if (!id || !start) return;
+        if (!events.has(id)) {
+          events.set(id, {
+            id,
+            title: row.dataset.title || 'Meeting',
+            start,
+            meet: row.dataset.meet || '',
+          });
+        }
+      });
+
+      const now = Date.now();
+      events.forEach((event) => {
+        const startTime = Date.parse(event.start);
+        if (!startTime || Number.isNaN(startTime)) return;
+        if (startTime <= now) return;
+        const remindAt = startTime - (10 * 60 * 1000);
+        const delay = remindAt - now;
+        const notify = () => {
+          const body = event.meet ? `Join: ${event.meet}` : 'Join the call.';
+          new Notification('Meeting in 10 minutes', {
+            body: `${event.title} - ${body}`,
+            tag: `meeting-${event.id}`,
+          });
+        };
+        if (delay <= 0) {
+          notify();
+        } else {
+          setTimeout(notify, delay);
+        }
+      });
+    };
+    scheduleReminders();
 
     const params = new URLSearchParams(window.location.search);
     const eventId = params.get('event');
