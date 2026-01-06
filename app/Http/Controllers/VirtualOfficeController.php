@@ -20,7 +20,7 @@ class VirtualOfficeController extends Controller
         $workspaceId = session('current_workspace_id');
 
         $workspace = Workspace::with(['memberships.user' => function ($q) {
-            $q->select('id','name','role','email');
+            $q->select('id','name','role','email','avatar_url');
         }])
         ->whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
         ->when($workspaceId, fn($q) => $q->where('id', $workspaceId))
@@ -29,7 +29,7 @@ class VirtualOfficeController extends Controller
         // Fallback to first assigned workspace
         if (!$workspace) {
             $workspace = Workspace::with(['memberships.user' => function ($q) {
-                $q->select('id','name','role','email');
+                $q->select('id','name','role','email','avatar_url');
             }])->whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
             ->orderBy('name')->first();
         }
