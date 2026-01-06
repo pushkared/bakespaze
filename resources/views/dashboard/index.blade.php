@@ -8,7 +8,7 @@
 
   <div class="dash-content">
     <div class="dash-header">
-      <button class="create-task solid" onclick="window.location='{{ route('tasks.index') }}'">+ Create Task</button>
+      <button class="create-task solid" id="floating-create-task">+ Create Task</button>
       <div class="dash-greeting">
         <div class="greet-line">Hey {{ auth()->user()->name ?? 'there' }},</div>
         <div class="greet-line">{{ $greeting ?? 'Welcome' }}!</div>
