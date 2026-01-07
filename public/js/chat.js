@@ -153,12 +153,12 @@
           if (isImage) {
             return `
               <div class="chat-attachment image">
-                <a class="chat-attachment-thumb" href="${previewUrl}" data-open="1" rel="noopener noreferrer">
+                <a class="chat-attachment-thumb" href="${previewUrl}" data-preview="image" rel="noopener noreferrer">
                   <img src="${previewUrl}" alt="${name}">
                 </a>
                 <div class="chat-attachment-meta">
                   <span>${name}</span>
-                  <a href="${url}" data-open="1" download>Download</a>
+                  <a href="${url}" download>Download</a>
                 </div>
               </div>
             `;
@@ -166,7 +166,7 @@
           return `
             <div class="chat-attachment file">
               <span>${name}</span>
-              <a href="${url}" data-open="1" rel="noopener noreferrer" download>Download</a>
+              <a href="${url}" rel="noopener noreferrer" download>Download</a>
             </div>
           `;
         }).join('')}</div>`
@@ -212,17 +212,39 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
   };
 
+  const openPreview = (url) => {
+    let overlay = document.getElementById('chat-preview-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'chat-preview-overlay';
+      overlay.className = 'chat-preview-overlay';
+      overlay.innerHTML = `
+        <div class="chat-preview-card">
+          <button type="button" class="chat-preview-close" aria-label="Close">Close</button>
+          <img class="chat-preview-image" alt="Attachment preview">
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+      overlay.querySelector('.chat-preview-close')?.addEventListener('click', () => {
+        overlay.classList.remove('open');
+      });
+    }
+    const img = overlay.querySelector('.chat-preview-image');
+    if (img) img.src = url;
+    overlay.classList.add('open');
+  };
+
   if (messagesEl) {
     messagesEl.addEventListener('click', (e) => {
-      const link = e.target.closest('a[data-open="1"]');
+      const link = e.target.closest('a[data-preview="image"]');
       if (!link) return;
       const url = link.getAttribute('href');
       if (!url) return;
       e.preventDefault();
-      const win = window.open(url, '_blank', 'noopener,noreferrer');
-      if (!win) {
-        window.location.href = url;
-      }
+      openPreview(url);
     });
   }
 

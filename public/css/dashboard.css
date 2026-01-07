@@ -1203,6 +1203,43 @@ input, select, textarea, button{
   display:flex;
   gap:10px;
 }
+.chat-preview-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:500;
+  padding:20px;
+}
+.chat-preview-overlay.open{display:flex}
+.chat-preview-card{
+  background:#0b0b0b;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;
+  padding:12px;
+  max-width:92vw;
+  max-height:92vh;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.chat-preview-close{
+  align-self:flex-end;
+  background:#1a1a1a;
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:10px;
+  padding:6px 10px;
+  cursor:pointer;
+}
+.chat-preview-image{
+  max-width:88vw;
+  max-height:80vh;
+  object-fit:contain;
+  border-radius:10px;
+}
 .chat-back{display:none}
 .chat-icon-btn{
   width:36px;
