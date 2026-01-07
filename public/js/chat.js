@@ -153,12 +153,12 @@
           if (isImage) {
             return `
               <div class="chat-attachment image">
-                <a class="chat-attachment-thumb" href="${previewUrl}" target="_blank" rel="noopener">
+                <a class="chat-attachment-thumb" href="${previewUrl}" data-open="1" rel="noopener noreferrer">
                   <img src="${previewUrl}" alt="${name}">
                 </a>
                 <div class="chat-attachment-meta">
                   <span>${name}</span>
-                  <a href="${url}" download>Download</a>
+                  <a href="${url}" data-open="1" download>Download</a>
                 </div>
               </div>
             `;
@@ -166,7 +166,7 @@
           return `
             <div class="chat-attachment file">
               <span>${name}</span>
-              <a href="${url}" target="_blank" rel="noopener" download>Download</a>
+              <a href="${url}" data-open="1" rel="noopener noreferrer" download>Download</a>
             </div>
           `;
         }).join('')}</div>`
@@ -211,6 +211,20 @@
     });
     messagesEl.scrollTop = messagesEl.scrollHeight;
   };
+
+  if (messagesEl) {
+    messagesEl.addEventListener('click', (e) => {
+      const link = e.target.closest('a[data-open="1"]');
+      if (!link) return;
+      const url = link.getAttribute('href');
+      if (!url) return;
+      e.preventDefault();
+      const win = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!win) {
+        window.location.href = url;
+      }
+    });
+  }
 
   const renderAttachmentPreview = (files) => {
     if (!attachPreviewEl) return;
