@@ -22,62 +22,6 @@
       </form>
     </header>
 
-    <div class="workspace-grid">
-      @forelse($workspaces as $ws)
-        @php
-          $currentMember = $ws->memberships->firstWhere('user_id', auth()->id());
-          $isWorkspaceAdmin = $currentMember && $currentMember->role === 'admin';
-        @endphp
-        <div class="workspace-card">
-          <div class="ws-top">
-            <div>
-              <div class="ws-name">{{ $ws->name }}</div>
-              <div class="ws-slug">#{{ $ws->slug }}</div>
-            </div>
-            <div class="ws-actions">
-              <form method="POST" action="{{ route('workspaces.switch') }}">
-                @csrf
-                <input type="hidden" name="workspace_id" value="{{ $ws->id }}">
-                <button type="submit" class="pill-btn small">Switch</button>
-              </form>
-              @if($isWorkspaceAdmin)
-                <form method="POST" action="{{ route('workspaces.destroy', $ws) }}" onsubmit="return confirm('Delete workspace?')">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="pill-btn small ghost">Delete</button>
-                </form>
-              @endif
-            </div>
-          </div>
-          <div class="ws-members">
-            @forelse($ws->memberships as $member)
-              <div class="member-pill">
-                <div class="avatar-fallback">{{ strtoupper(substr($member->user->name,0,1)) }}</div>
-                <div class="member-meta">
-                  <div class="member-name">{{ $member->user->name }}</div>
-                  <div class="member-role">{{ strtoupper($member->role) }}</div>
-                </div>
-                @if($isWorkspaceAdmin && $member->user->id !== auth()->id())
-                  <form method="POST" action="{{ route('workspaces.members.remove', [$ws, $member->user]) }}" onsubmit="return confirm('Remove this user from the workspace?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="pill-btn small ghost">Remove</button>
-                  </form>
-                @endif
-              </div>
-            @empty
-              <div class="muted">No members yet.</div>
-            @endforelse
-          </div>
-        </div>
-      @empty
-        <div class="empty-state">
-          <div class="eyebrow">Nothing here</div>
-          <p class="muted">Create your first workspace to get started.</p>
-        </div>
-      @endforelse
-    </div>
-
     @php
       $canAssign = $workspaces->contains(function ($ws) {
           $member = $ws->memberships->firstWhere('user_id', auth()->id());
@@ -122,6 +66,65 @@
         </form>
       </div>
     @endif
+
+    <div class="workspace-grid">
+      @forelse($workspaces as $ws)
+        @php
+          $currentMember = $ws->memberships->firstWhere('user_id', auth()->id());
+          $isWorkspaceAdmin = $currentMember && $currentMember->role === 'admin';
+        @endphp
+        <div class="workspace-card">
+          <button class="ws-top ws-toggle" type="button" aria-expanded="false">
+            <div>
+              <div class="ws-name">{{ $ws->name }}</div>
+              <div class="ws-slug">#{{ $ws->slug }}</div>
+            </div>
+            <span class="ws-caret" aria-hidden="true"></span>
+          </button>
+          <div class="ws-body">
+            <div class="ws-actions">
+              <form method="POST" action="{{ route('workspaces.switch') }}">
+                @csrf
+                <input type="hidden" name="workspace_id" value="{{ $ws->id }}">
+                <button type="submit" class="pill-btn small">Switch</button>
+              </form>
+              @if($isWorkspaceAdmin)
+                <form method="POST" action="{{ route('workspaces.destroy', $ws) }}" onsubmit="return confirm('Delete workspace?')">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="pill-btn small ghost">Delete</button>
+                </form>
+              @endif
+            </div>
+            <div class="ws-members">
+              @forelse($ws->memberships as $member)
+                <div class="member-pill">
+                  <div class="avatar-fallback">{{ strtoupper(substr($member->user->name,0,1)) }}</div>
+                  <div class="member-meta">
+                    <div class="member-name">{{ $member->user->name }}</div>
+                    <div class="member-role">{{ strtoupper($member->role) }}</div>
+                  </div>
+                  @if($isWorkspaceAdmin && $member->user->id !== auth()->id())
+                    <form method="POST" action="{{ route('workspaces.members.remove', [$ws, $member->user]) }}" onsubmit="return confirm('Remove this user from the workspace?')">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" class="pill-btn small ghost">Remove</button>
+                    </form>
+                  @endif
+                </div>
+              @empty
+                <div class="muted">No members yet.</div>
+              @endforelse
+            </div>
+          </div>
+        </div>
+      @empty
+        <div class="empty-state">
+          <div class="eyebrow">Nothing here</div>
+          <p class="muted">Create your first workspace to get started.</p>
+        </div>
+      @endforelse
+    </div>
   </div>
 </section>
 @push('scripts')
@@ -146,6 +149,25 @@
         options.forEach(opt => opt.style.display = '');
       });
     }
+
+    const cards = document.querySelectorAll('.workspace-card');
+    cards.forEach((card) => {
+      const toggle = card.querySelector('.ws-toggle');
+      const body = card.querySelector('.ws-body');
+      if (!toggle || !body) return;
+      toggle.addEventListener('click', () => {
+        const isOpen = card.classList.contains('is-open');
+        document.querySelectorAll('.workspace-card.is-open').forEach((openCard) => {
+          if (openCard !== card) {
+            openCard.classList.remove('is-open');
+            const openToggle = openCard.querySelector('.ws-toggle');
+            if (openToggle) openToggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+        card.classList.toggle('is-open', !isOpen);
+        toggle.setAttribute('aria-expanded', String(!isOpen));
+      });
+    });
   })();
 </script>
 @endpush
