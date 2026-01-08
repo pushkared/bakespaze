@@ -1763,7 +1763,7 @@ input, select, textarea, button{
   border:1px solid rgba(255,255,255,0.12);
   background:rgba(0,0,0,0.2);
   color:#fff;
-  height:44px;
+  height:38px;
   width:100%;
 }
 .task-filters input[type="search"]{
@@ -1778,7 +1778,7 @@ input, select, textarea, button{
   background-size:16px 16px;
 }
 .task-filters .date-field{
-  height:44px;
+  height:38px;
   width:100%;
 }
 .task-filters .date-field input{

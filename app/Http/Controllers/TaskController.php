@@ -57,12 +57,14 @@ class TaskController extends Controller
     {
         $user = $request->user();
         $allowedWorkspaceIds = $user->memberships()->pluck('workspace_id')->all();
+        $isAdmin = in_array($user->role, ['admin', 'super_admin'], true);
 
         $workspaceFilter = $request->input('workspace_id');
         $search = $request->input('q');
         $dueFrom = $request->input('due_from');
         $dueTo = $request->input('due_to');
         $statusFilter = $request->input('status');
+        $assigneeFilter = $request->input('assignee_id');
 
         $tasks = Task::with(['assignees','creator','comments.user','attachments','activities.actor','workspace.memberships'])
             ->whereIn('workspace_id', $allowedWorkspaceIds)
@@ -76,6 +78,7 @@ class TaskController extends Controller
             ->when($dueTo, fn($q) => $q->whereDate('due_date', '<=', $dueTo))
             ->when($statusFilter === 'completed', fn($q) => $q->where('status', 'completed'))
             ->when($statusFilter !== 'completed', fn($q) => $q->where('status', '!=', 'completed'))
+            ->when($assigneeFilter, fn($q) => $q->whereHas('assignees', fn($a) => $a->where('users.id', $assigneeFilter)))
             ->orderByRaw('ISNULL(due_date), due_date asc, id desc')
             ->get();
 
@@ -95,7 +98,9 @@ class TaskController extends Controller
                 'due_from' => $dueFrom,
                 'due_to' => $dueTo,
                 'status' => $statusFilter,
+                'assignee_id' => $assigneeFilter,
             ],
+            'isAdmin' => $isAdmin,
         ]);
     }
 

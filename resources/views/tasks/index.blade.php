@@ -30,6 +30,14 @@
         <option value="ongoing" @selected(($filters['status'] ?? '') === 'ongoing')>Ongoing</option>
         <option value="completed" @selected(($filters['status'] ?? '') === 'completed')>Completed</option>
       </select>
+      @if(!empty($isAdmin))
+        <select name="assignee_id" @if(($filters['assignee_id'] ?? '') === '') data-placeholder="1" @endif>
+          <option value="" disabled @selected(($filters['assignee_id'] ?? '') === '')>Assigned to</option>
+          @foreach($members as $member)
+            <option value="{{ $member->id }}" @selected(($filters['assignee_id'] ?? '') == $member->id)>{{ $member->name }}</option>
+          @endforeach
+        </select>
+      @endif
       <div class="date-field">
         <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" placeholder="Start date" title="Start date">
         <span class="date-placeholder">Start date</span>
