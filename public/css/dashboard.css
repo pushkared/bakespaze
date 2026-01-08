@@ -1764,6 +1764,12 @@ input, select, textarea, button{
   background:rgba(0,0,0,0.2);
   color:#fff;
 }
+.task-filters select option[disabled]{
+  color:#8d8d8d;
+}
+.task-filters select[data-placeholder="1"]{
+  color:#8d8d8d;
+}
 
 .task-row{
   display:grid;

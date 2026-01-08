@@ -19,14 +19,14 @@
 
     <form class="task-filters" method="GET" action="{{ route('tasks.index') }}">
       <input type="search" name="q" placeholder="Search title" value="{{ $filters['q'] ?? '' }}">
-      <select name="workspace_id">
-        <option value="" @selected(($filters['workspace_id'] ?? '') === '')>Workspace</option>
+      <select name="workspace_id" @if(($filters['workspace_id'] ?? '') === '') data-placeholder="1" @endif>
+        <option value="" disabled @selected(($filters['workspace_id'] ?? '') === '')>Workspace</option>
         @foreach($workspaces as $ws)
           <option value="{{ $ws->id }}" @selected(($filters['workspace_id'] ?? '') == $ws->id)>{{ $ws->name }}</option>
         @endforeach
       </select>
       <select name="status">
-        <option value="" @selected(($filters['status'] ?? '') === '')>Status</option>
+        <option value="" disabled @selected(($filters['status'] ?? '') === '')>Status</option>
         <option value="ongoing" @selected(($filters['status'] ?? '') === 'ongoing')>Ongoing</option>
         <option value="completed" @selected(($filters['status'] ?? '') === 'completed')>Completed</option>
       </select>
