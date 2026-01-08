@@ -55,6 +55,8 @@
           <div>
             @if($task->status === 'completed')
               <span class="status done">Completed</span>
+            @elseif($task->status === 'pending')
+              <span class="status pending">Pending</span>
             @else
               <span class="status open">Open</span>
             @endif
@@ -107,45 +109,101 @@
           </div>
         </div>
         <div class="task-detail" id="detail-{{ $task->id }}">
-          <div class="detail-inner">
-            <div class="detail-block">
-              <h4>Description</h4>
-              <div class="task-desc">{!! $task->description ?? '<span class="muted">No description</span>' !!}</div>
-            </div>
-            <div class="detail-block">
-              <h4>Attachments</h4>
-              <div class="task-attachments">
-                @forelse($task->attachments as $file)
-                  <a class="attachment-pill" href="{{ Storage::url($file->path) }}" target="_blank">{{ $file->original_name }}</a>
-                @empty
-                  <span class="muted">No attachments</span>
-                @endforelse
-              </div>
-              <form method="POST" action="{{ route('tasks.attach', $task) }}" enctype="multipart/form-data" class="attach-form">
-                @csrf
-                <input type="file" name="attachments[]" multiple>
-                <button type="submit" class="pill-btn small">Upload</button>
-              </form>
-            </div>
-            <div class="detail-block">
-              <h4>Comments</h4>
-              <div class="task-comments">
-                @forelse($task->comments as $comment)
-                  <div class="comment-row">
-                    <div class="avatar-chip">{{ strtoupper(substr($comment->user->name,0,1)) }}</div>
-                    <div class="comment-body">
-                      <div class="comment-meta">{{ $comment->user->name }} · {{ $comment->created_at->diffForHumans() }}</div>
-                      <div class="comment-text">{{ $comment->body }}</div>
-                    </div>
-                  </div>
-                @empty
-                  <span class="muted">No comments yet.</span>
-                @endforelse
-                <form method="POST" action="{{ route('tasks.comment', $task) }}" class="comment-form">
+          <div class="detail-tabs" data-task="{{ $task->id }}">
+            <button class="detail-tab active" type="button" data-target="overview-{{ $task->id }}">Overview</button>
+            <button class="detail-tab" type="button" data-target="comments-{{ $task->id }}">Comments</button>
+            <button class="detail-tab" type="button" data-target="activity-{{ $task->id }}">Activity</button>
+          </div>
+          <div class="detail-panels">
+            <div class="detail-panel active" id="overview-{{ $task->id }}">
+              @if($task->status === 'pending' && $isAssignee)
+                <form method="POST" action="{{ route('tasks.accept', $task) }}" class="accept-form">
                   @csrf
-                  <input type="text" name="body" placeholder="Add a comment..." required>
-                  <button type="submit" class="pill-btn small">Post</button>
+                  <button type="submit" class="pill-btn solid">Accept Task</button>
                 </form>
+              @endif
+              <div class="detail-block">
+                <h4>Description</h4>
+                <div class="task-desc">{!! $task->description ?? '<span class="muted">No description</span>' !!}</div>
+              </div>
+              <div class="detail-block">
+                <h4>Attachments</h4>
+                <div class="task-attachments">
+                  @forelse($task->attachments as $file)
+                    <a class="attachment-pill" href="{{ Storage::url($file->path) }}" target="_blank">{{ $file->original_name }}</a>
+                  @empty
+                    <span class="muted">No attachments</span>
+                  @endforelse
+                </div>
+                <form method="POST" action="{{ route('tasks.attach', $task) }}" enctype="multipart/form-data" class="attach-form">
+                  @csrf
+                  <input type="file" name="attachments[]" multiple>
+                  <button type="submit" class="pill-btn small">Upload</button>
+                </form>
+              </div>
+            </div>
+            <div class="detail-panel" id="comments-{{ $task->id }}">
+              <div class="detail-block">
+                <h4>Comments</h4>
+                <div class="task-comments">
+                  @forelse($task->comments as $comment)
+                    <div class="comment-row">
+                      <div class="avatar-chip">{{ strtoupper(substr($comment->user->name,0,1)) }}</div>
+                      <div class="comment-body">
+                        <div class="comment-meta">{{ $comment->user->name }} · {{ $comment->created_at->diffForHumans() }}</div>
+                        <div class="comment-text">{{ $comment->body }}</div>
+                      </div>
+                    </div>
+                  @empty
+                    <span class="muted">No comments yet.</span>
+                  @endforelse
+                  <form method="POST" action="{{ route('tasks.comment', $task) }}" class="comment-form">
+                    @csrf
+                    <input type="text" name="body" placeholder="Add a comment..." required>
+                    <button type="submit" class="pill-btn small">Post</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div class="detail-panel" id="activity-{{ $task->id }}">
+              <div class="detail-block">
+                <h4>Activity</h4>
+                <div class="activity-list">
+                  @forelse($task->activities as $activity)
+                    @php
+                      $payload = $activity->payload ?? [];
+                      $actorName = $activity->actor?->name ?? 'System';
+                      $from = $payload['from'] ?? null;
+                      $to = $payload['to'] ?? null;
+                      $fromName = $payload['from_name'] ?? null;
+                      $toName = $payload['to_name'] ?? null;
+                      $due = $payload['due_date'] ?? null;
+                      $formatDate = function ($value) {
+                          return $value ? \Carbon\Carbon::parse($value)->format('d M') : 'No due';
+                      };
+                    @endphp
+                    <div class="activity-row">
+                      <div class="activity-meta">{{ $activity->created_at->diffForHumans() }} · {{ $actorName }}</div>
+                      <div class="activity-text">
+                        @if($activity->type === 'assigned')
+                          Assigned to {{ $toName ?? 'user' }}.
+                        @elseif($activity->type === 'reassigned')
+                          Reassigned from {{ $fromName ?? 'user' }} to {{ $toName ?? 'user' }}.
+                        @elseif($activity->type === 'unassigned')
+                          Unassigned {{ $fromName ?? 'user' }}.
+                        @elseif($activity->type === 'due_date_changed')
+                          Due date changed from {{ $formatDate($from) }} to {{ $formatDate($to) }}.
+                        @elseif($activity->type === 'accepted')
+                          Task accepted. Due date: {{ $formatDate($due) }}.
+                        @else
+                          Updated task.
+                        @endif
+                      </div>
+                    </div>
+                  @empty
+                    <div class="muted">No activity yet.</div>
+                  @endforelse
+                </div>
               </div>
             </div>
           </div>
@@ -197,10 +255,13 @@
           </div>
           <div class="multi-options" id="task-assignee-options">
             <label class="option-row">
-              <input type="radio" name="assignee_id" value="" checked>
-              <span>Unassigned</span>
+              <input type="radio" name="assignee_id" value="{{ auth()->id() }}" checked>
+              <span>Myself ({{ auth()->user()->email }})</span>
             </label>
             @foreach($members as $member)
+              @if($member->id === auth()->id())
+                @continue
+              @endif
               <label class="option-row">
                 <input type="radio" name="assignee_id" value="{{ $member->id }}">
                 <span>{{ $member->name }} ({{ $member->email }})</span>
@@ -306,6 +367,22 @@
       });
     });
 
+    // detail tabs
+    document.querySelectorAll('.detail-tabs').forEach((tabs) => {
+      tabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('.detail-tab');
+        if (!btn) return;
+        const targetId = btn.dataset.target;
+        const container = tabs.closest('.task-detail');
+        if (!container) return;
+        container.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+        container.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = container.querySelector('#' + targetId);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
     // Task assignee search (radio)
     const tSearch = document.getElementById('task-assignee-search');
     const tOptions = document.querySelectorAll('#task-assignee-options .option-row');
@@ -340,7 +417,12 @@
         const dueInput = form.querySelector('input[name=\"due_date\"]');
         const radios = form.querySelectorAll('input[name=\"assignee_id\"]');
         if (titleInput) titleInput.value = btn.dataset.title || '';
-        if (editor) editor.innerHTML = decodeURIComponent(btn.dataset.desc || '');
+        if (editor) {
+          const rawDesc = btn.dataset.desc || '';
+          const decoder = document.createElement('textarea');
+          decoder.innerHTML = rawDesc;
+          editor.innerHTML = decoder.value;
+        }
         if (hidden) hidden.value = editor ? editor.innerHTML : '';
         if (dueInput) dueInput.value = btn.dataset.due || '';
         const targetAssignee = btn.dataset.assignee || '';

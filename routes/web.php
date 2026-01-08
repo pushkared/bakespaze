@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::post('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::post('/tasks/{task}/accept', [TaskController::class, 'accept'])->name('tasks.accept');
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
     Route::post('/tasks/{task}/comment', [TaskController::class, 'comment'])->name('tasks.comment');
     Route::post('/tasks/{task}/attach', [TaskController::class, 'attach'])->name('tasks.attach');

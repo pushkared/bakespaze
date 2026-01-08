@@ -8,6 +8,8 @@ use App\Models\Membership;
 use App\Models\User;
 use App\Models\TaskComment;
 use App\Models\TaskAttachment;
+use App\Models\TaskActivity;
+use App\Notifications\TaskAcceptedNotification;
 use App\Notifications\TaskAssignedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -51,7 +53,7 @@ class TaskController extends Controller
         $dueTo = $request->input('due_to');
         $statusFilter = $request->input('status', 'ongoing');
 
-        $tasks = Task::with(['assignees','creator','comments.user','attachments'])
+        $tasks = Task::with(['assignees','creator','comments.user','attachments','activities.actor'])
             ->whereIn('workspace_id', $allowedWorkspaceIds)
             ->where(function ($q) use ($user) {
                 $q->where('creator_id', $user->id)
@@ -98,18 +100,19 @@ class TaskController extends Controller
             'attachments.*' => ['file','max:5120'],
         ]);
 
+        $assigneeId = $data['assignee_id'] ?? null;
         $task = Task::create([
             'workspace_id' => $workspace->id,
             'creator_id' => $request->user()->id,
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'due_date' => $data['due_date'] ?? null,
-            'status' => 'open',
+            'status' => $assigneeId ? 'pending' : 'open',
         ]);
 
-        if (!empty($data['assignee_id'])) {
-            $task->assignees()->sync([$data['assignee_id']]);
-            $assignee = User::find($data['assignee_id']);
+        if (!empty($assigneeId)) {
+            $task->assignees()->sync([$assigneeId]);
+            $assignee = User::find($assigneeId);
             if ($assignee) {
                 try {
                     $assignee->notify(new TaskAssignedNotification($task));
@@ -117,6 +120,10 @@ class TaskController extends Controller
                     report($e);
                 }
             }
+            $this->logActivity($task, $request->user()->id, 'assigned', [
+                'to_user_id' => $assigneeId,
+                'to_name' => $assignee?->name,
+            ]);
         }
 
         if ($request->hasFile('attachments')) {
@@ -156,10 +163,15 @@ class TaskController extends Controller
         ) {
             abort(403);
         }
+        if ($task->status === 'pending' && ($data['status'] ?? null) === 'completed') {
+            abort(403);
+        }
 
         $reopen = $task->status === 'completed';
         $newStatus = $reopen ? 'open' : ($data['status'] ?? $task->status);
         $previousAssigneeId = $task->assignees()->first()?->id;
+        $previousAssignee = $previousAssigneeId ? User::find($previousAssigneeId) : null;
+        $previousDueDate = $task->due_date ? $task->due_date->format('Y-m-d') : null;
 
         $task->update([
             'title' => $data['title'],
@@ -167,6 +179,14 @@ class TaskController extends Controller
             'due_date' => $data['due_date'] ?? null,
             'status' => $newStatus,
         ]);
+
+        $newDueDate = $task->due_date ? $task->due_date->format('Y-m-d') : null;
+        if ($previousDueDate !== $newDueDate) {
+            $this->logActivity($task, $request->user()->id, 'due_date_changed', [
+                'from' => $previousDueDate,
+                'to' => $newDueDate,
+            ]);
+        }
 
         if (array_key_exists('assignee_id', $data)) {
             $task->assignees()->sync($data['assignee_id'] ? [$data['assignee_id']] : []);
@@ -179,10 +199,78 @@ class TaskController extends Controller
                         report($e);
                     }
                 }
+                $task->update([
+                    'status' => 'pending',
+                    'accepted_at' => null,
+                    'accepted_by_user_id' => null,
+                ]);
+                $this->logActivity($task, $request->user()->id, $previousAssigneeId ? 'reassigned' : 'assigned', [
+                    'from_user_id' => $previousAssigneeId,
+                    'from_name' => $previousAssignee?->name,
+                    'to_user_id' => $assignee?->id,
+                    'to_name' => $assignee?->name,
+                ]);
+            } elseif (empty($data['assignee_id']) && $previousAssigneeId) {
+                $task->update([
+                    'status' => 'open',
+                    'accepted_at' => null,
+                    'accepted_by_user_id' => null,
+                ]);
+                $this->logActivity($task, $request->user()->id, 'unassigned', [
+                    'from_user_id' => $previousAssigneeId,
+                    'from_name' => $previousAssignee?->name,
+                ]);
             }
         }
 
         return back()->with('status', 'Task updated.');
+    }
+
+    public function accept(Request $request, Task $task)
+    {
+        $this->ensureTaskAccess($task, $request);
+        $assigneeId = $task->assignees()->first()?->id;
+        abort_unless($assigneeId && (int)$assigneeId === (int)$request->user()->id, 403);
+
+        $task->update([
+            'status' => 'open',
+            'accepted_at' => now(),
+            'accepted_by_user_id' => $request->user()->id,
+        ]);
+
+        $this->logActivity($task, $request->user()->id, 'accepted', [
+            'due_date' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
+        ]);
+
+        $previousAssigneeId = TaskActivity::where('task_id', $task->id)
+            ->whereIn('type', ['assigned', 'reassigned'])
+            ->latest()
+            ->value('payload->from_user_id');
+
+        $notifyIds = collect([$assigneeId, $previousAssigneeId])->filter()->unique();
+        foreach ($notifyIds as $userId) {
+            $user = User::find($userId);
+            if (!$user) {
+                continue;
+            }
+            try {
+                $user->notify(new TaskAcceptedNotification($task));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return back()->with('status', 'Task accepted.');
+    }
+
+    protected function logActivity(Task $task, ?int $actorId, string $type, array $payload = []): void
+    {
+        TaskActivity::create([
+            'task_id' => $task->id,
+            'actor_id' => $actorId,
+            'type' => $type,
+            'payload' => $payload,
+        ]);
     }
 
     public function destroy(Request $request, Task $task)

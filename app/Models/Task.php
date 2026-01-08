@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\TaskActivity;
 
 class Task extends Model
 {
@@ -45,5 +46,10 @@ class Task extends Model
     public function assignees()
     {
         return $this->belongsToMany(User::class, 'task_user');
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(TaskActivity::class)->latest();
     }
 }

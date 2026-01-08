@@ -1741,6 +1741,7 @@ input, select, textarea, button{
 }
 .status.done{background:rgba(56,255,43,0.2);color:var(--lime)}
 .status.open{background:rgba(255,255,255,0.08);color:#fff}
+.status.pending{background:rgba(255,196,0,0.18);color:#ffd15c}
 
 .row-actions{display:flex;gap:8px;flex-wrap:wrap}
 
@@ -1751,12 +1752,29 @@ input, select, textarea, button{
 }
 .task-detail.open{display:block}
 
-.detail-inner{
-  padding:14px;
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
-  gap:12px;
+.detail-tabs{
+  display:flex;
+  gap:8px;
+  padding:12px 14px 0;
 }
+.detail-tab{
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);
+  color:#e9e9e9;
+  border-radius:12px;
+  padding:6px 12px;
+  cursor:pointer;
+  font-weight:700;
+}
+.detail-tab.active{
+  background:rgba(56,255,43,0.15);
+  border-color:rgba(56,255,43,0.45);
+  color:var(--lime);
+}
+.detail-panels{padding:14px}
+.detail-panel{display:none}
+.detail-panel.active{display:block}
+.accept-form{margin-bottom:12px}
 
 .detail-block h4{margin-bottom:6px;font-weight:800}
 .task-desc{color:#dcdcdc;line-height:1.4}
@@ -1798,6 +1816,15 @@ input, select, textarea, button{
   background:rgba(0,0,0,0.3);
   color:#fff;
 }
+.activity-list{display:flex;flex-direction:column;gap:10px}
+.activity-row{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.03);
+}
+.activity-meta{font-size:12px;color:#9f9f9f;margin-bottom:4px}
+.activity-text{color:#e9e9e9}
 
 /* Modal */
 .modal-backdrop{
