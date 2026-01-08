@@ -612,6 +612,14 @@ input, select, textarea, button{
   padding:18px;
   position:relative;
 }
+.board-table.is-clickable{
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.board-table.is-clickable:hover{
+  transform:translateY(-2px);
+  box-shadow:0 26px 46px rgba(0,0,0,0.4);
+}
 .table-message{
   font-size:28px;
   font-weight:600;

@@ -84,9 +84,11 @@ class VirtualOfficeController extends Controller
             $start = optional($item->getStart())->getDateTime() ?? optional($item->getStart())->getDate();
             $parsed = Carbon::parse($start)->setTimezone($timezone);
             return [
+                'id' => $item->getId(),
                 'title' => $item->getSummary() ?: 'Upcoming meeting',
                 'time' => $parsed->format('D d M, h:i A'),
                 'raw' => $parsed,
+                'meet' => $item->getHangoutLink(),
             ];
         } catch (\Throwable $e) {
             return null;

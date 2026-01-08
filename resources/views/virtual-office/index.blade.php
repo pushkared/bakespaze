@@ -159,7 +159,11 @@
   @endif
 @endfor
 
-    <div class="board-table meeting-table">
+    <div class="board-table meeting-table {{ !empty($nextMeeting['id']) ? 'is-clickable' : '' }}"
+      @if(!empty($nextMeeting['id']))
+        data-event-url="{{ route('calendar.index', ['event' => $nextMeeting['id']]) }}"
+      @endif
+    >
       <div class="table-message">
         @if($nextMeeting)
           <div class="table-title">{{ $nextMeeting['title'] }}</div>

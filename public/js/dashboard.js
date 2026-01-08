@@ -42,6 +42,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Gentle parallax for meeting table on desktop
   const stage = document.querySelector('.room-stage');
   const table = document.querySelector('.meeting-table');
+  if (table) {
+    table.addEventListener('click', () => {
+      const targetUrl = table.getAttribute('data-event-url');
+      if (targetUrl) {
+        window.location.href = targetUrl;
+      }
+    });
+  }
 
   let enabled = window.innerWidth >= 992 && !!stage && !!table;
   function onMove(e) {
