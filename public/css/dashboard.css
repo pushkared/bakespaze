@@ -1763,6 +1763,21 @@ input, select, textarea, button{
   border:1px solid rgba(255,255,255,0.12);
   background:rgba(0,0,0,0.2);
   color:#fff;
+  height:44px;
+}
+.task-filters select{
+  appearance:none;
+  padding-right:36px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:16px 16px;
+}
+.task-filters .date-field{
+  height:44px;
+}
+.task-filters .date-field input{
+  height:100%;
 }
 .task-filters .date-field{
   position:relative;
