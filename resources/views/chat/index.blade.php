@@ -39,7 +39,6 @@
             <button class="chat-icon-btn chat-call" type="button" aria-label="Call"></button>
             <button class="chat-icon-btn chat-video" type="button" aria-label="Video call"></button>
             <button class="chat-icon-btn chat-add" type="button" id="chat-add-people" aria-label="Add people"></button>
-            <button class="chat-icon-btn chat-settings" type="button" id="chat-settings" aria-label="Edit group"></button>
             <button class="chat-icon-btn chat-plus chat-new-btn" type="button" aria-label="New chat"></button>
           </div>
         </div>
@@ -105,39 +104,10 @@
   </div>
 </div>
 
-<div class="chat-modal hidden" id="chat-group-modal">
-  <div class="chat-modal-card">
-    <div class="chat-modal-head">
-      <div class="chat-modal-title">Group Settings</div>
-      <button class="chat-modal-close" type="button" id="chat-group-close">Close</button>
-    </div>
-    <div class="chat-modal-body">
-      <div class="chat-modal-row">
-        <label class="chat-modal-label" for="chat-group-edit-name">Group name</label>
-        <input type="text" id="chat-group-edit-name" placeholder="Team Alpha" />
-      </div>
-      <div class="chat-modal-row">
-        <label class="chat-modal-label" for="chat-group-edit-icon">Group icon</label>
-        <input type="file" id="chat-group-edit-icon" accept="image/*" />
-      </div>
-    </div>
-    <div class="chat-modal-actions">
-      <button class="chat-create-btn" type="button" id="chat-group-save">Save</button>
-    </div>
-  </div>
-</div>
-
 <script>
-  @php
-    $userAvatar = auth()->user()->avatar_url ?? null;
-    if ($userAvatar && \Illuminate\Support\Str::startsWith($userAvatar, ['http://', 'https://']) === false) {
-      $userAvatar = \Illuminate\Support\Facades\Storage::url($userAvatar);
-    }
-  @endphp
   window.__CHAT_CONFIG__ = {
     userId: {{ auth()->id() }},
     userName: @json(auth()->user()->name),
-    userAvatar: @json($userAvatar),
     reverb: {
       key: @json(env('REVERB_APP_KEY')),
       host: @json(env('REVERB_HOST', '127.0.0.1')),

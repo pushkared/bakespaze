@@ -11,7 +11,6 @@ class Conversation extends Model
 
     protected $fillable = [
         'name',
-        'avatar_url',
         'type',
         'created_by',
     ];
@@ -19,7 +18,7 @@ class Conversation extends Model
     public function participants()
     {
         return $this->belongsToMany(User::class)
-            ->withPivot(['role', 'joined_at', 'last_read_message_id', 'last_delivered_message_id'])
+            ->withPivot(['role', 'joined_at', 'last_read_message_id'])
             ->withTimestamps();
     }
 
