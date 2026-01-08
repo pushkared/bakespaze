@@ -17,10 +17,13 @@ class Task extends Model
         'description',
         'due_date',
         'status',
+        'accepted_at',
+        'accepted_by_user_id',
     ];
 
     protected $casts = [
         'due_date' => 'date',
+        'accepted_at' => 'datetime',
     ];
 
     public function workspace()
