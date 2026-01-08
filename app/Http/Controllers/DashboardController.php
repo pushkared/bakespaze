@@ -37,7 +37,15 @@ class DashboardController extends Controller
         $timezone = AppSetting::current()->timezone ?? 'Asia/Kolkata';
         $now = Carbon::now($timezone);
         $hour = (int)$now->format('H');
-        $greeting = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Evening');
+        if ($hour < 6) {
+            $greeting = 'Good Night';
+        } elseif ($hour < 12) {
+            $greeting = 'Good Morning';
+        } elseif ($hour < 17) {
+            $greeting = 'Good Afternoon';
+        } else {
+            $greeting = 'Good Evening';
+        }
 
         $todayRecord = AttendanceRecord::where('user_id', $request->user()->id)
             ->whereDate('work_date', $now->toDateString())
