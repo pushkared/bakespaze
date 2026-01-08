@@ -474,10 +474,13 @@
       };
 
       document.querySelectorAll('form').forEach((form) => {
-        form.addEventListener('submit', () => {
+        form.addEventListener('submit', (e) => {
           if (form.id === 'chat-form') return;
-          const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
-          if (submitBtn) setLoading(submitBtn);
+          setTimeout(() => {
+            if (e.defaultPrevented) return;
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn) setLoading(submitBtn);
+          }, 0);
         });
       });
       const banner = document.getElementById('permission-banner');
