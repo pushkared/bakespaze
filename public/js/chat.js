@@ -25,10 +25,21 @@
   const groupNameInput = document.getElementById('chat-group-name');
   const addPeopleBtn = document.getElementById('chat-add-people');
   const backBtn = document.getElementById('chat-back');
+  const settingsBtn = document.getElementById('chat-settings');
+  const groupModal = document.getElementById('chat-group-modal');
+  const groupClose = document.getElementById('chat-group-close');
+  const groupSave = document.getElementById('chat-group-save');
+  const groupEditName = document.getElementById('chat-group-edit-name');
+  const groupEditIcon = document.getElementById('chat-group-edit-icon');
 
   const state = {
     conversations: [],
     activeId: null,
+    activeConversation: null,
+    receipts: {
+      readMap: {},
+      deliveredMap: {},
+    },
     replyTo: null,
     echo: null,
     channelName: null,
@@ -128,10 +139,29 @@
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const escapeHtml = (value) => {
+    if (value == null) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  const linkify = (text) => {
+    const safe = escapeHtml(text);
+    return safe.replace(/https?:\/\/[^\s<]+/g, (raw) => {
+      const cleaned = raw.replace(/[),.]+$/, '');
+      return `<a href="${cleaned}" class="chat-link" target="_blank" rel="noopener noreferrer">${cleaned}</a>${raw.slice(cleaned.length)}`;
+    });
+  };
+
   const renderMessage = (message) => {
     const wrapper = document.createElement('div');
     wrapper.className = `chat-msg ${message.user_id === config.userId ? 'self' : ''}`;
     wrapper.dataset.id = message.id;
+    if (message.temp_id) wrapper.dataset.tempId = message.temp_id;
 
     const reactions = message.reactions || [];
     const grouped = reactions.reduce((acc, reaction) => {
@@ -166,18 +196,48 @@
           return `
             <div class="chat-attachment file">
               <span>${name}</span>
-              <a href="${url}" rel="noopener noreferrer" download>Download</a>
+              <a href="${url}" data-preview="file" data-name="${name}" rel="noopener noreferrer">Open</a>
             </div>
           `;
         }).join('')}</div>`
       : '';
 
+    const isGroup = state.activeConversation?.type === 'group';
+    const senderName = message.user_id === config.userId ? 'You' : (message.sender || 'Member');
+    const senderAvatar = message.user_id === config.userId ? config.userAvatar : message.sender_avatar;
+    const senderInitial = (senderName || 'U').trim().charAt(0).toUpperCase();
+    const senderHtml = isGroup ? `
+      <div class="chat-msg-sender">
+        <div class="avatar">${senderAvatar ? `<img src="${senderAvatar}" alt="${senderName}">` : senderInitial}</div>
+        <span>${senderName}</span>
+      </div>
+    ` : '';
+
+    const status = message.status || (message.user_id === config.userId ? 'sent' : '');
+    const statusHtml = message.user_id === config.userId ? `
+      <div class="chat-msg-status ${status === 'seen' ? 'seen' : ''}" data-status="${status}">
+        <span class="tick">${status === 'sent' ? '✓' : '✓✓'}</span>
+      </div>
+    ` : '';
+
+    const bodyHtml = message.body ? `<div class="chat-bubble">${linkify(message.body)}</div>` : '';
+    const linkMatch = message.body ? message.body.match(/https?:\/\/[^\s<]+/) : null;
+    const previewUrl = linkMatch ? linkMatch[0].replace(/[),.]+$/, '') : '';
+    const previewHtml = previewUrl ? `
+      <div class="chat-link-preview" data-url="${previewUrl}">
+        <div class="chat-link-preview__meta">Loading preview...</div>
+      </div>
+    ` : '';
+
     wrapper.innerHTML = `
       <div class="chat-msg-time">${formatTime(message.created_at)}</div>
       <div class="chat-msg-body">
+        ${senderHtml}
         ${message.reply_to ? `<div class="chat-reply">${message.reply_to.sender || ''}: ${message.reply_to.body || 'Attachment'}</div>` : ''}
-        ${message.body ? `<div class="chat-bubble">${message.body}</div>` : ''}
+        ${bodyHtml}
+        ${previewHtml}
         ${attachmentsHtml}
+        ${statusHtml}
         ${reactionHtml}
         <div class="chat-msg-actions">
           <button class="chat-msg-action reply" data-action="reply" aria-label="Reply"></button>
@@ -201,7 +261,56 @@
       });
     });
 
+    const preview = wrapper.querySelector('.chat-link-preview');
+    if (preview) {
+      const url = preview.dataset.url;
+      if (url) {
+        fetchJson(`/chat/link-preview?url=${encodeURIComponent(url)}`)
+          .then((data) => {
+            preview.innerHTML = `
+              <a class="chat-link-preview__inner" href="${data.url}" target="_blank" rel="noopener noreferrer">
+                ${data.image ? `<img src="${data.image}" alt="${data.title || 'Link'}">` : ''}
+                <div class="chat-link-preview__text">
+                  <div class="chat-link-preview__title">${escapeHtml(data.title || data.url)}</div>
+                  ${data.description ? `<div class="chat-link-preview__desc">${escapeHtml(data.description)}</div>` : ''}
+                  <div class="chat-link-preview__url">${escapeHtml(data.url)}</div>
+                </div>
+              </a>
+            `;
+          })
+          .catch(() => {
+            preview.remove();
+          });
+      }
+    }
+
     return wrapper;
+  };
+
+  const computeStatus = (messageId) => {
+    if (!state.activeConversation) return 'sent';
+    const others = (state.activeConversation.participants || []).filter(p => p.id !== config.userId);
+    if (!others.length) return 'sent';
+    const deliveredAll = others.every(p => (state.receipts.deliveredMap[p.id] || 0) >= messageId);
+    const seenAll = others.every(p => (state.receipts.readMap[p.id] || 0) >= messageId);
+    if (seenAll) return 'seen';
+    if (deliveredAll) return 'delivered';
+    return 'sent';
+  };
+
+  const updateStatuses = () => {
+    const nodes = messagesEl ? messagesEl.querySelectorAll('.chat-msg.self') : [];
+    nodes.forEach((node) => {
+      const id = parseInt(node.dataset.id, 10);
+      if (!id) return;
+      const status = computeStatus(id);
+      const statusEl = node.querySelector('.chat-msg-status');
+      if (!statusEl) return;
+      statusEl.dataset.status = status;
+      statusEl.classList.toggle('seen', status === 'seen');
+      const tick = statusEl.querySelector('.tick');
+      if (tick) tick.textContent = status === 'sent' ? '✓' : '✓✓';
+    });
   };
 
   const renderMessages = (messages) => {
@@ -210,9 +319,27 @@
       messagesEl.appendChild(renderMessage(message));
     });
     messagesEl.scrollTop = messagesEl.scrollHeight;
+    updateStatuses();
   };
 
-  const openPreview = (url) => {
+  const downloadFile = async (url, filename) => {
+    try {
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename || 'attachment';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 500);
+    } catch (err) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const openPreview = (url, type = 'image', name = '') => {
     let overlay = document.getElementById('chat-preview-overlay');
     if (!overlay) {
       overlay = document.createElement('div');
@@ -220,8 +347,12 @@
       overlay.className = 'chat-preview-overlay';
       overlay.innerHTML = `
         <div class="chat-preview-card">
-          <button type="button" class="chat-preview-close" aria-label="Close">Close</button>
-          <img class="chat-preview-image" alt="Attachment preview">
+          <div class="chat-preview-actions">
+            <button type="button" class="chat-preview-close" aria-label="Close">Close</button>
+            <button type="button" class="chat-preview-download" aria-label="Download">Download</button>
+          </div>
+          <img class="chat-preview-image" alt="Attachment preview" hidden>
+          <iframe class="chat-preview-frame" title="Attachment preview" hidden></iframe>
         </div>
       `;
       document.body.appendChild(overlay);
@@ -231,20 +362,42 @@
       overlay.querySelector('.chat-preview-close')?.addEventListener('click', () => {
         overlay.classList.remove('open');
       });
+      overlay.querySelector('.chat-preview-download')?.addEventListener('click', () => {
+        const link = overlay.dataset.url || '';
+        const fname = overlay.dataset.name || 'attachment';
+        if (link) downloadFile(link, fname);
+      });
     }
+    overlay.dataset.url = url;
+    overlay.dataset.name = name || '';
     const img = overlay.querySelector('.chat-preview-image');
-    if (img) img.src = url;
+    const frame = overlay.querySelector('.chat-preview-frame');
+    if (img) img.hidden = type !== 'image';
+    if (frame) frame.hidden = type === 'image';
+    if (type === 'image' && img) {
+      img.src = url;
+    } else if (frame) {
+      frame.src = url;
+    }
     overlay.classList.add('open');
   };
 
   if (messagesEl) {
     messagesEl.addEventListener('click', (e) => {
       const link = e.target.closest('a[data-preview="image"]');
-      if (!link) return;
-      const url = link.getAttribute('href');
-      if (!url) return;
+      if (link) {
+        const url = link.getAttribute('href');
+        if (!url) return;
+        e.preventDefault();
+        openPreview(url, 'image');
+        return;
+      }
+      const fileLink = e.target.closest('a[data-preview="file"]');
+      if (!fileLink) return;
+      const fileUrl = fileLink.getAttribute('href');
+      if (!fileUrl) return;
       e.preventDefault();
-      openPreview(url);
+      openPreview(fileUrl, 'file', fileLink.dataset.name || '');
     });
   }
 
@@ -315,6 +468,25 @@
         if (message.conversation_id !== state.activeId) return;
         messagesEl.appendChild(renderMessage(message));
         messagesEl.scrollTop = messagesEl.scrollHeight;
+        if (message.user_id !== config.userId) {
+          fetchJson(`/chat/conversations/${state.activeId}/delivered`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ last_delivered_message_id: message.id }),
+          });
+          fetchJson(`/chat/conversations/${state.activeId}/read`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ last_read_message_id: message.id }),
+          });
+        }
+      });
+    state.echo.private(state.channelName)
+      .listen('.message.receipt', (event) => {
+        if (event.conversation_id !== state.activeId) return;
+        state.receipts.readMap[event.user_id] = event.last_read_message_id || 0;
+        state.receipts.deliveredMap[event.user_id] = event.last_delivered_message_id || 0;
+        updateStatuses();
       });
   };
 
@@ -322,6 +494,7 @@
     state.activeId = id;
     renderConversations();
     const conv = state.conversations.find((c) => c.id === id);
+    state.activeConversation = conv || null;
     if (conv) {
       titleEl.textContent = conv.title;
       metaEl.textContent = conv.participants.map(p => p.name).join(', ');
@@ -331,7 +504,9 @@
         const peer = conv.type === 'direct'
           ? conv.participants.find((p) => p.id !== config.userId)
           : null;
-        const imageUrl = peer?.avatar_url || '';
+        const imageUrl = conv.type === 'group'
+          ? (conv.avatar_url || '')
+          : (peer?.avatar_url || '');
         if (imageUrl) {
           avatar.textContent = '';
           avatar.style.backgroundImage = `url("${imageUrl}")`;
@@ -343,15 +518,29 @@
         }
       }
     }
+    if (settingsBtn) {
+      settingsBtn.style.display = conv?.type === 'group' ? 'inline-flex' : 'none';
+    }
     emptyEl.style.display = 'none';
     threadEl.classList.remove('hidden');
     if (window.matchMedia('(max-width: 900px)').matches) {
       document.body.classList.add('chat-mobile-thread-open');
     }
-    const messages = await fetchJson(`/chat/conversations/${id}`);
+    const response = await fetchJson(`/chat/conversations/${id}`);
+    const messages = response.messages || response;
+    state.receipts.readMap = response.read_map || {};
+    state.receipts.deliveredMap = response.delivered_map || {};
     renderMessages(messages);
     subscribeConversation(id);
     const lastId = messages.length ? messages[messages.length - 1].id : null;
+    const lastFromOthers = messages.filter(m => m.user_id !== config.userId).slice(-1)[0];
+    if (lastFromOthers?.id) {
+      await fetchJson(`/chat/conversations/${id}/delivered`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ last_delivered_message_id: lastFromOthers.id }),
+      });
+    }
     await fetchJson(`/chat/conversations/${id}/read`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -435,6 +624,23 @@
     const files = attachEl.files;
     if (!body && (!files || files.length === 0)) return;
 
+    const tempId = `tmp-${Date.now()}`;
+    const tempMessage = {
+      id: tempId,
+      temp_id: tempId,
+      conversation_id: state.activeId,
+      user_id: config.userId,
+      sender: config.userName,
+      sender_avatar: config.userAvatar,
+      body: body || null,
+      created_at: new Date().toISOString(),
+      attachments: [],
+      reactions: [],
+      status: 'sent',
+    };
+    messagesEl.appendChild(renderMessage(tempMessage));
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
     const data = new FormData();
     if (body) data.append('body', body);
     if (state.replyTo) data.append('reply_to', state.replyTo.id);
@@ -447,7 +653,13 @@
       body: data,
     });
 
-    messagesEl.appendChild(renderMessage(message));
+    const tempEl = messagesEl.querySelector(`[data-temp-id="${tempId}"]`);
+    const finalEl = renderMessage(message);
+    if (tempEl) {
+      tempEl.replaceWith(finalEl);
+    } else {
+      messagesEl.appendChild(finalEl);
+    }
     messagesEl.scrollTop = messagesEl.scrollHeight;
     inputEl.value = '';
     attachEl.value = '';
@@ -493,6 +705,40 @@
   modalClose.addEventListener('click', () => modal.classList.add('hidden'));
   modalCreate.addEventListener('click', createConversation);
   addPeopleBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      if (!state.activeConversation || state.activeConversation.type !== 'group') return;
+      if (groupEditName) groupEditName.value = state.activeConversation.title || '';
+      if (groupEditIcon) groupEditIcon.value = '';
+      if (groupModal) groupModal.classList.remove('hidden');
+    });
+  }
+  if (groupClose) groupClose.addEventListener('click', () => groupModal && groupModal.classList.add('hidden'));
+  if (groupSave) {
+    groupSave.addEventListener('click', async () => {
+      if (!state.activeConversation) return;
+      const formData = new FormData();
+      formData.append('name', groupEditName?.value || '');
+      if (groupEditIcon && groupEditIcon.files && groupEditIcon.files[0]) {
+        formData.append('avatar', groupEditIcon.files[0]);
+      }
+      const response = await fetchJson(`/chat/conversations/${state.activeConversation.id}`, {
+        method: 'POST',
+        body: formData,
+      });
+      state.activeConversation.title = response.name || state.activeConversation.title;
+      state.activeConversation.avatar_url = response.avatar_url || state.activeConversation.avatar_url;
+      titleEl.textContent = state.activeConversation.title;
+      const avatar = document.getElementById('chat-thread-avatar');
+      if (avatar && state.activeConversation.avatar_url) {
+        avatar.textContent = '';
+        avatar.style.backgroundImage = `url("${state.activeConversation.avatar_url}")`;
+        avatar.classList.add('has-image');
+      }
+      await loadConversations();
+      if (groupModal) groupModal.classList.add('hidden');
+    });
+  }
   if (backBtn) {
     backBtn.addEventListener('click', () => {
       document.body.classList.remove('chat-mobile-thread-open');

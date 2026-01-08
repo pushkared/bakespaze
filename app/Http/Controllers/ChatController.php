@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\MessageSent;
+use App\Events\MessageReceiptUpdated;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageAttachment;
@@ -13,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class ChatController extends Controller
 {
@@ -44,6 +47,7 @@ class ChatController extends Controller
                     'id' => $conversation->id,
                     'type' => $conversation->type,
                     'title' => $title ?: 'Direct Chat',
+                    'avatar_url' => $conversation->type === 'group' ? $this->avatarUrl($conversation->avatar_url) : null,
                     'participants' => $conversation->participants->map(fn($p) => [
                         'id' => $p->id,
                         'name' => $p->name,
@@ -106,15 +110,23 @@ class ChatController extends Controller
     {
         $this->ensureParticipant($request->user(), $conversation);
 
+        $conversation->load('participants');
+        $readMap = $conversation->participants->mapWithKeys(fn($p) => [$p->id => (int) ($p->pivot->last_read_message_id ?? 0)]);
+        $deliveredMap = $conversation->participants->mapWithKeys(fn($p) => [$p->id => (int) ($p->pivot->last_delivered_message_id ?? 0)]);
+
         $messages = $conversation->messages()
-            ->with(['sender:id,name', 'attachments', 'reactions', 'replyTo.sender:id,name'])
+            ->with(['sender:id,name,avatar_url', 'attachments', 'reactions', 'replyTo.sender:id,name,avatar_url'])
             ->orderBy('id')
             ->get()
             ->map(function (Message $message) {
-                return $this->formatMessage($message);
+                return $this->formatMessage($message, $readMap, $deliveredMap, $conversation->participants);
             });
 
-        return response()->json($messages);
+        return response()->json([
+            'messages' => $messages,
+            'read_map' => $readMap,
+            'delivered_map' => $deliveredMap,
+        ]);
     }
 
     public function storeMessage(Request $request, Conversation $conversation)
@@ -152,9 +164,12 @@ class ChatController extends Controller
             }
         }
 
-        $message->load(['sender:id,name', 'attachments', 'reactions', 'replyTo.sender:id,name']);
+        $message->load(['sender:id,name,avatar_url', 'attachments', 'reactions', 'replyTo.sender:id,name,avatar_url']);
+        $conversation->load('participants');
 
-        $payload = $this->formatMessage($message);
+        $readMap = $conversation->participants->mapWithKeys(fn($p) => [$p->id => (int) ($p->pivot->last_read_message_id ?? 0)]);
+        $deliveredMap = $conversation->participants->mapWithKeys(fn($p) => [$p->id => (int) ($p->pivot->last_delivered_message_id ?? 0)]);
+        $payload = $this->formatMessage($message, $readMap, $deliveredMap, $conversation->participants);
         broadcast(new MessageSent($payload))->toOthers();
 
         try {
@@ -216,7 +231,111 @@ class ChatController extends Controller
             'last_read_message_id' => $data['last_read_message_id'] ?? null,
         ]);
 
+        $participant = $conversation->participants()->where('users.id', $request->user()->id)->first();
+        $payload = [
+            'conversation_id' => $conversation->id,
+            'user_id' => $request->user()->id,
+            'last_read_message_id' => (int) ($participant?->pivot->last_read_message_id ?? 0),
+            'last_delivered_message_id' => (int) ($participant?->pivot->last_delivered_message_id ?? 0),
+        ];
+        broadcast(new MessageReceiptUpdated($payload))->toOthers();
+
+        return response()->json([
+            'status' => 'ok',
+            'conversation_id' => $conversation->id,
+            'user_id' => $request->user()->id,
+            'last_read_message_id' => $data['last_read_message_id'] ?? null,
+        ]);
+    }
+
+    public function markDelivered(Request $request, Conversation $conversation)
+    {
+        $this->ensureParticipant($request->user(), $conversation);
+
+        $data = $request->validate([
+            'last_delivered_message_id' => ['required', 'integer'],
+        ]);
+
+        $conversation->participants()->updateExistingPivot($request->user()->id, [
+            'last_delivered_message_id' => $data['last_delivered_message_id'],
+        ]);
+
+        $participant = $conversation->participants()->where('users.id', $request->user()->id)->first();
+        $payload = [
+            'conversation_id' => $conversation->id,
+            'user_id' => $request->user()->id,
+            'last_read_message_id' => (int) ($participant?->pivot->last_read_message_id ?? 0),
+            'last_delivered_message_id' => (int) ($participant?->pivot->last_delivered_message_id ?? 0),
+        ];
+        broadcast(new MessageReceiptUpdated($payload))->toOthers();
+
         return response()->json(['status' => 'ok']);
+    }
+
+    public function updateConversation(Request $request, Conversation $conversation)
+    {
+        $this->ensureParticipant($request->user(), $conversation);
+        abort_unless($conversation->type === 'group', 403);
+
+        $isAdmin = $conversation->created_by === $request->user()->id
+            || $conversation->participants()
+                ->where('users.id', $request->user()->id)
+                ->wherePivot('role', 'admin')
+                ->exists();
+        abort_unless($isAdmin, 403);
+
+        $data = $request->validate([
+            'name' => ['nullable', 'string', 'max:120'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
+        ]);
+
+        if (array_key_exists('name', $data)) {
+            $conversation->name = $data['name'];
+        }
+
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('chat-icons', 'public');
+            $conversation->avatar_url = $path;
+        }
+
+        $conversation->save();
+
+        return response()->json([
+            'id' => $conversation->id,
+            'name' => $conversation->name,
+            'avatar_url' => $this->avatarUrl($conversation->avatar_url),
+        ]);
+    }
+
+    public function linkPreview(Request $request)
+    {
+        $data = $request->validate([
+            'url' => ['required', 'url'],
+        ]);
+
+        $url = $data['url'];
+        if (!$this->isSafeUrl($url)) {
+            return response()->json(['error' => 'Invalid URL'], 422);
+        }
+
+        $preview = Cache::remember('link_preview_'.md5($url), now()->addHour(), function () use ($url) {
+            try {
+                $response = Http::timeout(6)->get($url);
+                if (!$response->ok()) {
+                    return null;
+                }
+                $html = $response->body();
+                return $this->extractPreview($html, $url);
+            } catch (\Throwable $e) {
+                return null;
+            }
+        });
+
+        if (!$preview) {
+            return response()->json(['error' => 'No preview'], 404);
+        }
+
+        return response()->json($preview);
     }
 
     public function downloadAttachment(Request $request, MessageAttachment $attachment)
@@ -247,8 +366,23 @@ class ChatController extends Controller
         }
     }
 
-    protected function formatMessage(Message $message): array
+    protected function formatMessage(Message $message, $readMap = null, $deliveredMap = null, $participants = null): array
     {
+        $status = null;
+        if ($readMap && $deliveredMap && $participants && $message->sender?->id) {
+            $senderId = $message->sender->id;
+            $others = $participants->filter(fn($p) => $p->id !== $senderId);
+            $seen = $others->isEmpty()
+                ? false
+                : $others->every(fn($p) => (int) ($readMap[$p->id] ?? 0) >= $message->id);
+            $delivered = $others->isEmpty()
+                ? false
+                : $others->every(fn($p) => (int) ($deliveredMap[$p->id] ?? 0) >= $message->id);
+            if ((int) $senderId === (int) auth()->id()) {
+                $status = $seen ? 'seen' : ($delivered ? 'delivered' : 'sent');
+            }
+        }
+
         return [
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
@@ -257,6 +391,7 @@ class ChatController extends Controller
             'sender_avatar' => $this->avatarUrl($message->sender?->avatar_url),
             'body' => $message->body,
             'created_at' => $message->created_at->toDateTimeString(),
+            'status' => $status,
             'reply_to' => $message->replyTo ? [
                 'id' => $message->replyTo->id,
                 'sender' => $message->replyTo->sender?->name,
@@ -286,5 +421,77 @@ class ChatController extends Controller
             return $avatar;
         }
         return Storage::url($avatar);
+    }
+
+    protected function isSafeUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+        if (!$parts || empty($parts['scheme']) || empty($parts['host'])) {
+            return false;
+        }
+        if (!in_array($parts['scheme'], ['http', 'https'], true)) {
+            return false;
+        }
+        $host = $parts['host'];
+        $ip = gethostbyname($host);
+        if ($ip === $host) {
+            return false;
+        }
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            return false;
+        }
+        return true;
+    }
+
+    protected function extractPreview(string $html, string $url): ?array
+    {
+        libxml_use_internal_errors(true);
+        $doc = new \DOMDocument();
+        $doc->loadHTML($html);
+        $xpath = new \DOMXPath($doc);
+
+        $titleNode = $xpath->query("//meta[@property='og:title']/@content")->item(0)
+            ?: $xpath->query("//title")->item(0);
+        $descNode = $xpath->query("//meta[@property='og:description']/@content")->item(0)
+            ?: $xpath->query("//meta[@name='description']/@content")->item(0);
+        $imageNode = $xpath->query("//meta[@property='og:image']/@content")->item(0);
+
+        $title = $titleNode ? trim($titleNode->nodeValue ?? $titleNode->textContent ?? '') : null;
+        $description = $descNode ? trim($descNode->nodeValue ?? $descNode->textContent ?? '') : null;
+        $image = $imageNode ? trim($imageNode->nodeValue ?? $imageNode->textContent ?? '') : null;
+
+        if ($image) {
+            $image = $this->resolveUrl($url, $image);
+        }
+
+        if (!$title && !$description && !$image) {
+            return null;
+        }
+
+        return [
+            'url' => $url,
+            'title' => $title,
+            'description' => $description,
+            'image' => $image,
+        ];
+    }
+
+    protected function resolveUrl(string $base, string $relative): string
+    {
+        if (Str::startsWith($relative, ['http://', 'https://'])) {
+            return $relative;
+        }
+        $parts = parse_url($base);
+        $scheme = $parts['scheme'] ?? 'https';
+        $host = $parts['host'] ?? '';
+        if (Str::startsWith($relative, '//')) {
+            return $scheme.':'.$relative;
+        }
+        if (Str::startsWith($relative, '/')) {
+            return $scheme.'://'.$host.$relative;
+        }
+        $path = $parts['path'] ?? '/';
+        $dir = Str::endsWith($path, '/') ? $path : dirname($path).'/';
+        return $scheme.'://'.$host.$dir.$relative;
     }
 }

@@ -135,12 +135,12 @@
               <div class="detail-block">
                 <h4>Attachments</h4>
                 <div class="task-attachments">
-                  @forelse($task->attachments as $file)
-                    <a class="attachment-pill" href="{{ Storage::url($file->path) }}" target="_blank">{{ $file->original_name }}</a>
-                  @empty
-                    <span class="muted">No attachments</span>
-                  @endforelse
-                </div>
+                @forelse($task->attachments as $file)
+                  <a class="attachment-pill" href="{{ Storage::url($file->path) }}" data-preview="file" data-name="{{ $file->original_name }}">{{ $file->original_name }}</a>
+                @empty
+                  <span class="muted">No attachments</span>
+                @endforelse
+              </div>
                 <form method="POST" action="{{ route('tasks.attach', $task) }}" enctype="multipart/form-data" class="attach-form">
                   @csrf
                   <input type="file" name="attachments[]" multiple>
@@ -386,6 +386,64 @@
         btn.classList.add('active');
         const panel = container.querySelector('#' + targetId);
         if (panel) panel.classList.add('active');
+      });
+    });
+
+    const openFilePreview = (url, name) => {
+      let overlay = document.getElementById('task-preview-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'task-preview-overlay';
+        overlay.className = 'chat-preview-overlay';
+        overlay.innerHTML = `
+          <div class="chat-preview-card">
+            <div class="chat-preview-actions">
+              <button type="button" class="chat-preview-close" aria-label="Close">Close</button>
+              <button type="button" class="chat-preview-download" aria-label="Download">Download</button>
+            </div>
+            <iframe class="chat-preview-frame" title="Attachment preview"></iframe>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) overlay.classList.remove('open');
+        });
+        overlay.querySelector('.chat-preview-close')?.addEventListener('click', () => {
+          overlay.classList.remove('open');
+        });
+        overlay.querySelector('.chat-preview-download')?.addEventListener('click', async () => {
+          const link = overlay.dataset.url || '';
+          const fname = overlay.dataset.name || 'attachment';
+          if (!link) return;
+          try {
+            const res = await fetch(link, { credentials: 'include' });
+            if (!res.ok) throw new Error('Download failed');
+            const blob = await res.blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = fname;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 500);
+          } catch (err) {
+            window.open(link, '_blank', 'noopener,noreferrer');
+          }
+        });
+      }
+      overlay.dataset.url = url;
+      overlay.dataset.name = name || '';
+      const frame = overlay.querySelector('.chat-preview-frame');
+      if (frame) frame.src = url;
+      overlay.classList.add('open');
+    };
+
+    document.querySelectorAll('a.attachment-pill[data-preview="file"]').forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = link.getAttribute('href');
+        if (!url) return;
+        openFilePreview(url, link.dataset.name || '');
       });
     });
 

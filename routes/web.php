@@ -89,9 +89,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations');
     Route::post('/chat/conversations', [ChatController::class, 'storeConversation'])->name('chat.conversations.store');
+    Route::post('/chat/conversations/{conversation}', [ChatController::class, 'updateConversation'])->name('chat.conversations.update');
+    Route::get('/chat/link-preview', [ChatController::class, 'linkPreview'])->name('chat.link-preview');
     Route::get('/chat/conversations/{conversation}', [ChatController::class, 'messages'])->name('chat.messages');
     Route::post('/chat/conversations/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chat.messages.store');
     Route::post('/chat/conversations/{conversation}/read', [ChatController::class, 'markRead'])->name('chat.read');
+    Route::post('/chat/conversations/{conversation}/delivered', [ChatController::class, 'markDelivered'])->name('chat.delivered');
     Route::post('/chat/messages/{message}/reactions', [ChatController::class, 'react'])->name('chat.reactions.store');
     Route::delete('/chat/messages/{message}/reactions', [ChatController::class, 'unreact'])->name('chat.reactions.destroy');
     Route::get('/chat/attachments/{attachment}/preview', [ChatController::class, 'previewAttachment'])->name('chat.attachments.preview');
