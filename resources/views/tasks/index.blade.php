@@ -25,13 +25,19 @@
           <option value="{{ $ws->id }}" @selected(($filters['workspace_id'] ?? '') == $ws->id)>{{ $ws->name }}</option>
         @endforeach
       </select>
-      <select name="status">
+      <select name="status" @if(($filters['status'] ?? '') === '') data-placeholder="1" @endif>
         <option value="" disabled @selected(($filters['status'] ?? '') === '')>Status</option>
         <option value="ongoing" @selected(($filters['status'] ?? '') === 'ongoing')>Ongoing</option>
         <option value="completed" @selected(($filters['status'] ?? '') === 'completed')>Completed</option>
       </select>
-      <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" placeholder="Start date" title="Start date">
-      <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" placeholder="End date" title="End date">
+      <div class="date-field">
+        <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" placeholder="Start date" title="Start date">
+        <span class="date-placeholder">Start date</span>
+      </div>
+      <div class="date-field">
+        <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" placeholder="End date" title="End date">
+        <span class="date-placeholder">End date</span>
+      </div>
     </form>
 
     <div class="task-table-wrap">
@@ -410,6 +416,20 @@
         tOptions.forEach(opt => opt.style.display = '');
       });
     }
+
+    const dateFields = document.querySelectorAll('.task-filters .date-field');
+    const syncDateField = (field) => {
+      const input = field.querySelector('input[type="date"]');
+      if (!input) return;
+      field.classList.toggle('has-value', Boolean(input.value));
+    };
+    dateFields.forEach((field) => {
+      syncDateField(field);
+      const input = field.querySelector('input[type="date"]');
+      if (!input) return;
+      input.addEventListener('change', () => syncDateField(field));
+      input.addEventListener('input', () => syncDateField(field));
+    });
 
     const filterForm = document.querySelector('.task-filters');
     if (filterForm) {
