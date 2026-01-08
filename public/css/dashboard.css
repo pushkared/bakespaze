@@ -1688,9 +1688,15 @@ input, select, textarea, button{
 
 .tasks-head{
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   justify-content:space-between;
   gap:16px;
+}
+.tasks-head h1{
+  margin:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .task-add-btn{
   width:32px;
@@ -2984,8 +2990,8 @@ input, select, textarea, button{
 
   /* Tasks page */
   .tasks-page{padding:32px 18px 90px}
-  .tasks-head{flex-direction:column;align-items:flex-start}
-  .task-add-btn{align-self:flex-end}
+  .tasks-head{flex-direction:row;align-items:center}
+  .tasks-head h1{font-size:24px}
   .task-table-wrap{overflow:visible}
   .task-row{grid-template-columns:1fr;gap:8px;padding:12px}
   .task-row.head{display:none}
