@@ -474,6 +474,7 @@
 
       document.querySelectorAll('form').forEach((form) => {
         form.addEventListener('submit', () => {
+          if (form.id === 'chat-form') return;
           const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
           if (submitBtn) setLoading(submitBtn);
         });
@@ -515,5 +516,4 @@
   @stack('scripts')
 </body>
 </html>
-
 
