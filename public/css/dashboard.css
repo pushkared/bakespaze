@@ -1764,6 +1764,7 @@ input, select, textarea, button{
   background:rgba(0,0,0,0.2);
   color:#fff;
   height:44px;
+  width:180px;
 }
 .task-filters select{
   appearance:none;
@@ -1775,6 +1776,7 @@ input, select, textarea, button{
 }
 .task-filters .date-field{
   height:44px;
+  width:180px;
 }
 .task-filters .date-field input{
   height:100%;
@@ -1783,6 +1785,7 @@ input, select, textarea, button{
   position:relative;
   display:inline-flex;
   align-items:center;
+  width:180px;
 }
 .task-filters .date-field input{
   padding-right:34px;
