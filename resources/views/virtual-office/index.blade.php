@@ -224,8 +224,16 @@
       if(window.innerWidth > 900) closePanel();
     });
   }
+
+  document.addEventListener('click', (event) => {
+    if (window.innerWidth > 900) return;
+    const target = event.target;
+    if (target.closest('.seat-card') || target.closest('.seat-detail')) {
+      return;
+    }
+    closeMobileDetails();
+  });
 })();
 </script>
 @endpush
 @endsection
-
