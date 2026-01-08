@@ -2154,9 +2154,18 @@ input, select, textarea, button{
 
 .workspace-head{
   display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
   gap:20px;
+}
+.workspace-head > div{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.workspace-create{
+  justify-content:center;
 }
 .workspace-head h1{font-size:32px}
 
