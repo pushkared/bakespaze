@@ -14,7 +14,7 @@
         @endphp
         <h1>{{ $currentWs->name ?? 'All Workspace Tasks' }}</h1>
       </div>
-      <button class="pill-btn solid" id="open-task-modal">+ New Task</button>
+      <button class="task-add-btn" type="button" id="open-task-modal" aria-label="Create task"></button>
     </header>
 
     <form class="task-filters" method="GET" action="{{ route('tasks.index') }}">
@@ -31,7 +31,6 @@
       </select>
       <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" placeholder="Start date">
       <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" placeholder="End date">
-      <button class="pill-btn ghost" type="submit">Filter</button>
     </form>
 
     <div class="task-table-wrap">
@@ -408,6 +407,21 @@
         radios.forEach((r, idx) => r.checked = idx === 0); // unassigned
         if (tSearch) tSearch.value = '';
         tOptions.forEach(opt => opt.style.display = '');
+      });
+    }
+
+    const filterForm = document.querySelector('.task-filters');
+    if (filterForm) {
+      const searchInput = filterForm.querySelector('input[name="q"]');
+      let searchTimer = null;
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          if (searchTimer) clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => filterForm.submit(), 300);
+        });
+      }
+      filterForm.querySelectorAll('select, input[type="date"]').forEach((input) => {
+        input.addEventListener('change', () => filterForm.submit());
       });
     }
 

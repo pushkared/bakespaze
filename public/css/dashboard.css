@@ -1692,6 +1692,35 @@ input, select, textarea, button{
   justify-content:space-between;
   gap:16px;
 }
+.task-add-btn{
+  width:32px;
+  height:32px;
+  border-radius:999px;
+  border:none;
+  background:var(--lime);
+  position:relative;
+  cursor:pointer;
+  box-shadow:0 10px 20px rgba(56,255,43,0.25);
+}
+.task-add-btn::before,
+.task-add-btn::after{
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:18px;
+  height:3px;
+  background:#0a2b06;
+  transform:translate(-50%, -50%);
+  border-radius:2px;
+}
+.task-add-btn::after{
+  transform:translate(-50%, -50%) rotate(90deg);
+}
+.task-add-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 14px 24px rgba(56,255,43,0.35);
+}
 
 .task-table-wrap{
   width:100%;
@@ -2956,6 +2985,7 @@ input, select, textarea, button{
   /* Tasks page */
   .tasks-page{padding:32px 18px 90px}
   .tasks-head{flex-direction:column;align-items:flex-start}
+  .task-add-btn{align-self:flex-end}
   .task-table-wrap{overflow:visible}
   .task-row{grid-template-columns:1fr;gap:8px;padding:12px}
   .task-row.head{display:none}
