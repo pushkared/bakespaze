@@ -20,17 +20,18 @@
     <form class="task-filters" method="GET" action="{{ route('tasks.index') }}">
       <input type="search" name="q" placeholder="Search title" value="{{ $filters['q'] ?? '' }}">
       <select name="workspace_id">
-        <option value="">All workspaces</option>
+        <option value="" @selected(($filters['workspace_id'] ?? '') === '')>Workspace</option>
         @foreach($workspaces as $ws)
           <option value="{{ $ws->id }}" @selected(($filters['workspace_id'] ?? '') == $ws->id)>{{ $ws->name }}</option>
         @endforeach
       </select>
       <select name="status">
-        <option value="ongoing" @selected(($filters['status'] ?? 'ongoing') === 'ongoing')>Ongoing</option>
+        <option value="" @selected(($filters['status'] ?? '') === '')>Status</option>
+        <option value="ongoing" @selected(($filters['status'] ?? '') === 'ongoing')>Ongoing</option>
         <option value="completed" @selected(($filters['status'] ?? '') === 'completed')>Completed</option>
       </select>
-      <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" placeholder="Start date">
-      <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" placeholder="End date">
+      <input type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" placeholder="Start date" title="Start date">
+      <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" placeholder="End date" title="End date">
     </form>
 
     <div class="task-table-wrap">

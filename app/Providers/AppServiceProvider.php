@@ -59,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
             $panelTasks = Task::with('assignees')
                 ->whereHas('assignees', fn($a) => $a->where('users.id', $user->id))
                 ->when($currentWorkspace, fn($q) => $q->where('workspace_id', $currentWorkspace->id))
+                ->where('status', '!=', 'completed')
                 ->orderByRaw('ISNULL(due_date), due_date asc')
                 ->limit(8)
                 ->get();

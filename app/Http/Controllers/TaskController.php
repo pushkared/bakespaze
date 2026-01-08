@@ -62,7 +62,7 @@ class TaskController extends Controller
         $search = $request->input('q');
         $dueFrom = $request->input('due_from');
         $dueTo = $request->input('due_to');
-        $statusFilter = $request->input('status', 'ongoing');
+        $statusFilter = $request->input('status');
 
         $tasks = Task::with(['assignees','creator','comments.user','attachments','activities.actor','workspace.memberships'])
             ->whereIn('workspace_id', $allowedWorkspaceIds)
