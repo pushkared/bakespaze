@@ -1708,7 +1708,7 @@ input, select, textarea, button{
   cursor:pointer;
   box-shadow:0 10px 20px rgba(56,255,43,0.25);
   margin-left:auto;
-  margin-right:8px;
+  margin-right:13px;
   margin-top: 10px;
 }
 .task-add-btn::before,
