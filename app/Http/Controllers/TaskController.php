@@ -42,6 +42,17 @@ class TaskController extends Controller
         );
     }
 
+    protected function ensureTaskAdmin(Task $task, Request $request): void
+    {
+        $user = $request->user();
+        $isAppAdmin = in_array($user->role, ['admin', 'super_admin'], true);
+        $isWorkspaceAdmin = Membership::where('workspace_id', $task->workspace_id)
+            ->where('user_id', $user->id)
+            ->where('role', 'admin')
+            ->exists();
+        abort_unless($isAppAdmin || $isWorkspaceAdmin, 403);
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -53,7 +64,7 @@ class TaskController extends Controller
         $dueTo = $request->input('due_to');
         $statusFilter = $request->input('status', 'ongoing');
 
-        $tasks = Task::with(['assignees','creator','comments.user','attachments','activities.actor'])
+        $tasks = Task::with(['assignees','creator','comments.user','attachments','activities.actor','workspace.memberships'])
             ->whereIn('workspace_id', $allowedWorkspaceIds)
             ->where(function ($q) use ($user) {
                 $q->where('creator_id', $user->id)
@@ -276,6 +287,7 @@ class TaskController extends Controller
     public function destroy(Request $request, Task $task)
     {
         $this->ensureTaskAccess($task, $request);
+        $this->ensureTaskAdmin($task, $request);
         $task->delete();
         return back()->with('status', 'Task deleted.');
     }

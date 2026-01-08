@@ -47,6 +47,10 @@
       @forelse($tasks as $task)
         @php
           $isAssignee = $task->assignees->contains(auth()->id());
+          $memberRecord = $task->workspace->memberships->firstWhere('user_id', auth()->id());
+          $isWorkspaceAdmin = $memberRecord && $memberRecord->role === 'admin';
+          $isAppAdmin = in_array(auth()->user()->role, ['admin', 'super_admin'], true);
+          $canDeleteTask = $isWorkspaceAdmin || $isAppAdmin;
         @endphp
         <div class="task-row task-toggle" data-task="{{ $task->id }}">
           <div>{{ $task->title }}</div>
@@ -101,11 +105,13 @@
             </form>
             @endif
             @endif
-            <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete task?')">
-              @csrf
-              @method('DELETE')
-              <button class="pill-btn small ghost" type="submit">Delete</button>
-            </form>
+            @if($canDeleteTask)
+              <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete task?')">
+                @csrf
+                @method('DELETE')
+                <button class="pill-btn small ghost" type="submit">Delete</button>
+              </form>
+            @endif
           </div>
         </div>
         <div class="task-detail" id="detail-{{ $task->id }}">
