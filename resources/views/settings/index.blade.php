@@ -96,6 +96,54 @@
           <button type="submit" class="pill-btn solid">Save Settings</button>
         </div>
       </form>
+
+      <div class="settings-card">
+        <div class="eyebrow">Leaves</div>
+        <h2>Leave policy</h2>
+        <p class="muted">Manage yearly allowances and public holidays for the workspace.</p>
+
+        <form method="POST" action="{{ route('leaves.categories.update') }}">
+          @csrf
+          <div class="settings-grid leave-policy-grid">
+            @foreach(($leaveCategories ?? collect()) as $category)
+              <label>
+                <span>{{ $category->name }} allowance</span>
+                <input type="hidden" name="categories[{{ $category->id }}][id]" value="{{ $category->id }}">
+                <input type="number" name="categories[{{ $category->id }}][yearly_allowance]" min="0" max="365" value="{{ $category->yearly_allowance }}">
+              </label>
+            @endforeach
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="pill-btn solid">Save Allowances</button>
+          </div>
+        </form>
+
+        <div class="settings-divider"></div>
+
+        <form class="leave-holiday-form" method="POST" action="{{ route('leaves.holidays.store') }}">
+          @csrf
+          <input type="text" name="name" placeholder="Holiday name" required>
+          <input type="date" name="date" required>
+          <button type="submit" class="pill-btn solid">Add Holiday</button>
+        </form>
+        <div class="leave-holiday-list">
+          @forelse(($leaveHolidays ?? collect()) as $holiday)
+            <div class="leave-holiday-item">
+              <div>
+                <div class="leave-history-title">{{ $holiday->name }}</div>
+                <div class="leave-history-meta">{{ $holiday->date->format('d M Y') }}</div>
+              </div>
+              <form method="POST" action="{{ route('leaves.holidays.delete', $holiday) }}">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="pill-btn ghost">Remove</button>
+              </form>
+            </div>
+          @empty
+            <div class="muted">No holidays added.</div>
+          @endforelse
+        </div>
+      </div>
     @endif
     <form class="settings-card danger" method="POST" action="{{ route('account.destroy') }}" onsubmit="return confirm('Delete your account? This will remove your tasks and workspace access.');">
       @csrf

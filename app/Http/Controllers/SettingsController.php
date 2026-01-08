@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
+use App\Models\LeaveCategory;
+use App\Models\LeaveHoliday;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -14,12 +16,20 @@ class SettingsController extends Controller
         $breakOptions = [30, 60, 90, 120];
         $user = auth()->user();
         $isAdmin = $user && in_array($user->role, ['admin', 'super_admin'], true);
+        $leaveCategories = collect();
+        $leaveHolidays = collect();
+        if ($isAdmin) {
+            $leaveCategories = $this->ensureDefaultLeaveCategories();
+            $leaveHolidays = LeaveHoliday::orderBy('date')->get();
+        }
 
         return view('settings.index', [
             'settings' => $settings,
             'timezones' => $timezones,
             'breakOptions' => $breakOptions,
             'isAdmin' => $isAdmin,
+            'leaveCategories' => $leaveCategories,
+            'leaveHolidays' => $leaveHolidays,
         ]);
     }
 
@@ -41,5 +51,23 @@ class SettingsController extends Controller
         ]);
 
         return back()->with('status', 'Settings updated.');
+    }
+
+    protected function ensureDefaultLeaveCategories()
+    {
+        $defaults = [
+            'casual' => ['name' => 'Casual', 'yearly_allowance' => 12],
+            'sick' => ['name' => 'Sick', 'yearly_allowance' => 8],
+            'personal' => ['name' => 'Personal', 'yearly_allowance' => 6],
+        ];
+
+        foreach ($defaults as $code => $data) {
+            LeaveCategory::firstOrCreate(
+                ['code' => $code],
+                ['name' => $data['name'], 'yearly_allowance' => $data['yearly_allowance'], 'active' => true]
+            );
+        }
+
+        return LeaveCategory::orderBy('name')->get();
     }
 }

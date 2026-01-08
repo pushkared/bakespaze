@@ -15,6 +15,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotificationSubscriptionController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\LeaveController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -86,6 +87,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->middleware('admin')->name('settings.update');
     Route::delete('/account', [ProfileController::class, 'destroy'])->name('account.destroy');
+
+    Route::get('/leaves', [LeaveController::class, 'index'])->name('leaves.index');
+    Route::post('/leaves', [LeaveController::class, 'store'])->name('leaves.store');
+    Route::post('/leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
+    Route::post('/leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
+    Route::post('/leaves/categories', [LeaveController::class, 'updateCategories'])->name('leaves.categories.update');
+    Route::post('/leaves/holidays', [LeaveController::class, 'storeHoliday'])->name('leaves.holidays.store');
+    Route::delete('/leaves/holidays/{holiday}', [LeaveController::class, 'deleteHoliday'])->name('leaves.holidays.delete');
 
     Route::get('/chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations');
     Route::post('/chat/conversations', [ChatController::class, 'storeConversation'])->name('chat.conversations.store');
