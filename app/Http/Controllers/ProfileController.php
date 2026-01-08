@@ -14,6 +14,7 @@ use App\Models\MessageAttachment;
 use App\Models\User;
 use App\Models\AttendanceRecord;
 use App\Models\AppSetting;
+use App\Models\Membership;
 use Carbon\Carbon;
 
 class ProfileController extends Controller
@@ -117,8 +118,30 @@ class ProfileController extends Controller
             ? Carbon::parse($todayRecord->clock_in)->timezone($timezone)->format('h:i A')
             : null;
 
-        $assignedTasks = Task::with(['workspace:id,name'])
-            ->whereHas('assignees', fn($q) => $q->where('users.id', $profileUser->id))
+        $workspaceId = session('current_workspace_id');
+        $allowedWorkspaceIds = collect();
+        if ($workspaceId) {
+            $shared = Membership::where('workspace_id', $workspaceId)
+                ->whereIn('user_id', [$viewer->id, $profileUser->id])
+                ->distinct()
+                ->count('user_id') === 2;
+            if ($shared) {
+                $allowedWorkspaceIds = collect([$workspaceId]);
+            }
+        } else {
+            $viewerWorkspaces = Membership::where('user_id', $viewer->id)->pluck('workspace_id');
+            $profileWorkspaces = Membership::where('user_id', $profileUser->id)->pluck('workspace_id');
+            $allowedWorkspaceIds = $viewerWorkspaces->intersect($profileWorkspaces)->values();
+        }
+
+        $assignedTasksQuery = Task::with(['workspace:id,name'])
+            ->whereHas('assignees', fn($q) => $q->where('users.id', $profileUser->id));
+        if ($allowedWorkspaceIds->isNotEmpty()) {
+            $assignedTasksQuery->whereIn('workspace_id', $allowedWorkspaceIds);
+        } else {
+            $assignedTasksQuery->whereRaw('1 = 0');
+        }
+        $assignedTasks = $assignedTasksQuery
             ->orderByRaw('ISNULL(due_date), due_date asc')
             ->limit(10)
             ->get();

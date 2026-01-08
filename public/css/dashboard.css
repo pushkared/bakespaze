@@ -72,7 +72,7 @@ input, select, textarea, button{
 ========================= */
 .vo-sidebar{
   background:black;
-  opacity: 0.8;
+  opacity: 0.95;
   color:var(--text-dark);
   padding:26px 22px;
   display:flex;
