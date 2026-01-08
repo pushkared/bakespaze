@@ -77,7 +77,6 @@
           <button class="ws-top ws-toggle" type="button" aria-expanded="false">
             <div>
               <div class="ws-name">{{ $ws->name }}</div>
-              <div class="ws-slug">#{{ $ws->slug }}</div>
             </div>
             <span class="ws-caret" aria-hidden="true"></span>
           </button>
