@@ -44,6 +44,7 @@ class ChatController extends Controller
                     'id' => $conversation->id,
                     'type' => $conversation->type,
                     'title' => $title ?: 'Direct Chat',
+                    'avatar_url' => $conversation->type === 'group' ? $this->avatarUrl($conversation->avatar_url) : null,
                     'participants' => $conversation->participants->map(fn($p) => [
                         'id' => $p->id,
                         'name' => $p->name,
@@ -107,7 +108,7 @@ class ChatController extends Controller
         $this->ensureParticipant($request->user(), $conversation);
 
         $messages = $conversation->messages()
-            ->with(['sender:id,name', 'attachments', 'reactions', 'replyTo.sender:id,name'])
+            ->with(['sender:id,name,avatar_url', 'attachments', 'reactions', 'replyTo.sender:id,name,avatar_url'])
             ->orderBy('id')
             ->get()
             ->map(function (Message $message) {
@@ -152,7 +153,7 @@ class ChatController extends Controller
             }
         }
 
-        $message->load(['sender:id,name', 'attachments', 'reactions', 'replyTo.sender:id,name']);
+        $message->load(['sender:id,name,avatar_url', 'attachments', 'reactions', 'replyTo.sender:id,name,avatar_url']);
 
         $payload = $this->formatMessage($message);
         broadcast(new MessageSent($payload))->toOthers();
@@ -217,6 +218,41 @@ class ChatController extends Controller
         ]);
 
         return response()->json(['status' => 'ok']);
+    }
+
+    public function updateConversation(Request $request, Conversation $conversation)
+    {
+        $this->ensureParticipant($request->user(), $conversation);
+        abort_unless($conversation->type === 'group', 403);
+
+        $isAdmin = $conversation->created_by === $request->user()->id
+            || $conversation->participants()
+                ->where('users.id', $request->user()->id)
+                ->wherePivot('role', 'admin')
+                ->exists();
+        abort_unless($isAdmin, 403);
+
+        $data = $request->validate([
+            'name' => ['nullable', 'string', 'max:120'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
+        ]);
+
+        if (array_key_exists('name', $data)) {
+            $conversation->name = $data['name'];
+        }
+
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('chat-icons', 'public');
+            $conversation->avatar_url = $path;
+        }
+
+        $conversation->save();
+
+        return response()->json([
+            'id' => $conversation->id,
+            'name' => $conversation->name,
+            'avatar_url' => $this->avatarUrl($conversation->avatar_url),
+        ]);
     }
 
     public function downloadAttachment(Request $request, MessageAttachment $attachment)

@@ -25,10 +25,17 @@
   const groupNameInput = document.getElementById('chat-group-name');
   const addPeopleBtn = document.getElementById('chat-add-people');
   const backBtn = document.getElementById('chat-back');
+  const settingsBtn = document.getElementById('chat-settings');
+  const groupModal = document.getElementById('chat-group-modal');
+  const groupClose = document.getElementById('chat-group-close');
+  const groupSave = document.getElementById('chat-group-save');
+  const groupEditName = document.getElementById('chat-group-edit-name');
+  const groupEditIcon = document.getElementById('chat-group-edit-icon');
 
   const state = {
     conversations: [],
     activeId: null,
+    activeConversation: null,
     replyTo: null,
     echo: null,
     channelName: null,
@@ -172,9 +179,21 @@
         }).join('')}</div>`
       : '';
 
+    const isGroup = state.activeConversation?.type === 'group';
+    const senderName = message.user_id === config.userId ? 'You' : (message.sender || 'Member');
+    const senderAvatar = message.user_id === config.userId ? config.userAvatar : message.sender_avatar;
+    const senderInitial = (senderName || 'U').trim().charAt(0).toUpperCase();
+    const senderHtml = isGroup ? `
+      <div class="chat-msg-sender">
+        <div class="avatar">${senderAvatar ? `<img src="${senderAvatar}" alt="${senderName}">` : senderInitial}</div>
+        <span>${senderName}</span>
+      </div>
+    ` : '';
+
     wrapper.innerHTML = `
       <div class="chat-msg-time">${formatTime(message.created_at)}</div>
       <div class="chat-msg-body">
+        ${senderHtml}
         ${message.reply_to ? `<div class="chat-reply">${message.reply_to.sender || ''}: ${message.reply_to.body || 'Attachment'}</div>` : ''}
         ${message.body ? `<div class="chat-bubble">${message.body}</div>` : ''}
         ${attachmentsHtml}
@@ -322,6 +341,7 @@
     state.activeId = id;
     renderConversations();
     const conv = state.conversations.find((c) => c.id === id);
+    state.activeConversation = conv || null;
     if (conv) {
       titleEl.textContent = conv.title;
       metaEl.textContent = conv.participants.map(p => p.name).join(', ');
@@ -331,7 +351,9 @@
         const peer = conv.type === 'direct'
           ? conv.participants.find((p) => p.id !== config.userId)
           : null;
-        const imageUrl = peer?.avatar_url || '';
+        const imageUrl = conv.type === 'group'
+          ? (conv.avatar_url || '')
+          : (peer?.avatar_url || '');
         if (imageUrl) {
           avatar.textContent = '';
           avatar.style.backgroundImage = `url("${imageUrl}")`;
@@ -342,6 +364,9 @@
           avatar.classList.remove('has-image');
         }
       }
+    }
+    if (settingsBtn) {
+      settingsBtn.style.display = conv?.type === 'group' ? 'inline-flex' : 'none';
     }
     emptyEl.style.display = 'none';
     threadEl.classList.remove('hidden');
@@ -493,6 +518,40 @@
   modalClose.addEventListener('click', () => modal.classList.add('hidden'));
   modalCreate.addEventListener('click', createConversation);
   addPeopleBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      if (!state.activeConversation || state.activeConversation.type !== 'group') return;
+      if (groupEditName) groupEditName.value = state.activeConversation.title || '';
+      if (groupEditIcon) groupEditIcon.value = '';
+      if (groupModal) groupModal.classList.remove('hidden');
+    });
+  }
+  if (groupClose) groupClose.addEventListener('click', () => groupModal && groupModal.classList.add('hidden'));
+  if (groupSave) {
+    groupSave.addEventListener('click', async () => {
+      if (!state.activeConversation) return;
+      const formData = new FormData();
+      formData.append('name', groupEditName?.value || '');
+      if (groupEditIcon && groupEditIcon.files && groupEditIcon.files[0]) {
+        formData.append('avatar', groupEditIcon.files[0]);
+      }
+      const response = await fetchJson(`/chat/conversations/${state.activeConversation.id}`, {
+        method: 'POST',
+        body: formData,
+      });
+      state.activeConversation.title = response.name || state.activeConversation.title;
+      state.activeConversation.avatar_url = response.avatar_url || state.activeConversation.avatar_url;
+      titleEl.textContent = state.activeConversation.title;
+      const avatar = document.getElementById('chat-thread-avatar');
+      if (avatar && state.activeConversation.avatar_url) {
+        avatar.textContent = '';
+        avatar.style.backgroundImage = `url("${state.activeConversation.avatar_url}")`;
+        avatar.classList.add('has-image');
+      }
+      await loadConversations();
+      if (groupModal) groupModal.classList.add('hidden');
+    });
+  }
   if (backBtn) {
     backBtn.addEventListener('click', () => {
       document.body.classList.remove('chat-mobile-thread-open');

@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations');
     Route::post('/chat/conversations', [ChatController::class, 'storeConversation'])->name('chat.conversations.store');
+    Route::post('/chat/conversations/{conversation}', [ChatController::class, 'updateConversation'])->name('chat.conversations.update');
     Route::get('/chat/conversations/{conversation}', [ChatController::class, 'messages'])->name('chat.messages');
     Route::post('/chat/conversations/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chat.messages.store');
     Route::post('/chat/conversations/{conversation}/read', [ChatController::class, 'markRead'])->name('chat.read');
