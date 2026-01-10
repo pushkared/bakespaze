@@ -12,7 +12,7 @@ class TaskCompletedNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(private Task $task)
+    public function __construct(private Task $task, private ?string $completedBy = null)
     {
     }
 
@@ -23,10 +23,11 @@ class TaskCompletedNotification extends Notification
 
     public function toWebPush($notifiable, $notification): WebPushMessage
     {
+        $by = $this->completedBy ? ' by '.$this->completedBy : '';
         return (new WebPushMessage())
             ->title('Task completed')
             ->icon('/images/icon-192.png')
-            ->body($this->task->title)
+            ->body(trim($this->task->title.$by))
             ->data([
                 'url' => route('tasks.index'),
             ]);

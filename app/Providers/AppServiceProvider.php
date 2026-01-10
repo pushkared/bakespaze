@@ -59,8 +59,13 @@ class AppServiceProvider extends ServiceProvider
             $panelTasks = Task::with('assignees')
                 ->whereHas('assignees', fn($a) => $a->where('users.id', $user->id))
                 ->when($currentWorkspace, fn($q) => $q->where('workspace_id', $currentWorkspace->id))
-                ->whereNotNull('accepted_at')
-                ->where('accepted_by_user_id', $user->id)
+                ->where(function ($query) use ($user) {
+                    $query->where('status', 'pending')
+                        ->orWhere(function ($sub) use ($user) {
+                            $sub->whereNotNull('accepted_at')
+                                ->where('accepted_by_user_id', $user->id);
+                        });
+                })
                 ->where('status', '!=', 'completed')
                 ->orderByRaw('ISNULL(due_date), due_date asc')
                 ->limit(8)

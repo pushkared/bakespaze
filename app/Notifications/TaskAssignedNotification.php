@@ -12,7 +12,7 @@ class TaskAssignedNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(private Task $task)
+    public function __construct(private Task $task, private ?string $assignerName = null)
     {
     }
 
@@ -26,7 +26,7 @@ class TaskAssignedNotification extends Notification
         return (new WebPushMessage())
             ->title('New task assigned')
             ->icon('/images/icon-192.png')
-            ->body($this->task->title)
+            ->body(trim($this->task->title.' - from '.($this->assignerName ?: 'a teammate')))
             ->data([
                 'url' => route('tasks.index'),
             ]);

@@ -137,7 +137,7 @@ class TaskController extends Controller
             $assignee = User::find($assigneeId);
             if ($assignee) {
                 try {
-                    $assignee->notify(new TaskAssignedNotification($task));
+                    $assignee->notify(new TaskAssignedNotification($task, $request->user()->name));
                 } catch (\Throwable $e) {
                     report($e);
                 }
@@ -209,7 +209,7 @@ class TaskController extends Controller
                 $assigner = User::find($assignerId);
                 if ($assigner) {
                     try {
-                        $assigner->notify(new TaskCompletedNotification($task));
+                        $assigner->notify(new TaskCompletedNotification($task, $request->user()->name));
                     } catch (\Throwable $e) {
                         report($e);
                     }
@@ -231,7 +231,7 @@ class TaskController extends Controller
                 $assignee = User::find($data['assignee_id']);
                 if ($assignee) {
                     try {
-                        $assignee->notify(new TaskAssignedNotification($task));
+                        $assignee->notify(new TaskAssignedNotification($task, $request->user()->name));
                     } catch (\Throwable $e) {
                         report($e);
                     }
