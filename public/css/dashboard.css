@@ -265,7 +265,7 @@ input, select, textarea, button{
 /* =========================
    Topbar
 ========================= */
-.vo-main{display:flex;flex-direction:column;min-height:100vh}
+.vo-main{display:flex;flex-direction:column;min-height:100vh;height:100vh}
 
 .vo-topbar{
   --topbar-control:24px;
@@ -487,7 +487,9 @@ input, select, textarea, button{
   flex:1;
   padding:0;
   position:relative;
-  overflow:auto;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  min-height:0;
 }
 
 .content-area::-webkit-scrollbar{width:8px}
