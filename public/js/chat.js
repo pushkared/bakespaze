@@ -233,7 +233,7 @@
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const showIosTip = () => {
-    if (!isIOS || sessionStorage.getItem('ios_download_tip') === '1') return;
+    if (!isIOS || localStorage.getItem('ios_download_tip_hide') === '1') return;
     const tip = document.createElement('div');
     tip.className = 'ios-download-tip';
     tip.innerHTML = `
@@ -241,13 +241,20 @@
         <div class="ios-tip-title">Tip for iPhone</div>
         <div class="ios-tip-text">Hold on the image to download, then tap “Save to Photos”.</div>
         <div class="ios-tip-text">Swipe from the left edge to return to the app.</div>
+        <label class="ios-tip-opt">
+          <input type="checkbox" id="ios-tip-hide">
+          <span>Don’t show again</span>
+        </label>
         <button type="button" class="ios-tip-close">Got it</button>
       </div>
     `;
     document.body.appendChild(tip);
     tip.querySelector('.ios-tip-close')?.addEventListener('click', () => {
+      const hide = tip.querySelector('#ios-tip-hide');
+      if (hide && hide.checked) {
+        localStorage.setItem('ios_download_tip_hide', '1');
+      }
       tip.remove();
-      sessionStorage.setItem('ios_download_tip', '1');
     });
   };
   const triggerDownload = (url) => {

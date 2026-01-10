@@ -3354,6 +3354,14 @@ button.is-loading::after,
 }
 .ios-tip-title{font-weight:800;font-size:16px}
 .ios-tip-text{font-size:14px;color:#cfcfcf}
+.ios-tip-opt{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  color:#bdbdbd;
+}
+.ios-tip-opt input{accent-color:var(--lime)}
 .ios-tip-close{
   margin-top:6px;
   align-self:flex-end;
