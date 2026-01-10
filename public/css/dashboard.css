@@ -1806,10 +1806,16 @@ input, select, textarea, button{
   height:100%;
   width:100%;
   padding-right:34px;
+  padding-top:0;
+  padding-bottom:0;
+  line-height:1.2;
+  appearance:none;
 }
 .task-filters .date-placeholder{
   position:absolute;
   left:12px;
+  top:50%;
+  transform:translateY(-50%);
   color:#8d8d8d;
   font-size:14px;
   pointer-events:none;
