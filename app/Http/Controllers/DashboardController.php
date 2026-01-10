@@ -18,7 +18,7 @@ class DashboardController extends Controller
 
         return Workspace::whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
             ->when($workspaceId, fn($q) => $q->where('id', $workspaceId))
-            ->orderBy('name')
+            ->orderByDesc('created_at')
             ->first();
     }
 
@@ -39,7 +39,7 @@ class DashboardController extends Controller
                 });
             })
             ->where('status', '!=', 'completed')
-            ->orderByRaw('ISNULL(due_date), due_date asc')
+            ->orderByDesc('updated_at')
             ->limit(5)
             ->get();
 

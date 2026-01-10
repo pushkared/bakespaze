@@ -103,7 +103,7 @@ class WorkspaceController extends Controller
             $q->select('id','name','email','role');
         }])->whereHas('memberships', function ($q) use ($user) {
             $q->where('user_id', $user->id);
-        })->orderBy('name')->get();
+        })->orderByDesc('created_at')->get();
 
         $users = User::orderBy('name')->get(['id','name','email']);
 

@@ -22,7 +22,7 @@ class LeaveController extends Controller
         $isAdmin = $this->isAdmin($user);
 
         $categories = $this->ensureDefaultCategories();
-        $holidays = LeaveHoliday::orderBy('date')->get();
+        $holidays = LeaveHoliday::orderByDesc('created_at')->get();
 
         $requests = LeaveRequest::with(['category', 'approver'])
             ->where('user_id', $user->id)
@@ -33,7 +33,7 @@ class LeaveController extends Controller
         if ($isAdmin) {
             $pending = LeaveRequest::with(['category', 'user'])
                 ->where('status', 'pending')
-                ->orderBy('created_at', 'asc')
+                ->orderBy('created_at', 'desc')
                 ->get();
         }
 

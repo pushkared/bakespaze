@@ -49,7 +49,7 @@ class SearchController extends Controller
                 $q->where('tasks.title', 'like', "%{$term}%")
                   ->orWhere('tasks.description', 'like', "%{$term}%");
             })
-            ->orderByRaw('ISNULL(tasks.due_date), tasks.due_date asc')
+            ->orderByDesc('tasks.updated_at')
             ->limit(6)
             ->get()
             ->map(fn($t) => [
@@ -70,7 +70,7 @@ class SearchController extends Controller
                     ->orWhereHas('participants', fn($sub) => $sub->where('users.name', 'like', "%{$term}%"))
                     ->orWhereHas('messages', fn($sub) => $sub->where('body', 'like', "%{$term}%"));
             })
-            ->limit(6)
+            ->limit(12)
             ->get()
             ->map(function ($conversation) use ($user) {
                 $lastMessage = $conversation->messages->first();
@@ -88,8 +88,12 @@ class SearchController extends Controller
                     'peer_id' => $peer?->id,
                     'participants' => $conversation->participants->pluck('name')->values(),
                     'last_message' => $lastMessage?->body,
+                    'sort_at' => ($lastMessage?->created_at ?? $conversation->updated_at ?? $conversation->created_at)?->toDateTimeString(),
                 ];
-            });
+            })
+            ->sortByDesc('sort_at')
+            ->take(6)
+            ->values();
 
         $meetings = $this->searchMeetings($user, $term);
 

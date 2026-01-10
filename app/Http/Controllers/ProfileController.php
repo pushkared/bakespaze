@@ -143,7 +143,7 @@ class ProfileController extends Controller
         }
         $hasSharedWorkspace = $allowedWorkspaceIds->isNotEmpty();
         $assignedTasks = $assignedTasksQuery
-            ->orderByRaw('ISNULL(due_date), due_date asc')
+            ->orderByDesc('updated_at')
             ->limit(10)
             ->get();
 

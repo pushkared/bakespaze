@@ -49,7 +49,7 @@ class AppServiceProvider extends ServiceProvider
             $user = auth()->user();
             $availableWorkspaces = Workspace::whereHas('memberships', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
-            })->orderBy('name')->get(['id','name','slug']);
+            })->orderByDesc('created_at')->get(['id','name','slug']);
 
             $currentWorkspace = $availableWorkspaces->firstWhere('id', session('current_workspace_id'))
                 ?? $availableWorkspaces->first();
@@ -67,7 +67,7 @@ class AppServiceProvider extends ServiceProvider
                         });
                 })
                 ->where('status', '!=', 'completed')
-                ->orderByRaw('ISNULL(due_date), due_date asc')
+                ->orderByDesc('updated_at')
                 ->limit(8)
                 ->get();
 

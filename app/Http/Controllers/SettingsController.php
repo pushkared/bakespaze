@@ -20,7 +20,7 @@ class SettingsController extends Controller
         $leaveHolidays = collect();
         if ($isAdmin) {
             $leaveCategories = $this->ensureDefaultLeaveCategories();
-            $leaveHolidays = LeaveHoliday::orderBy('date')->get();
+            $leaveHolidays = LeaveHoliday::orderByDesc('created_at')->get();
         }
 
         return view('settings.index', [

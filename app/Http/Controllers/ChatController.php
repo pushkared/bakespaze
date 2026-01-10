@@ -54,8 +54,10 @@ class ChatController extends Controller
                         'body' => $lastMessage->body,
                         'created_at' => $lastMessage->created_at->toDateTimeString(),
                     ] : null,
+                    'sort_at' => ($lastMessage?->created_at ?? $conversation->updated_at ?? $conversation->created_at)?->toDateTimeString(),
                 ];
             })
+            ->sortByDesc('sort_at')
             ->values();
 
         return response()->json($conversations);

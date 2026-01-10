@@ -89,10 +89,10 @@ class TaskController extends Controller
                 ->whereNotNull('due_date')
                 ->whereDate('due_date', '<', now()->toDateString()))
             ->when($assigneeFilter, fn($q) => $q->whereHas('assignees', fn($a) => $a->where('users.id', $assigneeFilter)))
-            ->orderByRaw('ISNULL(due_date), due_date asc, id desc')
+            ->orderByDesc('updated_at')
             ->get();
 
-        $workspaces = Workspace::whereIn('id', $allowedWorkspaceIds)->orderBy('name')->get();
+        $workspaces = Workspace::whereIn('id', $allowedWorkspaceIds)->orderByDesc('created_at')->get();
 
         $members = User::whereHas('memberships', fn($q) => $q->whereIn('workspace_id', $allowedWorkspaceIds))
             ->orderBy('name')

@@ -31,7 +31,7 @@ class VirtualOfficeController extends Controller
             $workspace = Workspace::with(['memberships.user' => function ($q) {
                 $q->select('id','name','role','email','avatar_url');
             }])->whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
-            ->orderBy('name')->first();
+            ->orderByDesc('created_at')->first();
         }
 
         abort_unless($workspace, 403);
@@ -104,7 +104,7 @@ class VirtualOfficeController extends Controller
         $tasksByUser = Task::select('tasks.*', 'task_user.user_id')
             ->join('task_user', 'tasks.id', '=', 'task_user.task_id')
             ->where('tasks.workspace_id', $workspace->id)
-            ->orderBy('tasks.due_date')
+            ->orderByDesc('tasks.updated_at')
             ->get()
             ->groupBy('user_id');
 
