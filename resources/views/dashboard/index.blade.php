@@ -7,18 +7,7 @@
   <div class="vo-pattern"></div>
 
   <div class="dash-content">
-    <div class="dash-header">
-      <button class="create-task solid" onclick="window.location='{{ route('tasks.index') }}?open_modal=1'">+ Create Task</button>
-      <div class="dash-greeting">
-        <div class="greet-line">Hey {{ auth()->user()->name ?? 'there' }},</div>
-        <div class="greet-line">{{ $greeting ?? 'Welcome' }}!</div>
-        {{-- <div class="muted">{{ $todayDate ?? '' }} - {{ $currentTime ?? '' }}</div> --}}
-      </div>
-    </div>
-
-    <div class="dash-tasks">
-      <h2>Tasks For The Day!</h2>
-      <div class="task-count-strip">
+    <div class="task-count-strip">
         <div class="task-count-card">
           <div class="task-count-label">Total Tasks</div>
           <div class="task-count-value">{{ $taskCounts['total'] ?? 0 }}</div>
@@ -35,7 +24,19 @@
           <div class="task-count-label">Overdue</div>
           <div class="task-count-value">{{ $taskCounts['overdue'] ?? 0 }}</div>
         </div>
+    </div>
+
+    <div class="dash-header">
+      <div class="dash-greeting">
+        <div class="greet-line">Hey {{ auth()->user()->name ?? 'there' }},</div>
+        <div class="greet-line">{{ $greeting ?? 'Welcome' }}!</div>
+        {{-- <div class="muted">{{ $todayDate ?? '' }} - {{ $currentTime ?? '' }}</div> --}}
       </div>
+      <button class="create-task solid" onclick="window.location='{{ route('tasks.index') }}?open_modal=1'">+ Create Task</button>
+    </div>
+
+    <div class="dash-tasks">
+      <h2>Tasks For The Day!</h2>
       <div class="dash-task-list">
         @forelse(($tasks ?? collect()) as $task)
           @php
