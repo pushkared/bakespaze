@@ -454,8 +454,34 @@
           searchTimer = setTimeout(() => filterForm.submit(), 300);
         });
       }
-      filterForm.querySelectorAll('select, input[type="date"]').forEach((input) => {
+      filterForm.querySelectorAll('select').forEach((input) => {
         input.addEventListener('change', () => filterForm.submit());
+      });
+
+      const dateInputs = filterForm.querySelectorAll('input[type="date"]');
+      dateInputs.forEach((input) => {
+        let pending = null;
+        input.addEventListener('focus', () => {
+          input.dataset.prevValue = input.value || '';
+          input.dataset.changed = '0';
+        });
+        input.addEventListener('change', () => {
+          input.dataset.changed = '1';
+          if (pending) clearTimeout(pending);
+          pending = setTimeout(() => {
+            if (document.activeElement !== input) {
+              if (input.value !== (input.dataset.prevValue || '')) {
+                filterForm.submit();
+              }
+            }
+          }, 150);
+        });
+        input.addEventListener('blur', () => {
+          if (pending) clearTimeout(pending);
+          if (input.dataset.changed === '1' && input.value !== (input.dataset.prevValue || '')) {
+            filterForm.submit();
+          }
+        });
       });
     }
 
