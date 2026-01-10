@@ -53,7 +53,8 @@
         @endif
         <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="ios-form">
           @csrf
-          <input type="file" id="profile-avatar-input" name="avatar" accept="image/*" hidden>
+          <input type="file" id="profile-avatar-input" name="avatar" accept="image/*" class="visually-hidden-input">
+          <input type="hidden" id="profile-avatar-cropped" name="avatar_cropped">
           <div class="ios-row">
             <span>Name</span>
             <input type="text" name="name" value="{{ old('name', $user->name) }}" required>
@@ -68,7 +69,7 @@
         </form>
       </div>
     @else
-      <input type="file" id="profile-avatar-input" hidden>
+      <input type="file" id="profile-avatar-input" class="visually-hidden-input">
     @endif
 
     <div class="ios-settings-card">
@@ -154,6 +155,7 @@
     const applyBtn = document.getElementById('avatar-crop-apply');
     const cancelBtn = document.getElementById('avatar-crop-cancel');
     const cancelBtn2 = document.getElementById('avatar-crop-cancel-2');
+    const croppedInput = document.getElementById('profile-avatar-cropped');
     const cropSize = 240;
     let scale = 1;
     let baseScale = 1;
@@ -213,12 +215,17 @@
       avatarInput.addEventListener('change', (event) => {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
+        if (croppedInput) croppedInput.value = '';
         openModal(file);
       });
       avatarInput.addEventListener('input', (event) => {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
+        if (croppedInput) croppedInput.value = '';
         openModal(file);
+      });
+      avatarInput.addEventListener('click', () => {
+        if (croppedInput) croppedInput.value = '';
       });
     }
 
@@ -276,9 +283,18 @@
       canvas.toBlob((blob) => {
         if (!blob) return;
         const file = new File([blob], originalFile.name, { type: blob.type });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        avatarInput.files = dataTransfer.files;
+        if (croppedInput) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            croppedInput.value = reader.result || '';
+          };
+          reader.readAsDataURL(file);
+        }
+        if (typeof DataTransfer !== 'undefined' && avatarInput) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          avatarInput.files = dataTransfer.files;
+        }
 
         const preview = avatarTrigger ? avatarTrigger.querySelector('img') : null;
         if (preview) {
@@ -298,6 +314,7 @@
     }
     const cancelHandler = () => {
       if (avatarInput) avatarInput.value = '';
+      if (croppedInput) croppedInput.value = '';
       closeModal();
     };
     if (cancelBtn) cancelBtn.addEventListener('click', cancelHandler);

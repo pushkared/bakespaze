@@ -38,6 +38,7 @@ class ProfileController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'password' => ['nullable', 'confirmed', 'min:8'],
             'avatar' => ['nullable', 'image', 'max:2048'],
+            'avatar_cropped' => ['nullable', 'string'],
         ]);
 
         $user->name = $data['name'];
@@ -47,7 +48,17 @@ class ProfileController extends Controller
         if (!empty($data['password'])) {
             $user->password = Hash::make($data['password']);
         }
-        if ($request->hasFile('avatar')) {
+        if (!empty($data['avatar_cropped']) && str_starts_with($data['avatar_cropped'], 'data:image/')) {
+            $dataParts = explode(',', $data['avatar_cropped'], 2);
+            $encoded = $dataParts[1] ?? '';
+            $decoded = base64_decode($encoded, true);
+            if ($decoded !== false) {
+                $extension = str_contains($data['avatar_cropped'], 'image/png') ? 'png' : 'jpg';
+                $path = 'avatars/'.Str::uuid().'.'.$extension;
+                Storage::disk('public')->put($path, $decoded);
+                $user->avatar_url = $path;
+            }
+        } elseif ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar_url = $path;
         }
