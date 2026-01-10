@@ -1781,6 +1781,12 @@ input, select, textarea, button{
 .task-filters input[type="search"]{
   grid-column:1 / -1;
 }
+.task-filters .filter-reset{
+  height:38px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
 .task-filters select{
   appearance:none;
   padding-right:36px;

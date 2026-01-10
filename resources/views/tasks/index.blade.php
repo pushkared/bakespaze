@@ -48,6 +48,7 @@
         <input type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" placeholder="End date" title="End date">
         <span class="date-placeholder">End date</span>
       </div>
+      <a class="pill-btn ghost filter-reset" href="{{ route('tasks.index') }}">Reset</a>
     </form>
 
     <div class="task-table-wrap">
