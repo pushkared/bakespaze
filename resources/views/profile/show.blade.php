@@ -174,6 +174,7 @@
     if (avatarInput && avatarTrigger) {
       avatarTrigger.addEventListener('click', (e) => {
         if (avatarTrigger.getAttribute('aria-disabled') === 'true') return;
+        avatarInput.value = '';
         avatarInput.click();
       });
     }
@@ -194,10 +195,13 @@
       originalFile = file;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(file);
-      cropImage.src = objectUrl;
+      if (cropImage) {
+        cropImage.src = objectUrl;
+      }
       requestAnimationFrame(() => {
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
+        modal.style.display = 'flex';
       });
     };
 
@@ -205,11 +209,14 @@
       if (!modal) return;
       modal.classList.remove('is-open');
       modal.setAttribute('aria-hidden', 'true');
+      modal.style.removeProperty('display');
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
         objectUrl = null;
       }
-      cropImage.removeAttribute('src');
+      if (cropImage) {
+        cropImage.removeAttribute('src');
+      }
       originalFile = null;
     };
 
@@ -234,20 +241,24 @@
       }
     });
 
-    cropImage.addEventListener('load', () => {
-      baseScale = Math.max(cropSize / cropImage.naturalWidth, cropSize / cropImage.naturalHeight);
-      scale = baseScale;
-      translateX = (cropSize - cropImage.naturalWidth * scale) / 2;
-      translateY = (cropSize - cropImage.naturalHeight * scale) / 2;
-      zoomInput.min = baseScale.toFixed(2);
-      zoomInput.max = (baseScale * 3).toFixed(2);
-      zoomInput.value = scale.toFixed(2);
-      syncTransform();
-    });
+    if (cropImage) {
+      cropImage.addEventListener('load', () => {
+        baseScale = Math.max(cropSize / cropImage.naturalWidth, cropSize / cropImage.naturalHeight);
+        scale = baseScale;
+        translateX = (cropSize - cropImage.naturalWidth * scale) / 2;
+        translateY = (cropSize - cropImage.naturalHeight * scale) / 2;
+        if (zoomInput) {
+          zoomInput.min = baseScale.toFixed(2);
+          zoomInput.max = (baseScale * 3).toFixed(2);
+          zoomInput.value = scale.toFixed(2);
+        }
+        syncTransform();
+      });
+    }
 
     if (stage) {
       stage.addEventListener('pointerdown', (event) => {
-        if (!cropImage.src) return;
+        if (!cropImage || !cropImage.src) return;
         isDragging = true;
         lastX = event.clientX;
         lastY = event.clientY;
@@ -274,6 +285,10 @@
 
     const applyCrop = () => {
       if (!originalFile) return;
+      if (!cropImage || !cropImage.naturalWidth) {
+        closeModal();
+        return;
+      }
       const canvas = document.createElement('canvas');
       canvas.width = cropSize;
       canvas.height = cropSize;
