@@ -109,17 +109,19 @@
               data-assignee="{{ optional($task->assignees->first())->id }}"
             >Edit</button>
             @if($task->status !== 'completed')
-            @if($isAssignee)
-            <form method="POST" action="{{ route('tasks.update', $task) }}" onsubmit="return confirm('Mark complete?')">
-              @csrf
-              <input type="hidden" name="title" value="{{ e($task->title) }}">
-              <input type="hidden" name="description" value="{{ e($task->description) }}">
-              <input type="hidden" name="due_date" value="{{ $task->due_date }}">
-              <input type="hidden" name="status" value="completed">
-              <input type="hidden" name="assignee_id" value="{{ optional($task->assignees->first())->id }}">
-              <button class="pill-btn small ghost" type="submit">Mark Complete</button>
-            </form>
-            @endif
+              @if($isAssignee && $task->accepted_at)
+                <form method="POST" action="{{ route('tasks.update', $task) }}" onsubmit="return confirm('Mark complete?')">
+                  @csrf
+                  <input type="hidden" name="title" value="{{ e($task->title) }}">
+                  <input type="hidden" name="description" value="{{ e($task->description) }}">
+                  <input type="hidden" name="due_date" value="{{ $task->due_date }}">
+                  <input type="hidden" name="status" value="completed">
+                  <input type="hidden" name="assignee_id" value="{{ optional($task->assignees->first())->id }}">
+                  <button class="pill-btn small ghost" type="submit">Mark Complete</button>
+                </form>
+              @elseif($isAssignee)
+                <span class="muted small">Please accept the task first.</span>
+              @endif
             @endif
             @if($canDeleteTask)
               <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete task?')">
