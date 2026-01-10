@@ -160,12 +160,12 @@
           if (isImage) {
             return `
               <div class="chat-attachment image">
-                <a class="chat-attachment-thumb" href="${previewUrl}" data-preview="image" rel="noopener noreferrer">
+                <a class="chat-attachment-thumb" href="${previewUrl}" data-preview="image" data-download-url="${url}" rel="noopener noreferrer">
                   <img src="${previewUrl}" alt="${name}">
                 </a>
                 <div class="chat-attachment-meta">
                   <span>${name}</span>
-                  <a href="${url}" download>Download</a>
+                  <a href="${url}" data-download-url="${url}" download>Download</a>
                 </div>
               </div>
             `;
@@ -173,7 +173,7 @@
           return `
             <div class="chat-attachment file">
               <span>${name}</span>
-              <a href="${url}" rel="noopener noreferrer" download>Download</a>
+              <a href="${url}" data-download-url="${url}" rel="noopener noreferrer" download>Download</a>
             </div>
           `;
         }).join('')}</div>`
@@ -231,6 +231,16 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
   };
 
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const triggerDownload = (url) => {
+    if (!url) return;
+    const frame = document.createElement('iframe');
+    frame.style.display = 'none';
+    frame.src = url;
+    document.body.appendChild(frame);
+    setTimeout(() => frame.remove(), 1200);
+  };
+
   const openPreview = (url) => {
     let overlay = document.getElementById('chat-preview-overlay');
     if (!overlay) {
@@ -258,10 +268,21 @@
 
   if (messagesEl) {
     messagesEl.addEventListener('click', (e) => {
+      const downloadLink = e.target.closest('a[data-download-url]');
+      if (downloadLink && isIOS) {
+        e.preventDefault();
+        triggerDownload(downloadLink.dataset.downloadUrl);
+        return;
+      }
       const link = e.target.closest('a[data-preview="image"]');
       if (!link) return;
       const url = link.getAttribute('href');
       if (!url) return;
+      if (isIOS) {
+        e.preventDefault();
+        triggerDownload(link.dataset.downloadUrl || url);
+        return;
+      }
       e.preventDefault();
       openPreview(url);
     });
