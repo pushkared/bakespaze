@@ -47,6 +47,7 @@ class WorkspaceController extends Controller
 
     public function update(Request $request, Workspace $workspace)
     {
+        $this->ensureWorkspaceAdmin($workspace, $request->user());
         $data = $request->validate([
             'name' => ['required','string','max:255'],
         ]);

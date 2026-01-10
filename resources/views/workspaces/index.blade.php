@@ -95,6 +95,16 @@
                 </form>
               @endif
             </div>
+            @if($isWorkspaceAdmin)
+              <form class="ws-edit" method="POST" action="{{ route('workspaces.update', $ws) }}">
+                @csrf
+                <label>
+                  <span>Edit workspace name</span>
+                  <input type="text" name="name" value="{{ $ws->name }}" required>
+                </label>
+                <button type="submit" class="pill-btn small">Save</button>
+              </form>
+            @endif
             <div class="ws-members">
               @forelse($ws->memberships as $member)
                 <div class="member-pill">
