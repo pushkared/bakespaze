@@ -82,8 +82,11 @@
         @else
           <form method="POST" action="{{ route('attendance.punchout') }}">
             @csrf
-            <button class="pill-btn ghost" type="submit">Punch Out</button>
+            <button class="pill-btn ghost {{ empty($canPunchOut) ? 'is-disabled' : '' }}" type="submit" {{ empty($canPunchOut) ? 'disabled' : '' }}>Punch Out</button>
           </form>
+          @if(empty($canPunchOut))
+            <div class="muted small">Punch out available after 7:00 PM.</div>
+          @endif
           @if($breakActive)
             <form method="POST" action="{{ route('attendance.lunchend') }}">
               @csrf

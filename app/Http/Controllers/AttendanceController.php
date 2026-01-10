@@ -34,6 +34,8 @@ class AttendanceController extends Controller
             ->whereDate('work_date', $now->toDateString())
             ->latest()
             ->first();
+        $canPunchOut = $todayRecord && !$todayRecord->clock_out
+            && $now->copy()->setTime(19, 0, 0)->lte($now);
         $settings = AppSetting::current();
         $breakLimit = (int)($settings->break_duration_minutes ?? 30);
         $breakUsed = (int)($todayRecord?->break_minutes_used ?? 0);
@@ -101,6 +103,7 @@ class AttendanceController extends Controller
             'recent' => $recent,
             'todayRecord' => $todayRecord,
             'canPunchIn' => $this->canPunchIn($now),
+            'canPunchOut' => $canPunchOut,
             'breakLimit' => $breakLimit,
             'breakUsed' => $breakUsed,
             'breakActive' => $breakActive,
@@ -140,9 +143,13 @@ class AttendanceController extends Controller
         $settings = AppSetting::current();
         $timezone = $settings->timezone ?? 'Asia/Kolkata';
         $now = Carbon::now($timezone);
+        $cutoff = $now->copy()->setTime(19, 0, 0);
 
         $open = AttendanceRecord::where('user_id', $user->id)->whereNull('clock_out')->latest()->first();
         if ($open) {
+            if ($now->lt($cutoff)) {
+                return back()->withErrors('Punch out is available after 7:00 PM.');
+            }
             if ($open->lunch_start && !$open->lunch_end) {
                 $limit = (int)($settings->break_duration_minutes ?? 30);
                 $lunchStart = Carbon::parse($open->lunch_start)->timezone($timezone);

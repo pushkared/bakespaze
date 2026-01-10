@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 class AutoPunchOut extends Command
 {
     protected $signature = 'attendance:auto-punch-out';
-    protected $description = 'Auto punch-out users 8 hours after clock-in.';
+    protected $description = 'Auto punch-out users before midnight.';
 
     public function handle(): int
     {
@@ -19,14 +19,19 @@ class AutoPunchOut extends Command
         $now = Carbon::now($timezone);
         $breakLimit = (int)($settings->break_duration_minutes ?? 30);
 
+        $autoOutAt = $now->copy()->setTime(23, 55, 0);
+        if ($now->lt($autoOutAt)) {
+            return Command::SUCCESS;
+        }
+
         AttendanceRecord::whereNull('clock_out')
             ->whereNotNull('clock_in')
+            ->whereDate('work_date', $now->toDateString())
             ->orderBy('clock_in')
-            ->chunk(200, function ($records) use ($now, $breakLimit, $timezone) {
+            ->chunk(200, function ($records) use ($autoOutAt, $breakLimit, $timezone) {
                 foreach ($records as $record) {
                     $clockIn = Carbon::parse($record->clock_in)->timezone($timezone);
-                    $autoOutAt = $clockIn->copy()->addHours(8);
-                    if ($now->lt($autoOutAt)) {
+                    if ($autoOutAt->lt($clockIn)) {
                         continue;
                     }
 

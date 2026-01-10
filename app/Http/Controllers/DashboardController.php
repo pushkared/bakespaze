@@ -75,6 +75,9 @@ class DashboardController extends Controller
             'break_used' => $breakUsed,
             'break_limit' => $breakLimit,
             'can_punch_in' => !$todayRecord || $todayRecord->clock_out ? $this->canPunchIn($now) : false,
+            'can_punch_out' => $todayRecord && !$todayRecord->clock_out
+                ? $now->copy()->setTime(19, 0, 0)->lte($now)
+                : false,
         ];
 
         return view('dashboard.index', [

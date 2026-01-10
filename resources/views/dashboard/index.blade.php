@@ -54,7 +54,7 @@
     $canPunchIn = !empty($punchState['can_punch_in']);
     $punchedIn = !empty($punchState['punched_in']);
     $disablePunchIn = !$canPunchIn || $punchedIn;
-    $disablePunchOut = !$punchedIn;
+    $disablePunchOut = !$punchedIn || empty($punchState['can_punch_out']);
   @endphp
       <div class="punch-actions-row">
         <form method="POST" action="{{ route('attendance.punchin') }}">
@@ -67,6 +67,9 @@
           @csrf
       <button class="pill-btn {{ $disablePunchOut ? 'is-disabled' : '' }}" {{ $disablePunchOut ? 'disabled' : '' }}>Punch Out</button>
     </form>
+    @if($punchedIn && $disablePunchOut)
+      <div class="muted small">Punch out available after 7:00 PM.</div>
+    @endif
   </div>
 </div>
   </div>
