@@ -260,7 +260,15 @@ class ChatController extends Controller
         $conversation = $attachment->message->conversation;
         $this->ensureParticipant($request->user(), $conversation);
 
-        return Storage::disk('public')->download($attachment->path, $attachment->original_name);
+        $disk = Storage::disk('public');
+        abort_unless($disk->exists($attachment->path), 404);
+        $path = $disk->path($attachment->path);
+        $name = $attachment->original_name ?: basename($path);
+
+        return response()->download($path, $name, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="'.addslashes($name).'"',
+        ]);
     }
 
     public function previewAttachment(Request $request, MessageAttachment $attachment)
