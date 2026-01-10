@@ -60,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
                 ->whereHas('assignees', fn($a) => $a->where('users.id', $user->id))
                 ->when($currentWorkspace, fn($q) => $q->where('workspace_id', $currentWorkspace->id))
                 ->where(function ($query) use ($user) {
-                    $query->where('status', 'pending')
+                    $query->whereIn('status', ['open', 'ongoing', 'pending'])
                         ->orWhere(function ($sub) use ($user) {
                             $sub->whereNotNull('accepted_at')
                                 ->where('accepted_by_user_id', $user->id);

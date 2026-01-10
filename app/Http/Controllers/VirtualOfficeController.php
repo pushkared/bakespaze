@@ -160,10 +160,20 @@ class VirtualOfficeController extends Controller
                 'break_minutes' => $breakMinutes,
                 'break_limit' => $breakLimit,
                 'hours_today' => $this->formatMinutes($minutes),
-                'tasks' => collect($tasksByUser->get($userId))->take(4)->map(function ($task) {
+                'tasks' => collect($tasksByUser->get($userId))->take(4)->map(function ($task) use ($timezone) {
+                    $isOverdue = $task->due_date
+                        ? Carbon::parse($task->due_date)->timezone($timezone)->lt(Carbon::today($timezone))
+                        : false;
+                    $status = $task->status ?? 'open';
+                    if ($status === 'pending') {
+                        $status = 'open';
+                    }
+                    if ($status !== 'completed' && $isOverdue) {
+                        $status = 'overdue';
+                    }
                     return [
                         'title' => $task->title,
-                        'status' => $task->status ?? 'open',
+                        'status' => $status,
                         'due' => $task->due_date ? Carbon::parse($task->due_date)->format('d M') : null,
                     ];
                 })->values()->all(),

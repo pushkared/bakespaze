@@ -83,7 +83,11 @@ class TaskController extends Controller
             ->when($dueFrom, fn($q) => $q->whereDate('due_date', '>=', $dueFrom))
             ->when($dueTo, fn($q) => $q->whereDate('due_date', '<=', $dueTo))
             ->when($statusFilter === 'completed', fn($q) => $q->where('status', 'completed'))
-            ->when($statusFilter !== 'completed', fn($q) => $q->where('status', '!=', 'completed'))
+            ->when($statusFilter === 'open', fn($q) => $q->where('status', 'open'))
+            ->when($statusFilter === 'ongoing', fn($q) => $q->where('status', 'ongoing'))
+            ->when($statusFilter === 'overdue', fn($q) => $q->where('status', '!=', 'completed')
+                ->whereNotNull('due_date')
+                ->whereDate('due_date', '<', now()->toDateString()))
             ->when($assigneeFilter, fn($q) => $q->whereHas('assignees', fn($a) => $a->where('users.id', $assigneeFilter)))
             ->orderByRaw('ISNULL(due_date), due_date asc, id desc')
             ->get();
@@ -129,7 +133,7 @@ class TaskController extends Controller
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'due_date' => $data['due_date'] ?? null,
-            'status' => $assigneeId ? 'pending' : 'open',
+            'status' => 'open',
         ]);
 
         if (!empty($assigneeId)) {
@@ -186,12 +190,11 @@ class TaskController extends Controller
         ) {
             abort(403);
         }
-        if ($task->status === 'pending' && ($data['status'] ?? null) === 'completed') {
+        if (!$task->accepted_at && ($data['status'] ?? null) === 'completed') {
             abort(403);
         }
 
-        $reopen = $task->status === 'completed';
-        $newStatus = $reopen ? 'open' : ($data['status'] ?? $task->status);
+        $newStatus = $data['status'] ?? $task->status;
         $previousAssigneeId = $task->assignees()->first()?->id;
         $previousAssignee = $previousAssigneeId ? User::find($previousAssigneeId) : null;
         $previousDueDate = $task->due_date ? $task->due_date->format('Y-m-d') : null;
@@ -237,7 +240,7 @@ class TaskController extends Controller
                     }
                 }
                 $task->update([
-                    'status' => 'pending',
+                    'status' => 'open',
                     'accepted_at' => null,
                     'accepted_by_user_id' => null,
                 ]);
@@ -266,11 +269,12 @@ class TaskController extends Controller
     public function accept(Request $request, Task $task)
     {
         $this->ensureTaskAccess($task, $request);
+        abort_if($task->accepted_at, 403);
         $assigneeId = $task->assignees()->first()?->id;
         abort_unless($assigneeId && (int)$assigneeId === (int)$request->user()->id, 403);
 
         $task->update([
-            'status' => 'open',
+            'status' => 'ongoing',
             'accepted_at' => now(),
             'accepted_by_user_id' => $request->user()->id,
         ]);

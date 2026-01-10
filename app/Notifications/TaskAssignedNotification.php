@@ -24,7 +24,7 @@ class TaskAssignedNotification extends Notification
     public function toWebPush($notifiable, $notification): WebPushMessage
     {
         return (new WebPushMessage())
-            ->title('New task assigned')
+            ->title('New task assigned to you')
             ->icon('/images/icon-192.png')
             ->body(trim($this->task->title.' - from '.($this->assignerName ?: 'a teammate')))
             ->data([

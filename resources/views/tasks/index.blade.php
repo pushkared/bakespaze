@@ -27,8 +27,10 @@
       </select>
       <select name="status" @if(($filters['status'] ?? '') === '') data-placeholder="1" @endif>
         <option value="" disabled @selected(($filters['status'] ?? '') === '')>Status</option>
+        <option value="open" @selected(($filters['status'] ?? '') === 'open')>Open</option>
         <option value="ongoing" @selected(($filters['status'] ?? '') === 'ongoing')>Ongoing</option>
         <option value="completed" @selected(($filters['status'] ?? '') === 'completed')>Completed</option>
+        <option value="overdue" @selected(($filters['status'] ?? '') === 'overdue')>Overdue</option>
       </select>
       @if(!empty($isAdmin))
         <select name="assignee_id" @if(($filters['assignee_id'] ?? '') === '') data-placeholder="1" @endif>
@@ -71,13 +73,13 @@
           <div class="line-clamp">{!! Str::limit(strip_tags($task->description), 90) !!}</div>
           <div>{{ $task->due_date ? $task->due_date->format('d M, Y') : '—' }}</div>
           <div>
-            @if($task->status === 'completed')
-              <span class="status done">Completed</span>
-            @elseif($task->status === 'pending')
-              <span class="status pending">Pending</span>
-            @else
-              <span class="status open">Open</span>
-            @endif
+            @php
+              $isOverdue = $task->due_date && $task->due_date->lt(\Carbon\Carbon::today()) && $task->status !== 'completed';
+              $rawStatus = $task->status === 'pending' ? 'open' : ($task->status ?? 'open');
+              $statusLabel = $isOverdue ? 'Overdue' : ($rawStatus === 'ongoing' ? 'Ongoing' : ucfirst($rawStatus));
+              $statusClass = $isOverdue ? 'overdue' : ($rawStatus === 'completed' ? 'done' : ($rawStatus === 'ongoing' ? 'ongoing' : 'open'));
+            @endphp
+            <span class="status {{ $statusClass }}">{{ $statusLabel }}</span>
           </div>
           <div>
             @if($task->assignees->first())
@@ -136,7 +138,7 @@
           </div>
           <div class="detail-panels">
             <div class="detail-panel active" id="overview-{{ $task->id }}">
-              @if($task->status === 'pending' && $isAssignee)
+              @if(!$task->accepted_at && $isAssignee && $task->status !== 'completed')
                 <form method="POST" action="{{ route('tasks.accept', $task) }}" class="accept-form">
                   @csrf
                   <button type="submit" class="pill-btn solid">Accept Task</button>

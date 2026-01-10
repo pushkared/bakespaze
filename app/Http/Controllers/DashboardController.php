@@ -30,7 +30,7 @@ class DashboardController extends Controller
             ->when($workspace, fn($q) => $q->where('workspace_id', $workspace->id))
             ->whereHas('assignees', fn($a) => $a->where('users.id', $request->user()->id))
             ->where(function ($query) use ($request) {
-                $query->where('status', 'pending')
+                $query->whereIn('status', ['open', 'ongoing', 'pending'])
                     ->orWhere(function ($sub) use ($request) {
                         $sub->whereNotNull('accepted_at')
                             ->where('accepted_by_user_id', $request->user()->id);
