@@ -397,32 +397,50 @@
         if (message.conversation_id !== state.activeId) return;
         messagesEl.appendChild(renderMessage(message));
         messagesEl.scrollTop = messagesEl.scrollHeight;
-        if (state.activeConversation?.type === 'group') {
+        if (state.activeConversation) {
           state.activeMessages = state.activeMessages || [];
           state.activeMessages.push(message);
-          renderGroupInfo();
+          renderConversationInfo();
         }
       });
   };
 
-  const renderGroupInfo = () => {
+  const renderConversationInfo = () => {
     if (!groupInfoMembers || !groupInfoMedia) return;
     const conv = state.activeConversation;
-    if (!conv || conv.type !== 'group') return;
+    if (!conv) return;
 
-    const membersHtml = (conv.participants || []).map((p) => {
-      const initial = (p.name || 'U').trim().charAt(0).toUpperCase();
-      return `
-        <div class="chat-info-member">
-          <div class="avatar">${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.name}">` : initial}</div>
-          <div class="chat-info-member-meta">
-            <div class="chat-info-member-name">${p.name || 'Member'}</div>
-            <div class="chat-info-member-email">${p.email || ''}</div>
+    if (conv.type === 'group') {
+      const membersHtml = (conv.participants || []).map((p) => {
+        const initial = (p.name || 'U').trim().charAt(0).toUpperCase();
+        return `
+          <div class="chat-info-member">
+            <div class="avatar">${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.name}">` : initial}</div>
+            <div class="chat-info-member-meta">
+              <div class="chat-info-member-name">${p.name || 'Member'}</div>
+              <div class="chat-info-member-email">${p.email || ''}</div>
+            </div>
           </div>
-        </div>
-      `;
-    }).join('') || '<div class="muted">No members</div>';
-    groupInfoMembers.innerHTML = membersHtml;
+        `;
+      }).join('') || '<div class="muted">No members</div>';
+      groupInfoMembers.innerHTML = membersHtml;
+    } else {
+      const peer = (conv.participants || []).find((p) => p.id !== config.userId) || (conv.participants || [])[0];
+      if (peer) {
+        const initial = (peer.name || 'U').trim().charAt(0).toUpperCase();
+        groupInfoMembers.innerHTML = `
+          <div class="chat-info-member">
+            <div class="avatar">${peer.avatar_url ? `<img src="${peer.avatar_url}" alt="${peer.name}">` : initial}</div>
+            <div class="chat-info-member-meta">
+              <div class="chat-info-member-name">${peer.name || 'Member'}</div>
+              <div class="chat-info-member-email">${peer.email || ''}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        groupInfoMembers.innerHTML = '<div class="muted">No profile found.</div>';
+      }
+    }
 
     const messages = state.activeMessages || [];
     const attachments = messages.flatMap((m) => (m.attachments || []).map((a) => ({ ...a, message: m })));
@@ -452,13 +470,22 @@
     groupInfoMedia.innerHTML = `<div class="chat-info-media-grid">${mediaHtml}</div>`;
   };
 
-  const openGroupInfo = () => {
+  const openConversationInfo = () => {
     if (!groupInfoModal) return;
     const conv = state.activeConversation;
-    if (!conv || conv.type !== 'group') return;
-    if (groupInfoTitle) groupInfoTitle.textContent = conv.title || 'Group';
-    if (groupInfoSub) groupInfoSub.textContent = `${(conv.participants || []).length} members`;
-    renderGroupInfo();
+    if (!conv) return;
+    const tabs = groupInfoModal.querySelectorAll('.chat-info-tab');
+    if (tabs.length >= 2) {
+      tabs[0].textContent = conv.type === 'group' ? 'Members' : 'Profile';
+      tabs[1].textContent = 'Media';
+    }
+    if (groupInfoTitle) groupInfoTitle.textContent = conv.title || 'Chat';
+    if (groupInfoSub) {
+      groupInfoSub.textContent = conv.type === 'group'
+        ? `${(conv.participants || []).length} members`
+        : (conv.participants || []).find((p) => p.id !== config.userId)?.email || '';
+    }
+    renderConversationInfo();
     groupInfoModal.classList.remove('hidden');
   };
 
@@ -471,11 +498,11 @@
     });
   }
   if (threadTrigger) {
-    threadTrigger.addEventListener('click', () => openGroupInfo());
+    threadTrigger.addEventListener('click', () => openConversationInfo());
     threadTrigger.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        openGroupInfo();
+        openConversationInfo();
       }
     });
   }
@@ -498,7 +525,7 @@
     state.activeConversation = conv || null;
     if (conv) {
       titleEl.textContent = conv.title;
-      metaEl.textContent = conv.type === 'group' ? '' : conv.participants.map(p => p.name).join(', ');
+      metaEl.textContent = '';
       const initial = (conv.title || 'U').trim().charAt(0).toUpperCase();
       const avatar = document.getElementById('chat-thread-avatar');
       if (avatar) {
