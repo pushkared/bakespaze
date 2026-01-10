@@ -165,6 +165,10 @@
     let objectUrl = null;
     let originalFile = null;
 
+    if (modal && modal.parentElement !== document.body) {
+      document.body.appendChild(modal);
+    }
+
     if (avatarInput && avatarTrigger) {
       avatarTrigger.addEventListener('click', (e) => {
         if (avatarTrigger.getAttribute('aria-disabled') === 'true') return;
@@ -184,6 +188,7 @@
     };
 
     const openModal = (file) => {
+      if (!modal) return;
       originalFile = file;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(file);
@@ -193,6 +198,7 @@
     };
 
     const closeModal = () => {
+      if (!modal) return;
       modal.classList.remove('is-open');
       modal.setAttribute('aria-hidden', 'true');
       if (objectUrl) {
@@ -205,6 +211,11 @@
 
     if (avatarInput) {
       avatarInput.addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        openModal(file);
+      });
+      avatarInput.addEventListener('input', (event) => {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
         openModal(file);
