@@ -240,6 +240,10 @@
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      const container = document.querySelector('.content-area');
+      if (container) {
+        container.scrollTop = 0;
+      }
     };
     forceTop();
     requestAnimationFrame(forceTop);
