@@ -33,9 +33,9 @@
       <div class="dash-create-wrap">
         <button class="create-task plain" id="dash-create-toggle" aria-label="Quick create">+</button>
         <div class="dash-create-panel" id="dash-create-panel">
-          <a class="dash-create-item" href="{{ route('tasks.index') }}?open_modal=1">Add Task</a>
-          <a class="dash-create-item" href="{{ route('workspaces.index') }}">Add Workspace</a>
-          <a class="dash-create-item" href="{{ route('chat.index') }}">Create Chat</a>
+          <a class="dash-create-item" href="{{ route('tasks.index') }}?open_modal=1">New Task</a>
+          <a class="dash-create-item" href="{{ route('chat.index') }}">New Chat</a>
+          <a class="dash-create-item" href="{{ route('calendar.index') }}">New Meet</a>
         </div>
       </div>
       <div class="dash-greeting">
