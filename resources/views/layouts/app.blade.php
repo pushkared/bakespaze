@@ -155,7 +155,7 @@
             <form method="POST" action="{{ route('tasks.update', $task) }}">
               @csrf
               <input type="hidden" name="title" value="{{ $task->title }}">
-              <input type="hidden" name="description" value="{{ $task->description }}">
+              <input type="hidden" name="description" value="{{ e($task->description) }}">
               <input type="hidden" name="due_date" value="{{ $task->due_date }}">
               <input type="hidden" name="status" value="completed">
               <input type="hidden" name="assignee_id" value="{{ optional($task->assignees->first())->id }}">
