@@ -87,6 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const item = btn.closest('.dash-task-item');
       if (!item || item.classList.contains('is-done')) return;
+      if (btn.disabled) {
+        const msg = btn.dataset.disabledMessage;
+        if (msg) window.alert(msg);
+        return;
+      }
       if (!window.confirm('Are you sure you want to mark this task complete?')) {
         return;
       }

@@ -32,7 +32,12 @@
                data-task-due="{{ $task->due_date }}"
                data-task-assignee="{{ $assigneeId }}"
                data-task-status="{{ $task->status }}">
-            <button class="dash-task-box" type="button" aria-label="Mark task complete" {{ (!$isAssignee || $task->status === 'completed') ? 'disabled' : '' }}></button>
+            <button class="dash-task-box" type="button" aria-label="Mark task complete"
+              {{ (!$isAssignee || $task->status === 'completed' || !$task->accepted_at) ? 'disabled' : '' }}
+              @if(!$task->accepted_at && $isAssignee)
+                data-disabled-message="Please accept the task first."
+              @endif
+            ></button>
             <a class="dash-task-pill" href="{{ route('tasks.index') }}">{{ Str::limit($task->title, 48) }}</a>
           </div>
         @empty

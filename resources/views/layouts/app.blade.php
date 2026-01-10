@@ -151,18 +151,20 @@
             </div>
           </div>
           <div class="float-actions">
-            @if($task->status !== 'completed' && $isAssignee)
-            <form method="POST" action="{{ route('tasks.update', $task) }}">
-              @csrf
-              <input type="hidden" name="title" value="{{ e($task->title) }}">
-              <input type="hidden" name="description" value="{{ e($task->description) }}">
-              <input type="hidden" name="due_date" value="{{ $task->due_date }}">
-              <input type="hidden" name="status" value="completed">
-              <input type="hidden" name="assignee_id" value="{{ optional($task->assignees->first())->id }}">
-              <button type="submit" class="pill-btn small">Mark Done</button>
-            </form>
-            @else
+            @if($task->status !== 'completed' && $isAssignee && $task->accepted_at)
+              <form method="POST" action="{{ route('tasks.update', $task) }}">
+                @csrf
+                <input type="hidden" name="title" value="{{ e($task->title) }}">
+                <input type="hidden" name="description" value="{{ e($task->description) }}">
+                <input type="hidden" name="due_date" value="{{ $task->due_date }}">
+                <input type="hidden" name="status" value="completed">
+                <input type="hidden" name="assignee_id" value="{{ optional($task->assignees->first())->id }}">
+                <button type="submit" class="pill-btn small">Mark Done</button>
+              </form>
+            @elseif($task->status === 'completed')
               <span class="status done">Done</span>
+            @elseif($isAssignee)
+              <span class="muted small">Please accept first.</span>
             @endif
             <a href="{{ route('tasks.index') }}" class="pill-btn small ghost">Details</a>
           </div>
