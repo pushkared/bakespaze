@@ -27,7 +27,7 @@
       </div>
       <div class="chat-thread hidden" id="chat-thread">
         <div class="chat-thread-head">
-          <div class="chat-thread-user">
+          <div class="chat-thread-user chat-thread-trigger" id="chat-thread-trigger" role="button" tabindex="0" aria-label="Open group info">
             <div class="chat-thread-avatar" id="chat-thread-avatar">U</div>
             <div class="chat-thread-name">
               <div class="chat-thread-title" id="chat-thread-title"></div>
@@ -65,6 +65,26 @@
     </div>
   </div>
 </section>
+
+<div class="chat-info-modal hidden" id="chat-group-info">
+  <div class="chat-info-card">
+    <div class="chat-info-head">
+      <div>
+        <div class="chat-info-title" id="chat-info-title"></div>
+        <div class="chat-info-sub" id="chat-info-sub"></div>
+      </div>
+      <button class="chat-info-close" type="button" id="chat-info-close">Close</button>
+    </div>
+    <div class="chat-info-tabs">
+      <button type="button" class="chat-info-tab active" data-target="chat-info-members">Members</button>
+      <button type="button" class="chat-info-tab" data-target="chat-info-media">Media</button>
+    </div>
+    <div class="chat-info-panels">
+      <div class="chat-info-panel active" id="chat-info-members"></div>
+      <div class="chat-info-panel" id="chat-info-media"></div>
+    </div>
+  </div>
+</div>
 
 <div class="chat-modal hidden" id="chat-modal">
   <div class="chat-modal-card">

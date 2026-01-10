@@ -8,6 +8,13 @@
   const emptyEl = document.getElementById('chat-empty');
   const titleEl = document.getElementById('chat-thread-title');
   const metaEl = document.getElementById('chat-thread-meta');
+  const threadTrigger = document.getElementById('chat-thread-trigger');
+  const groupInfoModal = document.getElementById('chat-group-info');
+  const groupInfoTitle = document.getElementById('chat-info-title');
+  const groupInfoSub = document.getElementById('chat-info-sub');
+  const groupInfoMembers = document.getElementById('chat-info-members');
+  const groupInfoMedia = document.getElementById('chat-info-media');
+  const groupInfoClose = document.getElementById('chat-info-close');
   const messagesEl = document.getElementById('chat-messages');
   const formEl = document.getElementById('chat-form');
   const inputEl = document.getElementById('chat-input');
@@ -390,8 +397,99 @@
         if (message.conversation_id !== state.activeId) return;
         messagesEl.appendChild(renderMessage(message));
         messagesEl.scrollTop = messagesEl.scrollHeight;
+        if (state.activeConversation?.type === 'group') {
+          state.activeMessages = state.activeMessages || [];
+          state.activeMessages.push(message);
+          renderGroupInfo();
+        }
       });
   };
+
+  const renderGroupInfo = () => {
+    if (!groupInfoMembers || !groupInfoMedia) return;
+    const conv = state.activeConversation;
+    if (!conv || conv.type !== 'group') return;
+
+    const membersHtml = (conv.participants || []).map((p) => {
+      const initial = (p.name || 'U').trim().charAt(0).toUpperCase();
+      return `
+        <div class="chat-info-member">
+          <div class="avatar">${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.name}">` : initial}</div>
+          <div class="chat-info-member-meta">
+            <div class="chat-info-member-name">${p.name || 'Member'}</div>
+            <div class="chat-info-member-email">${p.email || ''}</div>
+          </div>
+        </div>
+      `;
+    }).join('') || '<div class="muted">No members</div>';
+    groupInfoMembers.innerHTML = membersHtml;
+
+    const messages = state.activeMessages || [];
+    const attachments = messages.flatMap((m) => (m.attachments || []).map((a) => ({ ...a, message: m })));
+    if (!attachments.length) {
+      groupInfoMedia.innerHTML = '<div class="muted">No media yet.</div>';
+      return;
+    }
+    const mediaHtml = attachments.map((att) => {
+      const name = att.name || 'Attachment';
+      const url = att.url || '#';
+      const previewUrl = att.preview_url || url;
+      const ext = (name.split('.').pop() || '').toLowerCase();
+      const isImage = ['jpg','jpeg','png','gif','webp','bmp'].includes(ext);
+      if (isImage) {
+        return `
+          <a class="chat-info-media-thumb" href="${previewUrl}" target="_blank" rel="noopener noreferrer">
+            <img src="${previewUrl}" alt="${name}">
+          </a>
+        `;
+      }
+      return `
+        <a class="chat-info-media-file" href="${url}" target="_blank" rel="noopener noreferrer">
+          ${name}
+        </a>
+      `;
+    }).join('');
+    groupInfoMedia.innerHTML = `<div class="chat-info-media-grid">${mediaHtml}</div>`;
+  };
+
+  const openGroupInfo = () => {
+    if (!groupInfoModal) return;
+    const conv = state.activeConversation;
+    if (!conv || conv.type !== 'group') return;
+    if (groupInfoTitle) groupInfoTitle.textContent = conv.title || 'Group';
+    if (groupInfoSub) groupInfoSub.textContent = `${(conv.participants || []).length} members`;
+    renderGroupInfo();
+    groupInfoModal.classList.remove('hidden');
+  };
+
+  if (groupInfoClose) {
+    groupInfoClose.addEventListener('click', () => groupInfoModal && groupInfoModal.classList.add('hidden'));
+  }
+  if (groupInfoModal) {
+    groupInfoModal.addEventListener('click', (e) => {
+      if (e.target === groupInfoModal) groupInfoModal.classList.add('hidden');
+    });
+  }
+  if (threadTrigger) {
+    threadTrigger.addEventListener('click', () => openGroupInfo());
+    threadTrigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openGroupInfo();
+      }
+    });
+  }
+
+  document.querySelectorAll('.chat-info-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const targetId = tab.dataset.target;
+      document.querySelectorAll('.chat-info-tab').forEach((t) => t.classList.remove('active'));
+      document.querySelectorAll('.chat-info-panel').forEach((p) => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = document.getElementById(targetId);
+      if (panel) panel.classList.add('active');
+    });
+  });
 
   const setActiveConversation = async (id) => {
     state.activeId = id;
@@ -400,7 +498,7 @@
     state.activeConversation = conv || null;
     if (conv) {
       titleEl.textContent = conv.title;
-      metaEl.textContent = conv.participants.map(p => p.name).join(', ');
+      metaEl.textContent = conv.type === 'group' ? '' : conv.participants.map(p => p.name).join(', ');
       const initial = (conv.title || 'U').trim().charAt(0).toUpperCase();
       const avatar = document.getElementById('chat-thread-avatar');
       if (avatar) {
@@ -424,13 +522,17 @@
     if (settingsBtn) {
       settingsBtn.style.display = conv?.type === 'group' ? 'inline-flex' : 'none';
     }
+    if (threadEl) {
+      threadEl.classList.toggle('is-group', conv?.type === 'group');
+    }
     emptyEl.style.display = 'none';
     threadEl.classList.remove('hidden');
     if (window.matchMedia('(max-width: 900px)').matches) {
       document.body.classList.add('chat-mobile-thread-open');
     }
     const messages = await fetchJson(`/chat/conversations/${id}`);
-    renderMessages(messages);
+    state.activeMessages = messages || [];
+    renderMessages(state.activeMessages);
     subscribeConversation(id);
     const lastId = messages.length ? messages[messages.length - 1].id : null;
     await fetchJson(`/chat/conversations/${id}/read`, {
