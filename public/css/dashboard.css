@@ -476,8 +476,9 @@ input, select, textarea, button{
   box-shadow:none;
   padding:0;
   border-radius:0;
-  font-size:36px;
+  font-size:34px;
   line-height:1;
+  font-weight:400;
   min-width:auto;
   width:auto;
   height:auto;
