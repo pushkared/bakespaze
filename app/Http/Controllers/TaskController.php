@@ -36,10 +36,12 @@ class TaskController extends Controller
     protected function ensureTaskAccess(Task $task, Request $request): void
     {
         $user = $request->user();
-        abort_unless(
-            Membership::where('workspace_id', $task->workspace_id)->where('user_id', $user->id)->exists(),
-            403
-        );
+        $isMember = Membership::where('workspace_id', $task->workspace_id)
+            ->where('user_id', $user->id)
+            ->exists();
+        $isAssignee = $task->assignees()->where('users.id', $user->id)->exists();
+        $isCreator = (int) $task->creator_id === (int) $user->id;
+        abort_unless($isMember || $isAssignee || $isCreator, 403);
     }
 
     protected function ensureTaskAdmin(Task $task, Request $request): void
