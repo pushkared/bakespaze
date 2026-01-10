@@ -2242,6 +2242,8 @@ input, select, textarea, button{
   max-width:640px;
   box-shadow:0 20px 48px rgba(0,0,0,0.4);
   padding:16px;
+  max-height:calc(100vh - 120px);
+  overflow:auto;
 }
 
 .modal-head{
