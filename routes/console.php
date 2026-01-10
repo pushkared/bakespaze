@@ -9,6 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('attendance:remind')->everyFiveMinutes();
+Schedule::command('attendance:break-overdue')->everyFiveMinutes();
 Schedule::command('attendance:auto-punch-out')->everyFiveMinutes();
 Schedule::command('tasks:remind-overdue')->dailyAt('10:00');
 Schedule::command('meeting:remind')->everyMinute();
