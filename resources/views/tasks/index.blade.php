@@ -322,15 +322,22 @@
     const form = modal ? modal.querySelector('form.task-form') : null;
     const modalTitle = modal ? modal.querySelector('.modal-head h3') : null;
     const submitBtn = modal ? modal.querySelector('.form-actions .pill-btn.solid') : null;
+    let scrollLockY = 0;
 
     function openModal() {
       if (!modal) return;
       modal.classList.add('open');
+      scrollLockY = window.scrollY || 0;
+      document.body.classList.add('modal-lock');
+      document.body.style.top = `-${scrollLockY}px`;
     }
     window.openTaskModal = openModal;
     function closeModal() {
       if (!modal) return;
       modal.classList.remove('open');
+      document.body.classList.remove('modal-lock');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollLockY);
     }
     window.syncEditor = function() {
       if (hidden && editor) {
