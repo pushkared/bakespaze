@@ -181,6 +181,9 @@ class TaskController extends Controller
             'status' => ['nullable','string'],
             'assignee_id' => ['nullable','exists:users,id'],
         ]);
+        if (array_key_exists('assignee_id', $data) && $data['assignee_id'] === '') {
+            $data['assignee_id'] = null;
+        }
 
         $currentAssigneeId = $task->assignees()->first()?->id;
         $targetAssigneeId = array_key_exists('assignee_id', $data) ? $data['assignee_id'] : $currentAssigneeId;
@@ -229,9 +232,13 @@ class TaskController extends Controller
         }
 
         if (array_key_exists('assignee_id', $data)) {
-            $task->assignees()->sync($data['assignee_id'] ? [$data['assignee_id']] : []);
-            if (!empty($data['assignee_id']) && $data['assignee_id'] !== $previousAssigneeId) {
-                $assignee = User::find($data['assignee_id']);
+            $incomingAssigneeId = $data['assignee_id'];
+            if ($newStatus === 'completed' && empty($incomingAssigneeId)) {
+                $incomingAssigneeId = $previousAssigneeId;
+            }
+            $task->assignees()->sync($incomingAssigneeId ? [$incomingAssigneeId] : []);
+            if (!empty($incomingAssigneeId) && $incomingAssigneeId !== $previousAssigneeId) {
+                $assignee = User::find($incomingAssigneeId);
                 if ($assignee) {
                     try {
                         $assignee->notify(new TaskAssignedNotification($task, $request->user()->name));
@@ -250,7 +257,7 @@ class TaskController extends Controller
                     'to_user_id' => $assignee?->id,
                     'to_name' => $assignee?->name,
                 ]);
-            } elseif (empty($data['assignee_id']) && $previousAssigneeId) {
+            } elseif (empty($incomingAssigneeId) && $previousAssigneeId && $newStatus !== 'completed') {
                 $task->update([
                     'status' => 'open',
                     'accepted_at' => null,
