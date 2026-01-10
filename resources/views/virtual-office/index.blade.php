@@ -236,7 +236,13 @@
       return;
     }
     closeMobileDetails();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const forceTop = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    forceTop();
+    requestAnimationFrame(forceTop);
   });
 })();
 </script>
