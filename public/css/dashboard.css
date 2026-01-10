@@ -2353,6 +2353,23 @@ input, select, textarea, button{
   font-weight:800;
   cursor:pointer;
 }
+.workspace-invites{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.invite-list{display:grid;gap:12px}
+.invite-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.04);
+}
+.invite-name{font-weight:800;font-size:16px}
 
 .workspace-grid{
   display:grid;
@@ -2686,6 +2703,13 @@ input, select, textarea, button{
   background:rgba(255,255,255,0.03);
   border-radius:12px;
   border:1px solid rgba(255,255,255,0.06);
+}
+.member-status{
+  margin-left:auto;
+  font-size:11px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:#ffd25b;
 }
 .avatar-fallback{
   width:34px;

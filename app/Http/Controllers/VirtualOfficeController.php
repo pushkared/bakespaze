@@ -19,18 +19,24 @@ class VirtualOfficeController extends Controller
         $user = $request->user();
         $workspaceId = session('current_workspace_id');
 
-        $workspace = Workspace::with(['memberships.user' => function ($q) {
-            $q->select('id','name','role','email','avatar_url');
+        $workspace = Workspace::with(['memberships' => function ($q) {
+            $q->where('status', 'accepted')
+                ->with(['user' => function ($userQuery) {
+                    $userQuery->select('id','name','role','email','avatar_url');
+                }]);
         }])
-        ->whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
+        ->whereHas('memberships', fn($q) => $q->where('user_id', $user->id)->where('status', 'accepted'))
         ->when($workspaceId, fn($q) => $q->where('id', $workspaceId))
         ->first();
 
         // Fallback to first assigned workspace
         if (!$workspace) {
-            $workspace = Workspace::with(['memberships.user' => function ($q) {
-                $q->select('id','name','role','email','avatar_url');
-            }])->whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
+            $workspace = Workspace::with(['memberships' => function ($q) {
+                $q->where('status', 'accepted')
+                    ->with(['user' => function ($userQuery) {
+                        $userQuery->select('id','name','role','email','avatar_url');
+                    }]);
+            }])->whereHas('memberships', fn($q) => $q->where('user_id', $user->id)->where('status', 'accepted'))
             ->orderByDesc('created_at')->first();
         }
 

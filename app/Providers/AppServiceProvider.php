@@ -48,7 +48,8 @@ class AppServiceProvider extends ServiceProvider
             }
             $user = auth()->user();
             $availableWorkspaces = Workspace::whereHas('memberships', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+                $q->where('user_id', $user->id)
+                    ->where('status', 'accepted');
             })->orderByDesc('created_at')->get(['id','name','slug']);
 
             $currentWorkspace = $availableWorkspaces->firstWhere('id', session('current_workspace_id'))

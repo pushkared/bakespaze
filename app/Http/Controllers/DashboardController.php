@@ -16,7 +16,7 @@ class DashboardController extends Controller
         $user = $request->user();
         $workspaceId = session('current_workspace_id');
 
-        return Workspace::whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
+        return Workspace::whereHas('memberships', fn($q) => $q->where('user_id', $user->id)->where('status', 'accepted'))
             ->when($workspaceId, fn($q) => $q->where('id', $workspaceId))
             ->orderByDesc('created_at')
             ->first();

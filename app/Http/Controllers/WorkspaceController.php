@@ -6,7 +6,7 @@ use App\Models\Workspace;
 use App\Models\Membership;
 use App\Models\User;
 use App\Models\Organization;
-use App\Notifications\WorkspaceAssignedNotification;
+use App\Notifications\WorkspaceInviteNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -38,7 +38,7 @@ class WorkspaceController extends Controller
         if ($user = auth()->user()) {
             Membership::firstOrCreate(
                 ['user_id' => $user->id, 'workspace_id' => $workspace->id],
-                ['role' => 'admin']
+                ['role' => 'admin', 'status' => 'accepted', 'accepted_at' => now()]
             );
         }
 
@@ -80,16 +80,35 @@ class WorkspaceController extends Controller
         $this->ensureWorkspaceAdmin($workspace, $request->user());
 
         foreach ($data['user_id'] as $uid) {
-            Membership::updateOrCreate(
-                ['user_id' => $uid, 'workspace_id' => $data['workspace_id']],
-                ['role' => $data['role']]
-            );
-            $user = User::find($uid);
-            if ($user && $workspace) {
-                try {
-                    $user->notify(new WorkspaceAssignedNotification($workspace));
-                } catch (\Throwable $e) {
-                    report($e);
+            $membership = Membership::where('user_id', $uid)
+                ->where('workspace_id', $data['workspace_id'])
+                ->first();
+            $shouldNotify = false;
+
+            if ($membership) {
+                $membership->role = $data['role'];
+                if ($membership->status === 'pending') {
+                    $shouldNotify = true;
+                }
+                $membership->save();
+            } else {
+                $membership = Membership::create([
+                    'user_id' => $uid,
+                    'workspace_id' => $data['workspace_id'],
+                    'role' => $data['role'],
+                    'status' => 'pending',
+                ]);
+                $shouldNotify = true;
+            }
+
+            if ($shouldNotify) {
+                $user = User::find($uid);
+                if ($user && $workspace) {
+                    try {
+                        $user->notify(new WorkspaceInviteNotification($workspace));
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
                 }
             }
         }
@@ -100,10 +119,15 @@ class WorkspaceController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $pendingInvites = Membership::with('workspace')
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->get();
         $workspaces = Workspace::with(['memberships.user' => function ($q) {
             $q->select('id','name','email','role');
         }])->whereHas('memberships', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
+            $q->where('user_id', $user->id)
+                ->where('status', 'accepted');
         })->orderByDesc('created_at')->get();
 
         $users = User::orderBy('name')->get(['id','name','email']);
@@ -111,6 +135,7 @@ class WorkspaceController extends Controller
         return view('workspaces.index', [
             'workspaces' => $workspaces,
             'users' => $users,
+            'pendingInvites' => $pendingInvites,
         ]);
     }
 
@@ -123,6 +148,7 @@ class WorkspaceController extends Controller
 
         $hasAccess = Membership::where('user_id', $user->id)
             ->where('workspace_id', $data['workspace_id'])
+            ->where('status', 'accepted')
             ->exists();
 
         abort_unless($hasAccess, 403);
@@ -130,6 +156,27 @@ class WorkspaceController extends Controller
         session(['current_workspace_id' => $data['workspace_id']]);
 
         return back()->with('status', 'Workspace switched.');
+    }
+
+    public function accept(Request $request, Workspace $workspace)
+    {
+        $user = $request->user();
+        $membership = Membership::where('user_id', $user->id)
+            ->where('workspace_id', $workspace->id)
+            ->first();
+        if (!$membership || $membership->status !== 'pending') {
+            return back()->withErrors('No pending invitation found.');
+        }
+
+        $membership->status = 'accepted';
+        $membership->accepted_at = now();
+        $membership->save();
+
+        if (!session('current_workspace_id')) {
+            session(['current_workspace_id' => $workspace->id]);
+        }
+
+        return back()->with('status', 'Workspace invitation accepted.');
     }
 
     public function removeUser(Workspace $workspace, User $user, Request $request)

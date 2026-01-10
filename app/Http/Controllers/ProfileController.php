@@ -123,14 +123,19 @@ class ProfileController extends Controller
         if ($workspaceId) {
             $shared = Membership::where('workspace_id', $workspaceId)
                 ->whereIn('user_id', [$viewer->id, $profileUser->id])
+                ->where('status', 'accepted')
                 ->distinct()
                 ->count('user_id') === 2;
             if ($shared) {
                 $allowedWorkspaceIds = collect([$workspaceId]);
             }
         } else {
-            $viewerWorkspaces = Membership::where('user_id', $viewer->id)->pluck('workspace_id');
-            $profileWorkspaces = Membership::where('user_id', $profileUser->id)->pluck('workspace_id');
+            $viewerWorkspaces = Membership::where('user_id', $viewer->id)
+                ->where('status', 'accepted')
+                ->pluck('workspace_id');
+            $profileWorkspaces = Membership::where('user_id', $profileUser->id)
+                ->where('status', 'accepted')
+                ->pluck('workspace_id');
             $allowedWorkspaceIds = $viewerWorkspaces->intersect($profileWorkspaces)->values();
         }
 

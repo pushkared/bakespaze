@@ -67,6 +67,27 @@
       </div>
     @endif
 
+    @if(($pendingInvites ?? collect())->isNotEmpty())
+      <div class="workspace-invites">
+        <div class="eyebrow">Invites</div>
+        <h2>Pending workspace invitations</h2>
+        <div class="invite-list">
+          @foreach($pendingInvites as $invite)
+            <div class="invite-card">
+              <div>
+                <div class="invite-name">{{ $invite->workspace?->name ?? 'Workspace' }}</div>
+                <div class="muted">Invitation pending</div>
+              </div>
+              <form method="POST" action="{{ route('workspaces.accept', $invite->workspace_id) }}">
+                @csrf
+                <button type="submit" class="pill-btn small">Accept</button>
+              </form>
+            </div>
+          @endforeach
+        </div>
+      </div>
+    @endif
+
     <div class="workspace-grid">
       @forelse($workspaces as $ws)
         @php
@@ -113,6 +134,9 @@
                     <div class="member-name">{{ $member->user->name }}</div>
                     <div class="member-role">{{ strtoupper($member->role) }}</div>
                   </div>
+                  @if($member->status === 'pending')
+                    <span class="member-status">Pending</span>
+                  @endif
                   @if($isWorkspaceAdmin && $member->user->id !== auth()->id())
                     <form method="POST" action="{{ route('workspaces.members.remove', [$ws, $member->user]) }}" onsubmit="return confirm('Remove this user from the workspace?')">
                       @csrf

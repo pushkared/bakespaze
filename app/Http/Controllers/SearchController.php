@@ -25,7 +25,9 @@ class SearchController extends Controller
             ]);
         }
 
-        $workspaceIds = Membership::where('user_id', $user->id)->pluck('workspace_id');
+        $workspaceIds = Membership::where('user_id', $user->id)
+            ->where('status', 'accepted')
+            ->pluck('workspace_id');
 
         $users = User::select('id', 'name', 'email', 'role')
             ->where(function ($q) use ($term) {

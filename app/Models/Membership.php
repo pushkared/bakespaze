@@ -14,6 +14,12 @@ class Membership extends Model
         'workspace_id',
         'team_id',
         'role',
+        'status',
+        'accepted_at',
+    ];
+
+    protected $casts = [
+        'accepted_at' => 'datetime',
     ];
 
     public function user()

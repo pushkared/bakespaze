@@ -18,7 +18,7 @@ class AttendanceController extends Controller
         $workspaceId = session('current_workspace_id');
         $availableUsers = collect();
         if ($isAdmin) {
-            $availableUsers = User::when($workspaceId, fn($q) => $q->whereHas('memberships', fn($m) => $m->where('workspace_id', $workspaceId)))
+            $availableUsers = User::when($workspaceId, fn($q) => $q->whereHas('memberships', fn($m) => $m->where('workspace_id', $workspaceId)->where('status', 'accepted')))
                 ->orderBy('name')
                 ->get(['id','name','email']);
         }

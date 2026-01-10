@@ -55,10 +55,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');
     Route::post('/workspaces/switch', [WorkspaceController::class, 'switch'])->name('workspaces.switch');
-    Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
-    Route::post('/workspaces/assign', [WorkspaceController::class, 'assignUser'])->name('workspaces.assign');
-    Route::delete('/workspaces/{workspace}/members/{user}', [WorkspaceController::class, 'removeUser'])->name('workspaces.members.remove');
-    Route::post('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->name('workspaces.update');
+Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
+Route::post('/workspaces/assign', [WorkspaceController::class, 'assignUser'])->name('workspaces.assign');
+Route::post('/workspaces/{workspace}/accept', [WorkspaceController::class, 'accept'])->name('workspaces.accept');
+Route::delete('/workspaces/{workspace}/members/{user}', [WorkspaceController::class, 'removeUser'])->name('workspaces.members.remove');
+Route::post('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->name('workspaces.update');
     Route::delete('/workspaces/{workspace}', [WorkspaceController::class, 'destroy'])->name('workspaces.destroy');
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');

@@ -22,12 +22,12 @@ class TaskController extends Controller
         $user = $request->user();
         $workspaceId = session('current_workspace_id');
 
-        $workspace = Workspace::whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
+        $workspace = Workspace::whereHas('memberships', fn($q) => $q->where('user_id', $user->id)->where('status', 'accepted'))
             ->when($workspaceId, fn($q) => $q->where('id', $workspaceId))
             ->first();
 
         if (!$workspace) {
-            $workspace = Workspace::whereHas('memberships', fn($q) => $q->where('user_id', $user->id))
+            $workspace = Workspace::whereHas('memberships', fn($q) => $q->where('user_id', $user->id)->where('status', 'accepted'))
                 ->orderBy('name')->firstOrFail();
         }
 
@@ -39,10 +39,10 @@ class TaskController extends Controller
         $user = $request->user();
         $isMember = Membership::where('workspace_id', $task->workspace_id)
             ->where('user_id', $user->id)
+            ->where('status', 'accepted')
             ->exists();
-        $isAssignee = $task->assignees()->where('users.id', $user->id)->exists();
-        $isCreator = (int) $task->creator_id === (int) $user->id;
-        abort_unless($isMember || $isAssignee || $isCreator, 403);
+        $isAppAdmin = in_array($user->role, ['admin', 'super_admin'], true);
+        abort_unless($isMember || $isAppAdmin, 403);
     }
 
     protected function ensureTaskAdmin(Task $task, Request $request): void
@@ -52,6 +52,7 @@ class TaskController extends Controller
         $isWorkspaceAdmin = Membership::where('workspace_id', $task->workspace_id)
             ->where('user_id', $user->id)
             ->where('role', 'admin')
+            ->where('status', 'accepted')
             ->exists();
         abort_unless($isAppAdmin || $isWorkspaceAdmin, 403);
     }
@@ -59,10 +60,10 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $allowedWorkspaceIds = $user->memberships()->pluck('workspace_id');
-        $assignedWorkspaceIds = Task::whereHas('assignees', fn($a) => $a->where('users.id', $user->id))
+        $allowedWorkspaceIds = Membership::where('user_id', $user->id)
+            ->where('status', 'accepted')
             ->pluck('workspace_id');
-        $allowedWorkspaceIds = $allowedWorkspaceIds->merge($assignedWorkspaceIds)->unique()->values()->all();
+        $allowedWorkspaceIds = $allowedWorkspaceIds->unique()->values()->all();
         $isAdmin = in_array($user->role, ['admin', 'super_admin'], true);
 
         $workspaceFilter = $request->input('workspace_id');
@@ -94,7 +95,7 @@ class TaskController extends Controller
 
         $workspaces = Workspace::whereIn('id', $allowedWorkspaceIds)->orderByDesc('created_at')->get();
 
-        $members = User::whereHas('memberships', fn($q) => $q->whereIn('workspace_id', $allowedWorkspaceIds))
+        $members = User::whereHas('memberships', fn($q) => $q->whereIn('workspace_id', $allowedWorkspaceIds)->where('status', 'accepted'))
             ->orderBy('name')
             ->get(['id','name','email']);
 
