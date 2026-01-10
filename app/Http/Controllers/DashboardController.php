@@ -51,7 +51,8 @@ class DashboardController extends Controller
         $taskCounts = [
             'total' => (clone $taskBase)->count(),
             'completed' => (clone $taskBase)->where('status', 'completed')->count(),
-            'open' => (clone $taskBase)->whereIn('status', ['open', 'ongoing'])->count(),
+            'open' => (clone $taskBase)->where('status', 'open')->count(),
+            'ongoing' => (clone $taskBase)->where('status', 'ongoing')->count(),
             'overdue' => (clone $taskBase)->where('status', '!=', 'completed')
                 ->whereNotNull('due_date')
                 ->whereDate('due_date', '<', $today)

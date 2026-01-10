@@ -3,36 +3,46 @@
 @section('title', 'Dashboard')
 
 @section('content')
+<div class="dash-count-top">
+  <div class="task-count-strip">
+    <a class="task-count-item" href="{{ route('tasks.index', ['status' => 'open']) }}">
+      <span class="task-count-text">Open</span>
+      <span class="task-count-badge open">{{ $taskCounts['open'] ?? 0 }}</span>
+    </a>
+    <a class="task-count-item" href="{{ route('tasks.index', ['status' => 'ongoing']) }}">
+      <span class="task-count-text">Ongoing</span>
+      <span class="task-count-badge ongoing">{{ $taskCounts['ongoing'] ?? 0 }}</span>
+    </a>
+    <a class="task-count-item" href="{{ route('tasks.index', ['status' => 'completed']) }}">
+      <span class="task-count-text">Completed</span>
+      <span class="task-count-badge completed">{{ $taskCounts['completed'] ?? 0 }}</span>
+    </a>
+    <a class="task-count-item" href="{{ route('tasks.index', ['status' => 'overdue']) }}">
+      <span class="task-count-text">Overdue</span>
+      <span class="task-count-badge overdue">{{ $taskCounts['overdue'] ?? 0 }}</span>
+    </a>
+  </div>
+</div>
+
 <section class="dash-stage">
   <div class="vo-pattern"></div>
 
   <div class="dash-content">
-    <div class="task-count-strip">
-        <div class="task-count-card">
-          <div class="task-count-label">Total Tasks</div>
-          <div class="task-count-value">{{ $taskCounts['total'] ?? 0 }}</div>
-        </div>
-        <div class="task-count-card">
-          <div class="task-count-label">Completed</div>
-          <div class="task-count-value">{{ $taskCounts['completed'] ?? 0 }}</div>
-        </div>
-        <div class="task-count-card">
-          <div class="task-count-label">Open</div>
-          <div class="task-count-value">{{ $taskCounts['open'] ?? 0 }}</div>
-        </div>
-        <div class="task-count-card">
-          <div class="task-count-label">Overdue</div>
-          <div class="task-count-value">{{ $taskCounts['overdue'] ?? 0 }}</div>
-        </div>
-    </div>
 
     <div class="dash-header">
+      <div class="dash-create-wrap">
+        <button class="create-task plain" id="dash-create-toggle" aria-label="Quick create">+</button>
+        <div class="dash-create-panel" id="dash-create-panel">
+          <a class="dash-create-item" href="{{ route('tasks.index') }}?open_modal=1">Add Task</a>
+          <a class="dash-create-item" href="{{ route('workspaces.index') }}">Add Workspace</a>
+          <a class="dash-create-item" href="{{ route('chat.index') }}">Create Chat</a>
+        </div>
+      </div>
       <div class="dash-greeting">
         <div class="greet-line">Hey {{ auth()->user()->name ?? 'there' }},</div>
         <div class="greet-line">{{ $greeting ?? 'Welcome' }}!</div>
         {{-- <div class="muted">{{ $todayDate ?? '' }} - {{ $currentTime ?? '' }}</div> --}}
       </div>
-      <button class="create-task solid" onclick="window.location='{{ route('tasks.index') }}?open_modal=1'">+ Create Task</button>
     </div>
 
     <div class="dash-tasks">
@@ -93,4 +103,25 @@
 </div>
   </div>
 </section>
+@push('scripts')
+<script>
+  (function(){
+    const toggle = document.getElementById('dash-create-toggle');
+    const panel = document.getElementById('dash-create-panel');
+    const wrap = document.querySelector('.dash-create-wrap');
+    if (!toggle || !panel || !wrap) return;
+    const closePanel = () => panel.classList.remove('open');
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      panel.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) closePanel();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePanel();
+    });
+  })();
+</script>
+@endpush
 @endsection

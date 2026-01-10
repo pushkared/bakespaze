@@ -470,6 +470,18 @@ input, select, textarea, button{
   cursor:pointer;
 }
 .create-task.solid{box-shadow:0 12px 30px rgba(0,0,0,0.25)}
+.create-task.plain{
+  background:transparent;
+  color:var(--lime);
+  box-shadow:none;
+  padding:0;
+  border-radius:0;
+  font-size:36px;
+  line-height:1;
+  min-width:auto;
+  width:auto;
+  height:auto;
+}
 .top-date{font-weight:700;font-size:16px;white-space:nowrap}
 .top-logo{
   display:none;
@@ -920,20 +932,49 @@ input, select, textarea, button{
 .dash-header{
   display:flex;
   align-items:flex-start;
-  justify-content:flex-end;
-  gap:64px;
+  justify-content:flex-start;
+  gap:12px;
   flex-wrap:wrap;
 }
-.dash-header .create-task{
-  padding:8px 14px;
-  border-radius:999px;
-  font-size:13px;
-  min-width:110px;
-  align-self:flex-end;
+.dash-create-wrap{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  margin-left:auto;
 }
+.dash-header .create-task{
+  align-self:flex-start;
+}
+.dash-create-panel{
+  position:absolute;
+  top:44px;
+  right:0;
+  left:auto;
+  background:#000;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:14px;
+  padding:10px;
+  display:none;
+  flex-direction:column;
+  gap:8px;
+  min-width:160px;
+  z-index:20;
+  box-shadow:0 18px 30px rgba(0,0,0,0.4);
+  transform:translateX(-8px);
+}
+.dash-create-panel.open{display:flex}
+.dash-create-item{
+  padding:10px 12px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.06);
+  color:#fff;
+  font-weight:600;
+  font-size:14px;
+}
+.dash-create-item:hover{background:rgba(255,255,255,0.12)}
 .dash-greeting{
   width:100%;
-  margin-top:10px;
+  margin-top:0;
 }
 
 .dash-greeting .greet-line{
@@ -951,31 +992,86 @@ input, select, textarea, button{
 }
 .task-count-strip{
   display:flex;
+  align-items:center;
+  justify-content:space-between;
   gap:12px;
-  overflow-x:auto;
-  padding:6px 2px 2px;
-  margin-bottom:12px;
-  scroll-snap-type:x mandatory;
+  padding:10px 14px;
+  margin:0 0 14px;
+  border-radius:12px;
+  background:linear-gradient(120deg, #0b6f08 0%, #0f7f0a 55%, #0b6f08 100%);
+  border:1px solid rgba(0,0,0,0.35);
+  box-shadow:0 10px 24px rgba(0,0,0,0.35);
+  overflow:hidden;
 }
-.task-count-strip::-webkit-scrollbar{height:6px}
-.task-count-strip::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,0.25);
-  border-radius:6px;
+.dash-count-top{
+  width:100%;
+  margin:0;
+  padding:0;
 }
-.task-count-card{
-  min-width:140px;
-  padding:12px 14px;
-  border-radius:14px;
-  border:1px dashed rgba(255,255,255,0.8);
-  background:rgba(255,255,255,0.02);
+.dash-count-top .task-count-strip{
+  margin:0;
+  border-radius:0;
+  width:100%;
+}
+.task-count-item{
   display:flex;
-  flex-direction:column;
-  gap:6px;
+  align-items:center;
+  gap:10px;
   color:#fff;
-  scroll-snap-align:start;
+  font-weight:700;
+  font-size:16px;
+  white-space:nowrap;
+  text-decoration:none;
 }
-.task-count-label{font-size:12px;color:#cfcfcf;text-transform:uppercase;letter-spacing:0.8px}
-.task-count-value{font-size:22px;font-weight:800;color:#fff}
+.task-count-item:hover{opacity:0.9}
+.task-count-text{letter-spacing:0.02em}
+.task-count-badge{
+  min-width:30px;
+  height:30px;
+  padding:0 8px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  color:#1a1a1a;
+  background:#d7d7d7;
+}
+.task-count-badge.ongoing{background:#5dd9e6;color:#032027}
+.task-count-badge.completed{background:var(--lime);color:#0b3a07}
+.task-count-badge.overdue{background:#ff3b3b;color:#fff}
+
+@media (max-width: 600px){
+  .task-count-strip{
+    gap:8px;
+    padding:8px 10px;
+    border-radius:10px;
+    margin-bottom:12px;
+  }
+  .dash-count-top .task-count-strip{
+    border-radius:0;
+    margin:0;
+  }
+  .task-count-item{font-size:12px;gap:6px}
+  .task-count-badge{
+    min-width:22px;
+    height:22px;
+    padding:0 4px;
+    font-size:11px;
+  }
+  .create-task.plain{font-size:30px}
+}
+
+@media (max-width: 380px){
+  .task-count-strip{gap:6px;padding:6px 8px}
+  .task-count-item{font-size:11px;gap:5px}
+  .task-count-badge{
+    min-width:20px;
+    height:20px;
+    padding:0 4px;
+    font-size:10px;
+  }
+}
 
 .dash-task-list{
   display:flex;
@@ -3332,7 +3428,7 @@ input, select, textarea, button{
 
 /* <= 640px */
 @media (max-width:640px){
-  .dash-header .create-task {font-size: 11px;}
+  .dash-header .create-task {font-size: 40px;}
   .vo-board{grid-template-columns:1fr 1.05fr 1fr;gap:14px}
   .seat-card{width:100px;height:100px}
   .seat-boss{width:100px;height:100px}
