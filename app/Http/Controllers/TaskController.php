@@ -56,7 +56,10 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $allowedWorkspaceIds = $user->memberships()->pluck('workspace_id')->all();
+        $allowedWorkspaceIds = $user->memberships()->pluck('workspace_id');
+        $assignedWorkspaceIds = Task::whereHas('assignees', fn($a) => $a->where('users.id', $user->id))
+            ->pluck('workspace_id');
+        $allowedWorkspaceIds = $allowedWorkspaceIds->merge($assignedWorkspaceIds)->unique()->values()->all();
         $isAdmin = in_array($user->role, ['admin', 'super_admin'], true);
 
         $workspaceFilter = $request->input('workspace_id');
