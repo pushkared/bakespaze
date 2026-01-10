@@ -236,17 +236,13 @@
       return;
     }
     closeMobileDetails();
-    const forceTop = () => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      const container = document.querySelector('.content-area');
-      if (container) {
-        container.scrollTop = 0;
-      }
-    };
-    forceTop();
-    requestAnimationFrame(forceTop);
+    const container = document.querySelector('.content-area');
+    if (container) {
+      container.scrollTo({ top: 0, behavior: 'auto' });
+    }
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   });
 })();
 </script>

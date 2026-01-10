@@ -265,7 +265,7 @@ input, select, textarea, button{
 /* =========================
    Topbar
 ========================= */
-.vo-main{display:flex;flex-direction:column;min-height:100vh;height:100vh}
+.vo-main{display:flex;flex-direction:column;min-height:100vh}
 
 .vo-topbar{
   --topbar-control:24px;
