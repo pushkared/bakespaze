@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Membership;
+use App\Models\Message;
 use Carbon\Carbon;
 use Google\Client as GoogleClient;
 use Google\Service\Calendar;
@@ -63,7 +64,7 @@ class SearchController extends Controller
                 'workspace' => $t->workspace?->name ?? 'Workspace',
             ]);
 
-        $chats = $user->conversations()
+        $chatsQuery = $user->conversations()
             ->with(['participants:id,name', 'messages' => function ($q) {
                 $q->latest()->limit(1);
             }])
@@ -73,9 +74,19 @@ class SearchController extends Controller
                     ->orWhereHas('messages', fn($sub) => $sub->where('body', 'like', "%{$term}%"));
             })
             ->limit(12)
+            ->get();
+
+        $matchedMessages = Message::select('conversation_id', 'body', 'created_at')
+            ->whereIn('conversation_id', $chatsQuery->pluck('id'))
+            ->where('body', 'like', "%{$term}%")
+            ->orderByDesc('created_at')
             ->get()
-            ->map(function ($conversation) use ($user) {
+            ->groupBy('conversation_id')
+            ->map(fn($group) => $group->first());
+
+        $chats = $chatsQuery->map(function ($conversation) use ($user, $matchedMessages) {
                 $lastMessage = $conversation->messages->first();
+                $matched = $matchedMessages->get($conversation->id);
                 $title = $conversation->type === 'group'
                     ? ($conversation->name ?: 'Group Chat')
                     : $conversation->participants->firstWhere('id', '!=', $user->id)?->name;
@@ -90,7 +101,8 @@ class SearchController extends Controller
                     'peer_id' => $peer?->id,
                     'participants' => $conversation->participants->pluck('name')->values(),
                     'last_message' => $lastMessage?->body,
-                    'sort_at' => ($lastMessage?->created_at ?? $conversation->updated_at ?? $conversation->created_at)?->toDateTimeString(),
+                    'match_message' => $matched?->body,
+                    'sort_at' => ($matched?->created_at ?? $lastMessage?->created_at ?? $conversation->updated_at ?? $conversation->created_at)?->toDateTimeString(),
                 ];
             })
             ->sortByDesc('sort_at')

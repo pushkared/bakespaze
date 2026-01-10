@@ -321,12 +321,16 @@
             <div class="meta">${t.workspace} - ${t.assigned_to || 'Unassigned'} - ${t.due_date || 'No due'} - ${t.status}</div>
           </div>
         `).join('') || '<div class="muted">No tasks found</div>';
-        const chatHtml = (data.chats || []).map(c => `
-          <div class="search-item" data-type="chat" data-id="${c.id}" data-peer-id="${c.peer_id || ''}" data-chat-type="${c.type || ''}">
-            <div class="title">${c.title}</div>
-            <div class="meta">${(c.participants || []).join(', ')}${c.last_message ? ' - ' + c.last_message : ''}</div>
-          </div>
-        `).join('') || '<div class="muted">No chats found</div>';
+        const chatHtml = (data.chats || []).map(c => {
+          const snippet = c.match_message || c.last_message || '';
+          const metaParts = [(c.participants || []).join(', '), snippet].filter(Boolean);
+          return `
+            <div class="search-item" data-type="chat" data-id="${c.id}" data-peer-id="${c.peer_id || ''}" data-chat-type="${c.type || ''}">
+              <div class="title">${c.title}</div>
+              <div class="meta">${metaParts.join(' - ')}</div>
+            </div>
+          `;
+        }).join('') || '<div class="muted">No chats found</div>';
         const meetingHtml = (data.meetings || []).map(m => `
           <div class="search-item" data-type="meeting" data-id="${m.id}">
             <div class="title">${m.title}</div>
@@ -401,7 +405,11 @@
         if (!mobileResults) return;
         const userHtml = (data.users || []).map(u => `<div class="search-item" data-type="user" data-id="${u.id}"><div class="title">${u.name}</div><div class="meta">${u.email}</div></div>`).join('') || '<div class="muted">No users</div>';
         const taskHtml = (data.tasks || []).map(t => `<div class="search-item" data-type="task" data-id="${t.id}"><div class="title">${t.title}</div><div class="meta">${t.workspace} - ${t.assigned_to || 'Unassigned'} - ${t.due_date || 'No due'} - ${t.status}</div></div>`).join('') || '<div class="muted">No tasks</div>';
-        const chatHtml = (data.chats || []).map(c => `<div class="search-item" data-type="chat" data-id="${c.id}" data-peer-id="${c.peer_id || ''}" data-chat-type="${c.type || ''}"><div class="title">${c.title}</div><div class="meta">${(c.participants || []).join(', ')}${c.last_message ? ' - ' + c.last_message : ''}</div></div>`).join('') || '<div class="muted">No chats</div>';
+        const chatHtml = (data.chats || []).map(c => {
+          const snippet = c.match_message || c.last_message || '';
+          const metaParts = [(c.participants || []).join(', '), snippet].filter(Boolean);
+          return `<div class="search-item" data-type="chat" data-id="${c.id}" data-peer-id="${c.peer_id || ''}" data-chat-type="${c.type || ''}"><div class="title">${c.title}</div><div class="meta">${metaParts.join(' - ')}</div></div>`;
+        }).join('') || '<div class="muted">No chats</div>';
         const meetingHtml = (data.meetings || []).map(m => `<div class="search-item" data-type="meeting" data-id="${m.id}"><div class="title">${m.title}</div><div class="meta">${m.start || 'No time'}${m.end ? ' - ' + m.end : ''}</div></div>`).join('') || '<div class="muted">No meetings</div>';
         mobileResults.innerHTML = `<div class="search-section"><h5>Users</h5>${userHtml}</div><div class="search-section"><h5>Tasks</h5>${taskHtml}</div><div class="search-section"><h5>Chats</h5>${chatHtml}</div><div class="search-section"><h5>Meetings</h5>${meetingHtml}</div>`;
       };
