@@ -165,7 +165,7 @@
                 </a>
                 <div class="chat-attachment-meta">
                   <span>${name}</span>
-                  <a href="${url}" data-download-url="${url}" download>Download</a>
+                  <a href="${url}" data-download-url="${url}" data-preview-url="${previewUrl}" download>Download</a>
                 </div>
               </div>
             `;
@@ -271,7 +271,8 @@
       const downloadLink = e.target.closest('a[data-download-url]');
       if (downloadLink && isIOS) {
         e.preventDefault();
-        triggerDownload(downloadLink.dataset.downloadUrl);
+        const openUrl = downloadLink.dataset.previewUrl || downloadLink.dataset.downloadUrl;
+        window.open(openUrl, '_blank');
         return;
       }
       const link = e.target.closest('a[data-preview="image"]');
