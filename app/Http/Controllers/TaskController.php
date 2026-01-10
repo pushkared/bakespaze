@@ -11,6 +11,7 @@ use App\Models\TaskAttachment;
 use App\Models\TaskActivity;
 use App\Notifications\TaskAcceptedNotification;
 use App\Notifications\TaskAssignedNotification;
+use App\Notifications\TaskCompletedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -168,6 +169,7 @@ class TaskController extends Controller
     {
         $this->ensureTaskAccess($task, $request);
 
+        $previousStatus = $task->status;
         $data = $request->validate([
             'title' => ['required','string','max:255'],
             'description' => ['nullable','string'],
@@ -200,6 +202,20 @@ class TaskController extends Controller
             'due_date' => $data['due_date'] ?? null,
             'status' => $newStatus,
         ]);
+
+        if ($previousStatus !== 'completed' && $newStatus === 'completed') {
+            $assignerId = $this->latestAssignerId($task);
+            if ($assignerId && (int) $assignerId !== (int) $request->user()->id) {
+                $assigner = User::find($assignerId);
+                if ($assigner) {
+                    try {
+                        $assigner->notify(new TaskCompletedNotification($task));
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
+            }
+        }
 
         $newDueDate = $task->due_date ? $task->due_date->format('Y-m-d') : null;
         if ($previousDueDate !== $newDueDate) {
@@ -263,21 +279,15 @@ class TaskController extends Controller
             'due_date' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
         ]);
 
-        $previousAssigneeId = TaskActivity::where('task_id', $task->id)
-            ->whereIn('type', ['assigned', 'reassigned'])
-            ->latest()
-            ->value('payload->from_user_id');
-
-        $notifyIds = collect([$assigneeId, $previousAssigneeId])->filter()->unique();
-        foreach ($notifyIds as $userId) {
-            $user = User::find($userId);
-            if (!$user) {
-                continue;
-            }
-            try {
-                $user->notify(new TaskAcceptedNotification($task));
-            } catch (\Throwable $e) {
-                report($e);
+        $assignerId = $this->latestAssignerId($task);
+        if ($assignerId && (int) $assignerId !== (int) $request->user()->id) {
+            $assigner = User::find($assignerId);
+            if ($assigner) {
+                try {
+                    $assigner->notify(new TaskAcceptedNotification($task));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
 
@@ -292,6 +302,20 @@ class TaskController extends Controller
             'type' => $type,
             'payload' => $payload,
         ]);
+    }
+
+    protected function latestAssignerId(Task $task): ?int
+    {
+        $activity = TaskActivity::where('task_id', $task->id)
+            ->whereIn('type', ['assigned', 'reassigned'])
+            ->latest()
+            ->first();
+
+        if ($activity && $activity->actor_id) {
+            return (int) $activity->actor_id;
+        }
+
+        return $task->creator_id ? (int) $task->creator_id : null;
     }
 
     public function destroy(Request $request, Task $task)
