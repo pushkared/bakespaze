@@ -3425,6 +3425,144 @@ input, select, textarea, button{
 
 .settings-actions{margin:10px 0}
 
+/* Apple-style settings/profile */
+.ios-settings-head{display:flex;flex-direction:column;gap:8px}
+.ios-settings-head h1{font-size:34px;letter-spacing:0.02em}
+.ios-settings-card{
+  background:rgba(20,20,20,0.82);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:22px;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 20px 36px rgba(0,0,0,0.35);
+}
+.ios-settings-card.danger{border-color:rgba(255,59,59,0.35)}
+.ios-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 4px;
+}
+.ios-row + .ios-row{border-top:1px solid rgba(255,255,255,0.08)}
+.ios-row span{font-weight:600;color:#f0f0f0}
+.ios-row input{
+  background:transparent;
+  border:0;
+  color:#f4f4f4;
+  text-align:right;
+  flex:1;
+}
+.ios-row input:focus{outline:none}
+.ios-row.actions{justify-content:flex-end;padding-top:14px}
+.ios-row-meta{font-weight:400;font-size:12px;color:#a8a8a8;margin-left:auto}
+.ios-row-link{position:relative;padding-right:30px}
+.ios-row-link::after{
+  content:">";
+  position:absolute;
+  right:6px;
+  color:#9a9a9a;
+  font-size:18px;
+  line-height:1;
+}
+.ios-row-link:hover::after{color:#c5c5c5}
+
+.profile-hero{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.profile-hero .profile-avatar{width:96px;height:96px}
+.ios-form{display:flex;flex-direction:column;gap:12px}
+.avatar-upload{
+  display:block;
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  overflow:hidden;
+  position:relative;
+  cursor:pointer;
+  border:2px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.08);
+}
+.avatar-upload[aria-disabled="true"]{cursor:default}
+.avatar-upload img{width:100%;height:100%;object-fit:cover}
+.avatar-edit{
+  position:absolute;
+  bottom:6px;
+  right:6px;
+  background:rgba(0,0,0,0.65);
+  color:#fff;
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+}
+.profile-info{min-width:200px;flex:1}
+.profile-name{font-size:26px;font-weight:700}
+.profile-email{color:#9c9c9c;font-size:14px}
+.profile-meta-row{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.profile-meta{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  background:rgba(255,255,255,0.05);
+  padding:10px 12px;
+  border-radius:14px;
+}
+.profile-actions{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.ios-row-action{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:999px;
+  padding:8px 14px;
+  color:#fff;
+  font-weight:600;
+}
+.ios-section-title{
+  text-transform:uppercase;
+  letter-spacing:0.22em;
+  color:var(--lime);
+  font-size:12px;
+}
+
+.settings-section{gap:12px}
+.settings-disclosure{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  width:100%;
+  background:none;
+  border:0;
+  color:#f1f1f1;
+  text-align:left;
+  padding:0;
+  cursor:pointer;
+}
+.settings-disclosure::after{
+  content:">";
+  font-size:18px;
+  color:#9a9a9a;
+  transform:rotate(0deg);
+  transition:transform 0.2s ease;
+}
+.settings-section.is-open .settings-disclosure::after{transform:rotate(90deg)}
+.settings-panel{
+  display:none;
+  margin-top:12px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+.settings-section.is-open .settings-panel{display:block}
+.settings-panel-form{display:flex;flex-direction:column;gap:16px}
+.settings-panel-form label{display:grid;gap:6px;font-weight:700;color:#e9e9e9}
+.settings-panel-form input,
+.settings-panel-form select{
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.25);
+  color:#fff;
+}
+
 @media (max-width: 900px){
   .profile-card{flex-direction:column;align-items:flex-start}
   .profile-actions{margin-left:0}
@@ -3444,6 +3582,8 @@ input, select, textarea, button{
   .profile-shell{width:100%;box-sizing:border-box}
   .profile-card{width:100%;box-sizing:border-box}
   .profile-grid{width:100%;box-sizing:border-box}
+  .profile-hero{align-items:flex-start}
+  .profile-actions{width:100%}
 }
 
 @media (max-width: 900px){
