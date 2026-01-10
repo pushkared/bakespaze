@@ -232,8 +232,12 @@
   };
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  const showIosTip = () => {
-    if (!isIOS || localStorage.getItem('ios_download_tip_hide') === '1') return;
+  const showIosTip = (openUrl) => {
+    if (!isIOS) return false;
+    if (localStorage.getItem('ios_download_tip_hide') === '1') {
+      if (openUrl) window.open(openUrl, '_blank');
+      return true;
+    }
     const tip = document.createElement('div');
     tip.className = 'ios-download-tip';
     tip.innerHTML = `
@@ -255,7 +259,11 @@
         localStorage.setItem('ios_download_tip_hide', '1');
       }
       tip.remove();
+      if (openUrl) {
+        window.open(openUrl, '_blank');
+      }
     });
+    return true;
   };
   const triggerDownload = (url) => {
     if (!url) return;
@@ -296,9 +304,8 @@
       const downloadLink = e.target.closest('a[data-download-url]');
       if (downloadLink && isIOS) {
         e.preventDefault();
-        showIosTip();
         const openUrl = downloadLink.dataset.previewUrl || downloadLink.dataset.downloadUrl;
-        window.open(openUrl, '_blank');
+        showIosTip(openUrl);
         return;
       }
       const link = e.target.closest('a[data-preview="image"]');
@@ -307,8 +314,8 @@
       if (!url) return;
       if (isIOS) {
         e.preventDefault();
-        showIosTip();
-        triggerDownload(link.dataset.downloadUrl || url);
+        const openUrl = link.dataset.downloadUrl || url;
+        showIosTip(openUrl);
         return;
       }
       e.preventDefault();
