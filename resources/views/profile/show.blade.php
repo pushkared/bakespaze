@@ -195,8 +195,10 @@
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(file);
       cropImage.src = objectUrl;
-      modal.classList.add('is-open');
-      modal.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => {
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+      });
     };
 
     const closeModal = () => {
@@ -211,23 +213,26 @@
       originalFile = null;
     };
 
+    const handleFileSelect = (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (croppedInput) croppedInput.value = '';
+      openModal(file);
+    };
+
     if (avatarInput) {
-      avatarInput.addEventListener('change', (event) => {
-        const file = event.target.files && event.target.files[0];
-        if (!file) return;
-        if (croppedInput) croppedInput.value = '';
-        openModal(file);
-      });
-      avatarInput.addEventListener('input', (event) => {
-        const file = event.target.files && event.target.files[0];
-        if (!file) return;
-        if (croppedInput) croppedInput.value = '';
-        openModal(file);
-      });
+      avatarInput.addEventListener('change', handleFileSelect);
+      avatarInput.addEventListener('input', handleFileSelect);
       avatarInput.addEventListener('click', () => {
         if (croppedInput) croppedInput.value = '';
       });
     }
+
+    document.addEventListener('change', (event) => {
+      if (event.target && event.target.id === 'profile-avatar-input') {
+        handleFileSelect(event);
+      }
+    });
 
     cropImage.addEventListener('load', () => {
       baseScale = Math.max(cropSize / cropImage.naturalWidth, cropSize / cropImage.naturalHeight);

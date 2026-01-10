@@ -3572,7 +3572,7 @@ input, select, textarea, button{
   z-index:9999;
   padding:24px;
 }
-.cropper-modal.is-open{display:flex}
+.cropper-modal.is-open{display:flex !important}
 .cropper-card{
   width:min(420px, 100%);
   background:#0f0f0f;
