@@ -199,6 +199,7 @@ class TaskController extends Controller
 
         $newStatus = $data['status'] ?? $task->status;
         $previousAssigneeId = $task->assignees()->first()?->id;
+        $previousAssigneeId = $previousAssigneeId ? (int) $previousAssigneeId : null;
         $previousAssignee = $previousAssigneeId ? User::find($previousAssigneeId) : null;
         $previousDueDate = $task->due_date ? $task->due_date->format('Y-m-d') : null;
 
@@ -209,16 +210,13 @@ class TaskController extends Controller
             'status' => $newStatus,
         ]);
 
-        if ($previousStatus !== 'completed' && $newStatus === 'completed') {
-            $assignerId = $this->latestAssignerId($task);
-            if ($assignerId && (int) $assignerId !== (int) $request->user()->id) {
-                $assigner = User::find($assignerId);
-                if ($assigner) {
-                    try {
-                        $assigner->notify(new TaskCompletedNotification($task, $request->user()->name));
-                    } catch (\Throwable $e) {
-                        report($e);
-                    }
+        if ($previousStatus !== 'completed' && $newStatus === 'completed' && $previousAssigneeId) {
+            $assignee = User::find($previousAssigneeId);
+            if ($assignee) {
+                try {
+                    $assignee->notify(new TaskCompletedNotification($task, $request->user()->name));
+                } catch (\Throwable $e) {
+                    report($e);
                 }
             }
         }
@@ -233,6 +231,7 @@ class TaskController extends Controller
 
         if (array_key_exists('assignee_id', $data)) {
             $incomingAssigneeId = $data['assignee_id'];
+            $incomingAssigneeId = $incomingAssigneeId !== null ? (int) $incomingAssigneeId : null;
             if ($newStatus === 'completed' && empty($incomingAssigneeId)) {
                 $incomingAssigneeId = $previousAssigneeId;
             }
