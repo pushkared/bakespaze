@@ -949,6 +949,33 @@ input, select, textarea, button{
   /* font-weight:500; */
   color:#f2f2f2;
 }
+.task-count-strip{
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+  padding:6px 2px 2px;
+  margin-bottom:12px;
+  scroll-snap-type:x mandatory;
+}
+.task-count-strip::-webkit-scrollbar{height:6px}
+.task-count-strip::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,0.25);
+  border-radius:6px;
+}
+.task-count-card{
+  min-width:140px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px dashed rgba(255,255,255,0.8);
+  background:rgba(255,255,255,0.02);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  color:#fff;
+  scroll-snap-align:start;
+}
+.task-count-label{font-size:12px;color:#cfcfcf;text-transform:uppercase;letter-spacing:0.8px}
+.task-count-value{font-size:22px;font-weight:800;color:#fff}
 
 .dash-task-list{
   display:flex;

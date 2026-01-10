@@ -43,6 +43,21 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $taskBase = Task::query()
+            ->when($workspace, fn($q) => $q->where('workspace_id', $workspace->id))
+            ->whereHas('assignees', fn($a) => $a->where('users.id', $request->user()->id));
+
+        $today = Carbon::now()->toDateString();
+        $taskCounts = [
+            'total' => (clone $taskBase)->count(),
+            'completed' => (clone $taskBase)->where('status', 'completed')->count(),
+            'open' => (clone $taskBase)->whereIn('status', ['open', 'ongoing'])->count(),
+            'overdue' => (clone $taskBase)->where('status', '!=', 'completed')
+                ->whereNotNull('due_date')
+                ->whereDate('due_date', '<', $today)
+                ->count(),
+        ];
+
         $timezone = AppSetting::current()->timezone ?? 'Asia/Kolkata';
         $now = Carbon::now($timezone);
         $hour = (int)$now->format('H');
@@ -83,6 +98,7 @@ class DashboardController extends Controller
         return view('dashboard.index', [
             'workspace' => $workspace,
             'tasks' => $tasks,
+            'taskCounts' => $taskCounts,
             'greeting' => $greeting,
             'todayDate' => $now->format('D d M'),
             'currentTime' => $now->format('h:i A'),

@@ -18,6 +18,24 @@
 
     <div class="dash-tasks">
       <h2>Tasks For The Day!</h2>
+      <div class="task-count-strip">
+        <div class="task-count-card">
+          <div class="task-count-label">Total Tasks</div>
+          <div class="task-count-value">{{ $taskCounts['total'] ?? 0 }}</div>
+        </div>
+        <div class="task-count-card">
+          <div class="task-count-label">Completed</div>
+          <div class="task-count-value">{{ $taskCounts['completed'] ?? 0 }}</div>
+        </div>
+        <div class="task-count-card">
+          <div class="task-count-label">Open</div>
+          <div class="task-count-value">{{ $taskCounts['open'] ?? 0 }}</div>
+        </div>
+        <div class="task-count-card">
+          <div class="task-count-label">Overdue</div>
+          <div class="task-count-value">{{ $taskCounts['overdue'] ?? 0 }}</div>
+        </div>
+      </div>
       <div class="dash-task-list">
         @forelse(($tasks ?? collect()) as $task)
           @php
