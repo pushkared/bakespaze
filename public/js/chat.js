@@ -232,6 +232,24 @@
   };
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const showIosTip = () => {
+    if (!isIOS || sessionStorage.getItem('ios_download_tip') === '1') return;
+    const tip = document.createElement('div');
+    tip.className = 'ios-download-tip';
+    tip.innerHTML = `
+      <div class="ios-tip-card">
+        <div class="ios-tip-title">Tip for iPhone</div>
+        <div class="ios-tip-text">Hold on the image to download, then tap “Save to Photos”.</div>
+        <div class="ios-tip-text">Swipe from the left edge to return to the app.</div>
+        <button type="button" class="ios-tip-close">Got it</button>
+      </div>
+    `;
+    document.body.appendChild(tip);
+    tip.querySelector('.ios-tip-close')?.addEventListener('click', () => {
+      tip.remove();
+      sessionStorage.setItem('ios_download_tip', '1');
+    });
+  };
   const triggerDownload = (url) => {
     if (!url) return;
     const frame = document.createElement('iframe');
@@ -271,6 +289,7 @@
       const downloadLink = e.target.closest('a[data-download-url]');
       if (downloadLink && isIOS) {
         e.preventDefault();
+        showIosTip();
         const openUrl = downloadLink.dataset.previewUrl || downloadLink.dataset.downloadUrl;
         window.open(openUrl, '_blank');
         return;
@@ -281,6 +300,7 @@
       if (!url) return;
       if (isIOS) {
         e.preventDefault();
+        showIosTip();
         triggerDownload(link.dataset.downloadUrl || url);
         return;
       }
