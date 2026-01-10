@@ -141,6 +141,7 @@ class ProfileController extends Controller
         } else {
             $assignedTasksQuery->whereRaw('1 = 0');
         }
+        $hasSharedWorkspace = $allowedWorkspaceIds->isNotEmpty();
         $assignedTasks = $assignedTasksQuery
             ->orderByRaw('ISNULL(due_date), due_date asc')
             ->limit(10)
@@ -163,6 +164,7 @@ class ProfileController extends Controller
             'todayHours' => $this->formatMinutes($todayMinutes),
             'assignedTasks' => $assignedTasks,
             'todayTasks' => $todayTasks,
+            'hasSharedWorkspace' => $hasSharedWorkspace,
         ]);
     }
 

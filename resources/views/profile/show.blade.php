@@ -86,7 +86,11 @@
             </div>
           </div>
         @empty
+          @if(!$hasSharedWorkspace)
+            <div class="muted">Tasks are visible only within shared workspaces.</div>
+          @else
           <div class="muted">No assigned tasks.</div>
+          @endif
         @endforelse
       </div>
     </div>
@@ -106,7 +110,11 @@
             </div>
           </div>
         @empty
+          @if(!$hasSharedWorkspace)
+            <div class="muted">Tasks are visible only within shared workspaces.</div>
+          @else
           <div class="muted">No tasks due today.</div>
+          @endif
         @endforelse
       </div>
     </div>
