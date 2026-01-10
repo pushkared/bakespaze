@@ -51,9 +51,16 @@
         @if(session('status'))
           <div class="profile-alert">{{ session('status') }}</div>
         @endif
+        @if($errors->any())
+          <div class="profile-alert error">
+            @foreach($errors->all() as $error)
+              <div>{{ $error }}</div>
+            @endforeach
+          </div>
+        @endif
         <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="ios-form">
           @csrf
-          <input type="file" id="profile-avatar-input" name="avatar" accept="image/*" class="visually-hidden-input">
+          <input type="file" id="profile-avatar-input" name="avatar" accept="image/*" class="visually-hidden-input" onchange="window.__avatarCrop && window.__avatarCrop(this.files && this.files[0])">
           <input type="hidden" id="profile-avatar-cropped" name="avatar_cropped">
           <div class="ios-row">
             <span>Name</span>
@@ -69,7 +76,7 @@
         </form>
       </div>
     @else
-      <input type="file" id="profile-avatar-input" class="visually-hidden-input">
+      <input type="file" id="profile-avatar-input" class="visually-hidden-input" onchange="window.__avatarCrop && window.__avatarCrop(this.files && this.files[0])">
     @endif
 
     <div class="ios-settings-card">
@@ -190,8 +197,29 @@
       cropImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
     };
 
+    const fallbackPreview = (file) => {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (croppedInput) croppedInput.value = reader.result || '';
+        const preview = avatarTrigger ? avatarTrigger.querySelector('img') : null;
+        if (preview) {
+          preview.src = reader.result || '';
+        } else if (avatarTrigger) {
+          const img = document.createElement('img');
+          img.src = reader.result || '';
+          avatarTrigger.innerHTML = '';
+          avatarTrigger.appendChild(img);
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+
     const openModal = (file) => {
-      if (!modal) return;
+      if (!modal) {
+        fallbackPreview(file);
+        return;
+      }
       originalFile = file;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(file);
@@ -241,6 +269,12 @@
       }
     });
 
+    window.__avatarCrop = (file) => {
+      if (!file) return;
+      if (croppedInput) croppedInput.value = '';
+      openModal(file);
+    };
+
     if (cropImage) {
       cropImage.addEventListener('load', () => {
         baseScale = Math.max(cropSize / cropImage.naturalWidth, cropSize / cropImage.naturalHeight);
@@ -286,6 +320,7 @@
     const applyCrop = () => {
       if (!originalFile) return;
       if (!cropImage || !cropImage.naturalWidth) {
+        fallbackPreview(originalFile);
         closeModal();
         return;
       }

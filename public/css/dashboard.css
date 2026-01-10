@@ -3468,6 +3468,7 @@ input, select, textarea, button{
 .profile-form input[type="email"],
 .profile-form input[type="file"]{padding:10px;border-radius:10px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff}
 .profile-alert{padding:10px;border-radius:10px;background:rgba(54,255,76,0.1);color:#9f9;margin-bottom:10px}
+.profile-alert.error{background:rgba(255,59,59,0.12);color:#ff9c9c}
 
 .settings-actions{margin:10px 0}
 
