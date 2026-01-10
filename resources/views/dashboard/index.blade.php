@@ -5,19 +5,19 @@
 @section('content')
 <div class="dash-count-top">
   <div class="task-count-strip">
-    <a class="task-count-item" href="{{ route('tasks.index', ['status' => 'open']) }}">
+    <a class="task-count-item" href="{{ route('tasks.index', array_filter(['status' => 'open', 'workspace_id' => $workspace?->id])) }}">
       <span class="task-count-text">Open</span>
       <span class="task-count-badge open">{{ $taskCounts['open'] ?? 0 }}</span>
     </a>
-    <a class="task-count-item" href="{{ route('tasks.index', ['status' => 'ongoing']) }}">
+    <a class="task-count-item" href="{{ route('tasks.index', array_filter(['status' => 'ongoing', 'workspace_id' => $workspace?->id])) }}">
       <span class="task-count-text">Ongoing</span>
       <span class="task-count-badge ongoing">{{ $taskCounts['ongoing'] ?? 0 }}</span>
     </a>
-    <a class="task-count-item" href="{{ route('tasks.index', ['status' => 'completed']) }}">
+    <a class="task-count-item" href="{{ route('tasks.index', array_filter(['status' => 'completed', 'workspace_id' => $workspace?->id])) }}">
       <span class="task-count-text">Completed</span>
       <span class="task-count-badge completed">{{ $taskCounts['completed'] ?? 0 }}</span>
     </a>
-    <a class="task-count-item" href="{{ route('tasks.index', ['status' => 'overdue']) }}">
+    <a class="task-count-item" href="{{ route('tasks.index', array_filter(['status' => 'overdue', 'workspace_id' => $workspace?->id])) }}">
       <span class="task-count-text">Overdue</span>
       <span class="task-count-badge overdue">{{ $taskCounts['overdue'] ?? 0 }}</span>
     </a>
