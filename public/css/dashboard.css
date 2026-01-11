@@ -619,7 +619,7 @@ input, select, textarea, button{
   box-shadow:none;
   padding:0;
   border-radius:0;
-  font-size:34px;
+  font-size:36px;
   line-height:1;
   font-weight:400;
   min-width:auto;
@@ -1203,7 +1203,7 @@ input, select, textarea, button{
     padding:0 4px;
     font-size:11px;
   }
-  .create-task.plain{font-size:30px}
+  .create-task.plain{font-size:32px}
 }
 
 @media (max-width: 380px){
@@ -1305,10 +1305,10 @@ input, select, textarea, button{
   justify-content:flex-end;
 }
 .task-actions .pill-btn{
-  padding:8px 14px;
+  padding:9px 16px;
   border-radius:999px;
-  font-size:11px;
-  min-width:110px;
+  font-size:12px;
+  min-width:120px;
   text-align: center;
 }
 
@@ -1344,9 +1344,9 @@ input, select, textarea, button{
 }
 .punch-actions-row{display:flex;gap:10px;align-items:center}
 .punch-actions .pill-btn{
-  padding:8px 14px;
-  font-size:11px;
-  min-width:110px;
+  padding:9px 16px;
+  font-size:12px;
+  min-width:120px;
   text-align:center;
 }
 
