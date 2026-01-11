@@ -366,7 +366,7 @@
         fetch(`{{ route('notifications.unread') }}`)
           .then(r => r.ok ? r.json() : Promise.reject())
           .then(data => {
-            setBadge(data.count || 0);
+            setBadge(data.unread_count ?? data.count || 0);
             renderNotifications(data.notifications || []);
           })
           .catch(() => {});

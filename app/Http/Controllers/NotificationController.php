@@ -10,6 +10,7 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
+        $unreadCount = $user->unreadNotifications()->count();
         $notifications = $user->unreadNotifications()
             ->latest()
             ->limit(30)
@@ -29,6 +30,7 @@ class NotificationController extends Controller
 
         return response()->json([
             'count' => $notifications->count(),
+            'unread_count' => $unreadCount,
             'notifications' => $notifications,
         ]);
     }
