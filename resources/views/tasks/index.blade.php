@@ -75,7 +75,7 @@
           <div>{{ $task->due_date ? $task->due_date->format('d M, Y') : '—' }}</div>
           <div>
             @php
-              $isOverdue = $task->due_date && $task->due_date->lt(\Carbon\Carbon::today()) && $task->status !== 'completed';
+              $isOverdue = $task->due_date && $task->due_date->lt(\Carbon\Carbon::today());
               $rawStatus = $task->status === 'pending' ? 'open' : ($task->status ?? 'open');
               $statusLabel = $isOverdue ? 'Overdue' : ($rawStatus === 'ongoing' ? 'Ongoing' : ucfirst($rawStatus));
               $statusClass = $isOverdue ? 'overdue' : ($rawStatus === 'completed' ? 'done' : ($rawStatus === 'ongoing' ? 'ongoing' : 'open'));

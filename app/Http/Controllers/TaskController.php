@@ -73,6 +73,7 @@ class TaskController extends Controller
         $statusFilter = $request->input('status');
         $assigneeFilter = $request->input('assignee_id');
 
+        $today = now()->toDateString();
         $tasks = Task::with(['assignees','creator','comments.user','attachments','activities.actor','workspace.memberships'])
             ->whereIn('workspace_id', $allowedWorkspaceIds)
             ->where(function ($q) use ($user) {
@@ -83,12 +84,23 @@ class TaskController extends Controller
             ->when($search, fn($q) => $q->where('title', 'like', '%'.$search.'%'))
             ->when($dueFrom, fn($q) => $q->whereDate('due_date', '>=', $dueFrom))
             ->when($dueTo, fn($q) => $q->whereDate('due_date', '<=', $dueTo))
-            ->when($statusFilter === 'completed', fn($q) => $q->where('status', 'completed'))
-            ->when($statusFilter === 'open', fn($q) => $q->where('status', 'open'))
-            ->when($statusFilter === 'ongoing', fn($q) => $q->where('status', 'ongoing'))
-            ->when($statusFilter === 'overdue', fn($q) => $q->where('status', '!=', 'completed')
-                ->whereNotNull('due_date')
-                ->whereDate('due_date', '<', now()->toDateString()))
+            ->when($statusFilter === 'completed', fn($q) => $q->where('status', 'completed')
+                ->where(function ($q2) use ($today) {
+                    $q2->whereNull('due_date')
+                       ->orWhereDate('due_date', '>=', $today);
+                }))
+            ->when($statusFilter === 'open', fn($q) => $q->where('status', 'open')
+                ->where(function ($q2) use ($today) {
+                    $q2->whereNull('due_date')
+                       ->orWhereDate('due_date', '>=', $today);
+                }))
+            ->when($statusFilter === 'ongoing', fn($q) => $q->where('status', 'ongoing')
+                ->where(function ($q2) use ($today) {
+                    $q2->whereNull('due_date')
+                       ->orWhereDate('due_date', '>=', $today);
+                }))
+            ->when($statusFilter === 'overdue', fn($q) => $q->whereNotNull('due_date')
+                ->whereDate('due_date', '<', $today))
             ->when($assigneeFilter, fn($q) => $q->whereHas('assignees', fn($a) => $a->where('users.id', $assigneeFilter)))
             ->orderByDesc('updated_at')
             ->get();
