@@ -3723,6 +3723,7 @@ input, select, textarea, button{
   .leave-reject-form input{min-width:0;width:100%}
   .stack-on-mobile{flex-direction:column;align-items:flex-start}
   .stack-on-mobile .ios-select{width:100%}
+  .timezone-row .ios-row-meta{width:100%}
 
   /* Attendance */
   .att-grid{grid-template-columns:1fr}
@@ -3839,6 +3840,13 @@ input, select, textarea, button{
   max-width:100%;
 }
 .stack-on-mobile{gap:14px}
+.timezone-row{
+  flex-wrap:wrap;
+  align-items:flex-start;
+}
+.timezone-row .ios-row-meta{
+  margin-left:0;
+}
 .ios-row-link{position:relative;padding-right:30px}
 .ios-row-link::after{
   content:">";

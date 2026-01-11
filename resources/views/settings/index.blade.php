@@ -39,7 +39,7 @@
     @if(!empty($isAdmin))
       <form class="ios-settings-card" method="POST" action="{{ route('settings.timezone') }}">
         @csrf
-        <div class="ios-row stack-on-mobile">
+        <div class="ios-row stack-on-mobile timezone-row">
           <div>
             <div class="eyebrow">Admin</div>
             <div class="settings-title">Timezone</div>
@@ -57,7 +57,7 @@
       </form>
     @else
       <div class="ios-settings-card">
-        <div class="ios-row stack-on-mobile">
+        <div class="ios-row stack-on-mobile timezone-row">
           <div>
             <div class="eyebrow">General</div>
             <div class="settings-title">Timezone</div>
