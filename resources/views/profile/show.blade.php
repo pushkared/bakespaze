@@ -7,8 +7,13 @@
   <div class="vo-pattern"></div>
   <div class="profile-shell">
     <header class="profile-head ios-settings-head">
-      <div class="eyebrow">Settings</div>
-      <h1>Profile</h1>
+      <div class="profile-title-row">
+        <a class="back-icon" href="{{ url()->previous() }}" aria-label="Go back">‹</a>
+        <div>
+          <div class="eyebrow">Settings</div>
+          <h1>Profile</h1>
+        </div>
+      </div>
     </header>
 
     <div class="ios-settings-card profile-hero">
