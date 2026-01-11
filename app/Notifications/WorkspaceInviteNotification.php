@@ -18,7 +18,7 @@ class WorkspaceInviteNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -30,5 +30,16 @@ class WorkspaceInviteNotification extends Notification
             ->data([
                 'url' => route('workspaces.index'),
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        return [
+            'type' => 'workspace_invite',
+            'title' => 'Workspace invitation',
+            'body' => 'Tap to accept your invitation to '.$this->workspace->name,
+            'action_url' => route('workspaces.index'),
+            'workspace_id' => $this->workspace->id,
+        ];
     }
 }

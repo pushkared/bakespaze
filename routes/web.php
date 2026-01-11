@@ -13,6 +13,7 @@ use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NotificationSubscriptionController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\LeaveController;
@@ -108,6 +109,8 @@ Route::post('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->
     Route::get('/chat/attachments/{attachment}/preview', [ChatController::class, 'previewAttachment'])->name('chat.attachments.preview');
     Route::get('/chat/attachments/{attachment}', [ChatController::class, 'downloadAttachment'])->name('chat.attachments.download');
 
+    Route::get('/notifications/unread', [NotificationController::class, 'unread'])->name('notifications.unread');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
     Route::post('/notifications/subscribe', [NotificationSubscriptionController::class, 'store'])->name('notifications.subscribe');
     Route::delete('/notifications/subscribe', [NotificationSubscriptionController::class, 'destroy'])->name('notifications.unsubscribe');
 });

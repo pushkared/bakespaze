@@ -18,7 +18,7 @@ class TaskAcceptedNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -32,5 +32,18 @@ class TaskAcceptedNotification extends Notification
             ->data([
                 'url' => route('tasks.index'),
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        $due = $this->task->due_date ? $this->task->due_date->format('d M') : 'No due date';
+
+        return [
+            'type' => 'task_accepted',
+            'title' => 'Task accepted',
+            'body' => $this->task->title.' - '.$due,
+            'action_url' => route('tasks.index', ['status' => 'ongoing', 'workspace_id' => $this->task->workspace_id]),
+            'task_id' => $this->task->id,
+        ];
     }
 }

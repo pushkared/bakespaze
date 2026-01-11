@@ -18,7 +18,7 @@ class TaskAssignedNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -30,5 +30,16 @@ class TaskAssignedNotification extends Notification
             ->data([
                 'url' => route('tasks.index'),
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        return [
+            'type' => 'task_assigned',
+            'title' => 'New task assigned to you',
+            'body' => trim($this->task->title.' - from '.($this->assignerName ?: 'a teammate')),
+            'action_url' => route('tasks.index', ['status' => 'open', 'workspace_id' => $this->task->workspace_id]),
+            'task_id' => $this->task->id,
+        ];
     }
 }

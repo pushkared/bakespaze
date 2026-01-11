@@ -91,6 +91,16 @@
           </button>
         </div>
         <div class="top-right">
+          <div class="notify-wrap">
+            <button class="notify-bell" id="notify-bell" aria-label="Notifications">
+              <span class="icon-bell" aria-hidden="true"></span>
+              <span class="notify-count" id="notify-count" hidden>0</span>
+            </button>
+            <div class="notify-panel" id="notify-panel">
+              <div class="notify-head">Notifications</div>
+              <div class="notify-list" id="notify-list"></div>
+            </div>
+          </div>
           <button class="create-task">+ Create Task</button>
           <div class="top-date">{{ \Carbon\Carbon::now()->format('D d M') }}</div>
           <div class="top-logo">
@@ -103,6 +113,17 @@
       <main class="content-area">
         @yield('content')
       </main>
+    </div>
+  </div>
+
+  <div class="notify-modal" id="notify-modal" aria-hidden="true">
+    <div class="notify-modal-card">
+      <div class="notify-modal-head">
+        <div class="notify-modal-title" id="notify-modal-title">Notification</div>
+        <button type="button" class="notify-modal-close" id="notify-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="notify-modal-body" id="notify-modal-body"></div>
+      <div class="notify-modal-actions" id="notify-modal-actions"></div>
     </div>
   </div>
 
@@ -302,6 +323,182 @@
       };
       if (floatCreate) floatCreate.addEventListener('click', handleCreate);
       if (floatShortcut) floatShortcut.addEventListener('click', handleCreate);
+
+      // Notifications dropdown (unread only)
+      const notifyBell = document.getElementById('notify-bell');
+      const notifyPanel = document.getElementById('notify-panel');
+      const notifyList = document.getElementById('notify-list');
+      const notifyCount = document.getElementById('notify-count');
+      const notifyModal = document.getElementById('notify-modal');
+      const notifyModalTitle = document.getElementById('notify-modal-title');
+      const notifyModalBody = document.getElementById('notify-modal-body');
+      const notifyModalActions = document.getElementById('notify-modal-actions');
+      const notifyModalClose = document.getElementById('notify-modal-close');
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+      const setBadge = (count) => {
+        if (!notifyCount) return;
+        if (!count) {
+          notifyCount.hidden = true;
+          notifyCount.textContent = '0';
+          return;
+        }
+        notifyCount.hidden = false;
+        notifyCount.textContent = String(count);
+      };
+
+      const renderNotifications = (items) => {
+        if (!notifyList) return;
+        if (!items.length) {
+          notifyList.innerHTML = '<div class="muted">No new notifications.</div>';
+          return;
+        }
+        notifyList.innerHTML = items.map(item => `
+          <button class="notify-item" data-id="${item.id}" data-url="${item.action_url || ''}" data-type="${item.type || ''}" data-task-id="${item.task_id || ''}" data-workspace-id="${item.workspace_id || ''}" data-title="${item.title || ''}" data-body="${item.body || ''}">
+            <div class="notify-title">${item.title}</div>
+            <div class="notify-body">${item.body || ''}</div>
+            <div class="notify-time">${item.created_at || ''}</div>
+          </button>
+        `).join('');
+      };
+
+      const fetchNotifications = () => {
+        fetch(`{{ route('notifications.unread') }}`)
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then(data => {
+            setBadge(data.count || 0);
+            renderNotifications(data.notifications || []);
+          })
+          .catch(() => {});
+      };
+
+      if (notifyBell && notifyPanel) {
+        notifyBell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifyPanel.classList.toggle('open');
+          if (notifyPanel.classList.contains('open')) {
+            fetchNotifications();
+          }
+        });
+        document.addEventListener('click', (e) => {
+          if (!notifyPanel.contains(e.target) && !notifyBell.contains(e.target)) {
+            notifyPanel.classList.remove('open');
+          }
+        });
+      }
+
+      if (notifyList) {
+        notifyList.addEventListener('click', (e) => {
+          const item = e.target.closest('.notify-item');
+          if (!item) return;
+          const id = item.dataset.id;
+          const url = item.dataset.url;
+          const type = item.dataset.type;
+          const taskId = item.dataset.taskId;
+          const workspaceId = item.dataset.workspaceId;
+          const title = item.dataset.title || 'Notification';
+          const body = item.dataset.body || '';
+          fetch(`{{ url('/notifications') }}/${id}/read`, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          }).finally(() => {
+            if (type === 'task_assigned' && taskId) {
+              openNotifyModal(title, body, [
+                { label: 'Accept Task', action: 'accept-task', id: taskId },
+                { label: 'View Tasks', url: url },
+              ]);
+              return;
+            }
+            if (type === 'workspace_invite' && workspaceId) {
+              openNotifyModal(title, body, [
+                { label: 'Accept Workspace', action: 'accept-workspace', id: workspaceId },
+                { label: 'View Workspaces', url: url },
+              ]);
+              return;
+            }
+            if (type === 'task_completed') {
+              openNotifyModal(title, body, [
+                { label: 'View Tasks', url: url },
+              ]);
+              return;
+            }
+            if (url) {
+              window.location.href = url;
+            } else {
+              fetchNotifications();
+            }
+          });
+        });
+      }
+
+      if (notifyBell) {
+        fetchNotifications();
+      }
+
+      const openNotifyModal = (title, body, actions) => {
+        if (!notifyModal || !notifyModalTitle || !notifyModalBody || !notifyModalActions) return;
+        notifyModalTitle.textContent = title;
+        notifyModalBody.textContent = body;
+        notifyModalActions.innerHTML = actions.map(action => {
+          if (action.url) {
+            return `<button type="button" class="pill-btn ghost" data-url="${action.url}">${action.label}</button>`;
+          }
+          if (action.action === 'accept-task') {
+            return `<button type="button" class="pill-btn solid" data-action="accept-task" data-id="${action.id}">${action.label}</button>`;
+          }
+          if (action.action === 'accept-workspace') {
+            return `<button type="button" class="pill-btn solid" data-action="accept-workspace" data-id="${action.id}">${action.label}</button>`;
+          }
+          return '';
+        }).join('');
+        notifyModal.classList.add('open');
+        notifyModal.setAttribute('aria-hidden', 'false');
+      };
+
+      if (notifyModalActions) {
+        notifyModalActions.addEventListener('click', (e) => {
+          const btn = e.target.closest('button');
+          if (!btn) return;
+          const url = btn.dataset.url;
+          if (url) {
+            window.location.href = url;
+            return;
+          }
+          const action = btn.dataset.action;
+          const id = btn.dataset.id;
+          if (!action || !id) return;
+          const endpoint = action === 'accept-task'
+            ? `{{ url('/tasks') }}/${id}/accept`
+            : `{{ url('/workspaces') }}/${id}/accept`;
+          fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          }).finally(() => {
+            notifyModal.classList.remove('open');
+            notifyModal.setAttribute('aria-hidden', 'true');
+            fetchNotifications();
+          });
+        });
+      }
+
+      if (notifyModalClose && notifyModal) {
+        notifyModalClose.addEventListener('click', () => {
+          notifyModal.classList.remove('open');
+          notifyModal.setAttribute('aria-hidden', 'true');
+        });
+        notifyModal.addEventListener('click', (e) => {
+          if (e.target === notifyModal) {
+            notifyModal.classList.remove('open');
+            notifyModal.setAttribute('aria-hidden', 'true');
+          }
+        });
+      }
 
       // Global search with suggestions
       const searchInput = document.getElementById('global-search');
