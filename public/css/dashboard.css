@@ -281,7 +281,6 @@ input, select, textarea, button{
   position:sticky;
   top:0;
   z-index:100;
-  opacity: 0.75;
 }
 .vo-body .vo-main{
   background:#070707 url("../images/mobile-bg.png") center/cover no-repeat;
