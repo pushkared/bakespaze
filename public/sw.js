@@ -80,7 +80,13 @@ self.addEventListener('notificationclick', (event) => {
         client.postMessage({ type: 'notification-click', payload });
         return;
       }
-      return clients.openWindow(url);
+      const nextUrl = new URL(url, self.location.origin);
+      if (payload.type) nextUrl.searchParams.set('notify_type', payload.type);
+      if (payload.task_id) nextUrl.searchParams.set('task_id', payload.task_id);
+      if (payload.workspace_id) nextUrl.searchParams.set('workspace_id', payload.workspace_id);
+      if (event.notification.title) nextUrl.searchParams.set('notify_title', event.notification.title);
+      if (event.notification.body) nextUrl.searchParams.set('notify_body', event.notification.body);
+      return clients.openWindow(nextUrl.toString());
     })
   );
 });

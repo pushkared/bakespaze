@@ -377,12 +377,18 @@
           e.stopPropagation();
           notifyPanel.classList.toggle('open');
           if (notifyPanel.classList.contains('open')) {
+            notifyPanel.style.display = 'flex';
+          } else {
+            notifyPanel.style.removeProperty('display');
+          }
+          if (notifyPanel.classList.contains('open')) {
             fetchNotifications();
           }
         });
         document.addEventListener('click', (e) => {
           if (!notifyPanel.contains(e.target) && !notifyBell.contains(e.target)) {
             notifyPanel.classList.remove('open');
+            notifyPanel.style.removeProperty('display');
           }
         });
       }
@@ -533,6 +539,40 @@
           }
         });
       }
+
+      const bootNotificationFromUrl = () => {
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('notify_type');
+        if (!type) return;
+        const taskId = params.get('task_id');
+        const workspaceId = params.get('workspace_id');
+        const title = params.get('notify_title') || 'Notification';
+        const body = params.get('notify_body') || '';
+        if (type === 'task_assigned' && taskId) {
+          openNotifyModal(title, body || 'Do you want to accept this task now?', [
+            { label: 'Accept Task', action: 'accept-task', id: taskId },
+            { label: 'View Tasks', url: '{{ route('tasks.index') }}' },
+          ]);
+        } else if (type === 'workspace_invite' && workspaceId) {
+          openNotifyModal(title, body || 'Do you want to accept this workspace invitation?', [
+            { label: 'Accept Workspace', action: 'accept-workspace', id: workspaceId },
+            { label: 'View Workspaces', url: '{{ route('workspaces.index') }}' },
+          ]);
+        } else if (type === 'task_completed') {
+          openNotifyModal(title, body || 'A task was marked completed.', [
+            { label: 'View Tasks', url: '{{ route('tasks.index') }}' },
+          ]);
+        }
+        params.delete('notify_type');
+        params.delete('task_id');
+        params.delete('workspace_id');
+        params.delete('notify_title');
+        params.delete('notify_body');
+        const nextQuery = params.toString();
+        const nextUrl = `${window.location.pathname}${nextQuery ? '?' + nextQuery : ''}${window.location.hash}`;
+        window.history.replaceState({}, '', nextUrl);
+      };
+      bootNotificationFromUrl();
 
       // Global search with suggestions
       const searchInput = document.getElementById('global-search');
