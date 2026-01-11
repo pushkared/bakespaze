@@ -86,7 +86,7 @@
               <a class="workspace-manage" href="{{ route('workspaces.index') }}">Manage workspaces</a>
             </div>
           </div>
-          <button class="mobile-search-btn" type="button" aria-label="Open search" id="mobile-search-btn" onclick="document.getElementById('mobile-search-overlay')?.classList.add('open')">
+          <button class="mobile-search-btn" type="button" aria-label="Open search" id="mobile-search-btn" onclick="var el=document.getElementById('mobile-search-overlay'); if(el){el.classList.add('open');}">
             <span class="icon-search" aria-hidden="true"></span>
           </button>
         </div>
@@ -253,7 +253,8 @@
 
       const togglePanel = (open) => {
         if (!panel) return;
-        panel.classList.toggle('open', open ?? !panel.classList.contains('open'));
+        const shouldOpen = open !== undefined ? open : !panel.classList.contains('open');
+        panel.classList.toggle('open', shouldOpen);
       };
 
       if (btn && panel) {
@@ -334,7 +335,8 @@
       const notifyModalBody = document.getElementById('notify-modal-body');
       const notifyModalActions = document.getElementById('notify-modal-actions');
       const notifyModalClose = document.getElementById('notify-modal-close');
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
       const setBadge = (count) => {
         if (!notifyCount) return;
@@ -366,7 +368,10 @@
         fetch(`{{ route('notifications.unread') }}`)
           .then(r => r.ok ? r.json() : Promise.reject())
           .then(data => {
-            setBadge(data.unread_count ?? data.count || 0);
+            const unreadCount = data.unread_count != null
+              ? data.unread_count
+              : (data.count != null ? data.count : 0);
+            setBadge(unreadCount);
             renderNotifications(data.notifications || []);
           })
           .catch(() => {});
