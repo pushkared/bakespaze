@@ -111,6 +111,7 @@ Route::post('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->
 
     Route::get('/notifications/unread', [NotificationController::class, 'unread'])->name('notifications.unread');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('/notifications/clear', [NotificationController::class, 'clearAll'])->name('notifications.clear');
     Route::post('/notifications/subscribe', [NotificationSubscriptionController::class, 'store'])->name('notifications.subscribe');
     Route::delete('/notifications/subscribe', [NotificationSubscriptionController::class, 'destroy'])->name('notifications.unsubscribe');
 });

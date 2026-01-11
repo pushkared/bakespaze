@@ -18,7 +18,7 @@ class LeaveStatusNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -33,5 +33,19 @@ class LeaveStatusNotification extends Notification
             ->data([
                 'url' => route('leaves.index'),
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        $range = $this->request->start_date->format('d M').' - '.$this->request->end_date->format('d M');
+        $status = ucfirst($this->request->status);
+
+        return [
+            'type' => 'leave_status',
+            'title' => 'Leave '.$status,
+            'body' => $range,
+            'action_url' => route('leaves.index'),
+            'leave_id' => $this->request->id,
+        ];
     }
 }

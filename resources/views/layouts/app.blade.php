@@ -97,7 +97,10 @@
               <span class="notify-count" id="notify-count" hidden>0</span>
             </button>
             <div class="notify-panel" id="notify-panel">
-              <div class="notify-head">Notifications</div>
+              <div class="notify-head-row">
+                <div class="notify-head">Notifications</div>
+                <button type="button" class="notify-clear" id="notify-clear">Clear all</button>
+              </div>
               <div class="notify-list" id="notify-list"></div>
             </div>
           </div>
@@ -330,6 +333,7 @@
       const notifyPanel = document.getElementById('notify-panel');
       const notifyList = document.getElementById('notify-list');
       const notifyCount = document.getElementById('notify-count');
+      const notifyClear = document.getElementById('notify-clear');
       const notifyModal = document.getElementById('notify-modal');
       const notifyModalTitle = document.getElementById('notify-modal-title');
       const notifyModalBody = document.getElementById('notify-modal-body');
@@ -353,7 +357,13 @@
         if (!notifyList) return;
         if (!items.length) {
           notifyList.innerHTML = '<div class="muted">No new notifications.</div>';
+          if (notifyClear) {
+            notifyClear.disabled = true;
+          }
           return;
+        }
+        if (notifyClear) {
+          notifyClear.disabled = false;
         }
         notifyList.innerHTML = items.map(item => `
           <button class="notify-item" data-id="${item.id}" data-url="${item.action_url || ''}" data-type="${item.type || ''}" data-task-id="${item.task_id || ''}" data-workspace-id="${item.workspace_id || ''}" data-title="${item.title || ''}" data-body="${item.body || ''}">
@@ -459,6 +469,22 @@
 
       if (notifyBell) {
         fetchNotifications();
+      }
+
+      if (notifyClear) {
+        notifyClear.addEventListener('click', (e) => {
+          e.stopPropagation();
+          fetch(`{{ route('notifications.clear') }}`, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          }).finally(() => {
+            setBadge(0);
+            renderNotifications([]);
+          });
+        });
       }
 
       if ('serviceWorker' in navigator) {

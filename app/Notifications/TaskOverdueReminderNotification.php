@@ -18,7 +18,7 @@ class TaskOverdueReminderNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -32,5 +32,21 @@ class TaskOverdueReminderNotification extends Notification
             ->data([
                 'url' => route('tasks.index'),
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        $days = $this->daysOverdue === 1 ? '1 day' : $this->daysOverdue.' days';
+
+        return [
+            'type' => 'task_overdue',
+            'title' => 'Task overdue',
+            'body' => $this->task->title.' • '.$days.' overdue',
+            'action_url' => route('tasks.index', [
+                'status' => 'overdue',
+                'workspace_id' => $this->task->workspace_id,
+            ]),
+            'task_id' => $this->task->id,
+        ];
     }
 }

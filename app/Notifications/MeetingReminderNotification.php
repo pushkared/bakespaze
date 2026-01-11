@@ -21,7 +21,7 @@ class MeetingReminderNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -37,5 +37,19 @@ class MeetingReminderNotification extends Notification
             ->data([
                 'url' => $url,
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        $time = $this->startTime ? $this->startTime->format('h:i A') : '';
+        $body = trim($this->title.' '.$time);
+        $url = $this->meetLink ?: route('calendar.index');
+
+        return [
+            'type' => 'meeting_reminder',
+            'title' => 'Meeting in 10 minutes',
+            'body' => $body,
+            'action_url' => $url,
+        ];
     }
 }

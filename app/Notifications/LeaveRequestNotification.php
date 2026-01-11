@@ -18,7 +18,7 @@ class LeaveRequestNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -33,5 +33,19 @@ class LeaveRequestNotification extends Notification
             ->data([
                 'url' => route('leaves.index'),
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        $name = $this->request->user?->name ?: 'Someone';
+        $range = $this->request->start_date->format('d M').' - '.$this->request->end_date->format('d M');
+
+        return [
+            'type' => 'leave_request',
+            'title' => 'Leave request',
+            'body' => $name.' requested leave ('.$range.')',
+            'action_url' => route('leaves.index'),
+            'leave_id' => $this->request->id,
+        ];
     }
 }

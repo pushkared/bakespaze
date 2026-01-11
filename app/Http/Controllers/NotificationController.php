@@ -24,6 +24,9 @@ class NotificationController extends Controller
                     'action_url' => $notification->data['action_url'] ?? null,
                     'task_id' => $notification->data['task_id'] ?? null,
                     'workspace_id' => $notification->data['workspace_id'] ?? null,
+                    'conversation_id' => $notification->data['conversation_id'] ?? null,
+                    'leave_id' => $notification->data['leave_id'] ?? null,
+                    'employee_id' => $notification->data['employee_id'] ?? null,
                     'created_at' => $notification->created_at?->diffForHumans(),
                 ];
             });
@@ -41,6 +44,13 @@ class NotificationController extends Controller
         if ($notification) {
             $notification->markAsRead();
         }
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function clearAll(Request $request)
+    {
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
 
         return response()->json(['status' => 'ok']);
     }

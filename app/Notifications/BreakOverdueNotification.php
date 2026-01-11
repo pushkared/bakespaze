@@ -23,7 +23,7 @@ class BreakOverdueNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -38,5 +38,19 @@ class BreakOverdueNotification extends Notification
             ->data([
                 'url' => route('attendance.index', ['user_id' => $this->employee->id]),
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        $name = $this->employee->name ?? 'Employee';
+        $over = max(1, $this->overMinutes);
+
+        return [
+            'type' => 'break_overdue',
+            'title' => 'Break overdue',
+            'body' => "{$name}'s break is overdue by {$over} min.",
+            'action_url' => route('attendance.index', ['user_id' => $this->employee->id]),
+            'employee_id' => $this->employee->id,
+        ];
     }
 }

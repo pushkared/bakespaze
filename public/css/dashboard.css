@@ -357,15 +357,44 @@ input, select, textarea, button{
   z-index:300;
   box-shadow:0 16px 32px rgba(0,0,0,0.45);
   pointer-events:auto;
+  max-height:70vh;
+  overflow:hidden;
 }
 .notify-panel.open{display:flex}
+.notify-head-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
 .notify-head{
   font-weight:800;
   color:#fff;
   font-size:14px;
   letter-spacing:0.02em;
 }
-.notify-list{display:flex;flex-direction:column;gap:8px}
+.notify-clear{
+  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.08);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  border-radius:999px;
+  padding:4px 10px;
+  cursor:pointer;
+}
+.notify-clear:disabled{
+  opacity:0.4;
+  cursor:default;
+}
+.notify-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  max-height:calc(70vh - 56px);
+}
 .notify-item{
   text-align:left;
   border:none;

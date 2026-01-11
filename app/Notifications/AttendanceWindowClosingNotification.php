@@ -13,7 +13,7 @@ class AttendanceWindowClosingNotification extends Notification
 
     public function via($notifiable): array
     {
-        return [WebPushChannel::class];
+        return ['database', WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification): WebPushMessage
@@ -25,5 +25,15 @@ class AttendanceWindowClosingNotification extends Notification
             ->data([
                 'url' => route('attendance.index'),
             ]);
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        return [
+            'type' => 'attendance_reminder',
+            'title' => 'Punch-in window closing soon',
+            'body' => 'You have limited time left to punch in today.',
+            'action_url' => route('attendance.index'),
+        ];
     }
 }
