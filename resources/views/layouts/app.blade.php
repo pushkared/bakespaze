@@ -92,7 +92,7 @@
         </div>
         <div class="top-right">
           <div class="notify-wrap">
-            <button class="notify-bell" id="notify-bell" aria-label="Notifications" onclick="window.__toggleNotifyPanel && window.__toggleNotifyPanel()">
+            <button class="notify-bell" id="notify-bell" aria-label="Notifications">
               <span class="icon-bell" aria-hidden="true"></span>
               <span class="notify-count" id="notify-count" hidden>0</span>
             </button>
