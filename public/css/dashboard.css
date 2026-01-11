@@ -347,6 +347,8 @@ input, select, textarea, button{
   right:16px;
   width:260px;
   background:#000;
+  opacity:1;
+  backdrop-filter:none;
   border:1px solid rgba(255,255,255,0.12);
   border-radius:12px;
   padding:10px;
