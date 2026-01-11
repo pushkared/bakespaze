@@ -41,6 +41,9 @@ class SendAttendanceReminders extends Command
                     if (Cache::get($cacheKey)) {
                         continue;
                     }
+                    if (!$user->notifications_enabled) {
+                        continue;
+                    }
                     try {
                         $user->notify(new AttendanceWindowClosingNotification());
                     } catch (\Throwable $e) {

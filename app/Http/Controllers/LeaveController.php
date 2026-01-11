@@ -81,6 +81,7 @@ class LeaveController extends Controller
 
         $admins = User::whereIn('role', ['admin', 'super_admin'])->get();
         if ($admins->isNotEmpty()) {
+            $admins = $admins->where('notifications_enabled', true);
             Notification::send($admins, new LeaveRequestNotification($requestModel));
         }
 
@@ -98,7 +99,9 @@ class LeaveController extends Controller
             'rejection_reason' => null,
         ]);
 
-        $leave->user?->notify(new LeaveStatusNotification($leave));
+        if ($leave->user?->notifications_enabled) {
+            $leave->user->notify(new LeaveStatusNotification($leave));
+        }
 
         return back()->with('status', 'Leave approved.');
     }
@@ -118,7 +121,9 @@ class LeaveController extends Controller
             'rejection_reason' => $data['rejection_reason'] ?? null,
         ]);
 
-        $leave->user?->notify(new LeaveStatusNotification($leave));
+        if ($leave->user?->notifications_enabled) {
+            $leave->user->notify(new LeaveStatusNotification($leave));
+        }
 
         return back()->with('status', 'Leave rejected.');
     }

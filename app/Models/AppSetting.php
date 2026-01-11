@@ -10,6 +10,8 @@ class AppSetting extends Model
     protected $fillable = [
         'punch_in_start',
         'punch_in_end',
+        'punch_out_after_hours',
+        'auto_punch_out_time',
         'break_duration_minutes',
         'timezone',
     ];
@@ -19,6 +21,8 @@ class AppSetting extends Model
         return [
             'punch_in_start' => '09:00:00',
             'punch_in_end' => '11:00:00',
+            'punch_out_after_hours' => 8,
+            'auto_punch_out_time' => '23:55:00',
             'break_duration_minutes' => 30,
             'timezone' => 'Asia/Kolkata',
         ];

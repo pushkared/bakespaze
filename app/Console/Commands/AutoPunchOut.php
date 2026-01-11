@@ -19,7 +19,8 @@ class AutoPunchOut extends Command
         $now = Carbon::now($timezone);
         $breakLimit = (int)($settings->break_duration_minutes ?? 30);
 
-        $autoOutAt = $now->copy()->setTime(23, 55, 0);
+        $autoOutTime = $settings->auto_punch_out_time ?? '23:55:00';
+        $autoOutAt = $now->copy()->setTimeFromTimeString($autoOutTime);
         if ($now->lt($autoOutAt)) {
             return Command::SUCCESS;
         }

@@ -45,7 +45,9 @@ class SendTaskOverdueReminders extends Command
 
                     foreach ($recipients as $user) {
                         try {
-                            $user->notify(new TaskOverdueReminderNotification($task, $daysOverdue));
+                            if ($user->notifications_enabled) {
+                                $user->notify(new TaskOverdueReminderNotification($task, $daysOverdue));
+                            }
                         } catch (\Throwable $e) {
                             report($e);
                         }

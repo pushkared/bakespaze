@@ -163,6 +163,7 @@ class ChatController extends Controller
         try {
             $recipients = $conversation->participants()
                 ->where('users.id', '!=', $request->user()->id)
+                ->where('users.notifications_enabled', true)
                 ->get();
             Notification::send($recipients, new ChatMessageNotification($message));
         } catch (\Throwable $e) {

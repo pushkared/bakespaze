@@ -13,6 +13,11 @@
         <p class="muted">Apply for leave and track approvals. Weekends and public holidays are excluded.</p>
       </div>
       <div class="leave-head-meta">
+        @if($isAdmin)
+          <a class="leave-settings-btn" href="#leave-admin" aria-label="Leave settings"></a>
+        @else
+          <button class="leave-settings-btn" type="button" id="leave-settings-btn" aria-label="Leave settings"></button>
+        @endif
         <div class="leave-year">Year {{ $year }}</div>
         @if(session('status'))
           <div class="pill success">{{ session('status') }}</div>
@@ -159,16 +164,69 @@
     </div>
 
     @if($isAdmin)
-      <div class="leave-admin">
+      <div class="leave-admin" id="leave-admin">
         <div class="card-head">
           <div>
             <div class="eyebrow">Admin</div>
             <h2>Manage approvals</h2>
-            <p class="muted">Leave policy settings are managed in Settings.</p>
+            <p class="muted">Review requests and keep leave policy updated.</p>
           </div>
-          <a class="pill-btn ghost" href="{{ route('settings.index') }}">Open Settings</a>
         </div>
         <div class="leave-admin-grid">
+          <div class="leave-card">
+            <div class="card-head">
+              <div>
+                <div class="eyebrow">Policy</div>
+                <h3>Leave allowances</h3>
+              </div>
+            </div>
+            <form class="settings-panel-form" method="POST" action="{{ route('leaves.categories.update') }}">
+              @csrf
+              <div class="settings-grid leave-policy-grid">
+                @foreach(($categories ?? collect()) as $category)
+                  <label>
+                    <span>{{ $category->name }} allowance</span>
+                    <input type="hidden" name="categories[{{ $category->id }}][id]" value="{{ $category->id }}">
+                    <input type="number" name="categories[{{ $category->id }}][yearly_allowance]" min="0" max="365" value="{{ $category->yearly_allowance }}">
+                  </label>
+                @endforeach
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="pill-btn solid">Save Allowances</button>
+              </div>
+            </form>
+          </div>
+          <div class="leave-card">
+            <div class="card-head">
+              <div>
+                <div class="eyebrow">Policy</div>
+                <h3>Public holidays</h3>
+              </div>
+            </div>
+            <form class="leave-holiday-form" method="POST" action="{{ route('leaves.holidays.store') }}">
+              @csrf
+              <input type="text" name="name" placeholder="Holiday name" required>
+              <input type="date" name="date" required>
+              <button type="submit" class="pill-btn solid">Add Holiday</button>
+            </form>
+            <div class="leave-holiday-list">
+              @forelse(($holidays ?? collect()) as $holiday)
+                <div class="leave-holiday-item">
+                  <div>
+                    <div class="leave-history-title">{{ $holiday->name }}</div>
+                    <div class="leave-history-meta">{{ $holiday->date->format('d M Y') }}</div>
+                  </div>
+                  <form method="POST" action="{{ route('leaves.holidays.delete', $holiday) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="pill-btn ghost">Remove</button>
+                  </form>
+                </div>
+              @empty
+                <div class="muted">No holidays added.</div>
+              @endforelse
+            </div>
+          </div>
           <div class="leave-card">
             <div class="card-head">
               <div>
@@ -216,4 +274,17 @@
     @endif
   </div>
 </section>
+@if(!$isAdmin)
+  @push('scripts')
+  <script>
+    (function(){
+      const btn = document.getElementById('leave-settings-btn');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        alert('Admin permissions required to update leave settings.');
+      });
+    })();
+  </script>
+  @endpush
+@endif
 @endsection

@@ -97,7 +97,7 @@
       <button class="pill-btn {{ $disablePunchOut ? 'is-disabled' : '' }}" {{ $disablePunchOut ? 'disabled' : '' }}>Punch Out</button>
     </form>
     @if($punchedIn && $disablePunchOut)
-      <div class="muted small">Punch out available after 7:00 PM.</div>
+      <div class="muted small">Punch out available after {{ $punchState['punch_out_after_hours'] ?? 8 }} hours of punching in.</div>
     @endif
   </div>
 </div>

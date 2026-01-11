@@ -55,7 +55,9 @@ class SendBreakOverdueNotifications extends Command
                 ->pluck('user_id')
                 ->unique()
                 ->all();
-            $admins = User::whereIn('id', $adminIds)->get();
+                $admins = User::whereIn('id', $adminIds)
+                    ->where('notifications_enabled', true)
+                    ->get();
 
             if ($admins->isEmpty()) {
                 $admins = User::whereIn('role', ['admin', 'super_admin'])->get();

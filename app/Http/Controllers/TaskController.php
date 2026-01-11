@@ -140,7 +140,7 @@ class TaskController extends Controller
         if (!empty($assigneeId)) {
             $task->assignees()->sync([$assigneeId]);
             $assignee = User::find($assigneeId);
-            if ($assignee) {
+            if ($assignee && $assignee->notifications_enabled) {
                 try {
                     $assignee->notify(new TaskAssignedNotification($task, $request->user()->name));
                 } catch (\Throwable $e) {
@@ -213,7 +213,7 @@ class TaskController extends Controller
 
         if ($previousStatus !== 'completed' && $newStatus === 'completed' && $previousAssigneeId) {
             $assignee = User::find($previousAssigneeId);
-            if ($assignee) {
+            if ($assignee && $assignee->notifications_enabled) {
                 try {
                     $assignee->notify(new TaskCompletedNotification($task, $request->user()->name));
                 } catch (\Throwable $e) {
@@ -239,7 +239,7 @@ class TaskController extends Controller
             $task->assignees()->sync($incomingAssigneeId ? [$incomingAssigneeId] : []);
             if (!empty($incomingAssigneeId) && $incomingAssigneeId !== $previousAssigneeId) {
                 $assignee = User::find($incomingAssigneeId);
-                if ($assignee) {
+                if ($assignee && $assignee->notifications_enabled) {
                     try {
                         $assignee->notify(new TaskAssignedNotification($task, $request->user()->name));
                     } catch (\Throwable $e) {
@@ -293,7 +293,7 @@ class TaskController extends Controller
         $assignerId = $this->latestAssignerId($task);
         if ($assignerId && (int) $assignerId !== (int) $request->user()->id) {
             $assigner = User::find($assignerId);
-            if ($assigner) {
+            if ($assigner && $assigner->notifications_enabled) {
                 try {
                     $assigner->notify(new TaskAcceptedNotification($task));
                 } catch (\Throwable $e) {

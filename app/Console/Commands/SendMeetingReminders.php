@@ -85,11 +85,13 @@ class SendMeetingReminders extends Command
                     continue;
                 }
                 try {
-                    $target->notify(new MeetingReminderNotification(
-                        $event->getSummary() ?: 'Meeting',
-                        $start,
-                        $event->getHangoutLink()
-                    ));
+                    if ($target->notifications_enabled) {
+                        $target->notify(new MeetingReminderNotification(
+                            $event->getSummary() ?: 'Meeting',
+                            $start,
+                            $event->getHangoutLink()
+                        ));
+                    }
                 } catch (\Throwable $e) {
                     report($e);
                 }

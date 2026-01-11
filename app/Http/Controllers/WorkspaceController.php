@@ -104,7 +104,7 @@ class WorkspaceController extends Controller
 
             if ($shouldNotify) {
                 $user = User::find($uid);
-                if ($user && $workspace) {
+                if ($user && $workspace && $user->notifications_enabled) {
                     try {
                         $user->notify(new WorkspaceInviteNotification($workspace));
                     } catch (\Throwable $e) {
@@ -183,7 +183,7 @@ class WorkspaceController extends Controller
             ->with('user')
             ->get()
             ->pluck('user')
-            ->filter();
+            ->filter(fn($admin) => $admin && $admin->notifications_enabled);
 
         if ($admins->isNotEmpty()) {
             \Illuminate\Support\Facades\Notification::send(

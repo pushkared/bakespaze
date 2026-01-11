@@ -91,9 +91,10 @@ class DashboardController extends Controller
             'break_used' => $breakUsed,
             'break_limit' => $breakLimit,
             'can_punch_in' => !$todayRecord || $todayRecord->clock_out ? $this->canPunchIn($now) : false,
-            'can_punch_out' => $todayRecord && !$todayRecord->clock_out
-                ? $now->copy()->setTime(19, 0, 0)->lte($now)
+            'can_punch_out' => $todayRecord && !$todayRecord->clock_out && $todayRecord->clock_in
+                ? $now->gte(Carbon::parse($todayRecord->clock_in)->timezone($timezone)->addHours((int)($settings->punch_out_after_hours ?? 8)))
                 : false,
+            'punch_out_after_hours' => (int)($settings->punch_out_after_hours ?? 8),
         ];
 
         return view('dashboard.index', [

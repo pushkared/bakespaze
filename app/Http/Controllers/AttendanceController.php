@@ -34,10 +34,16 @@ class AttendanceController extends Controller
             ->whereDate('work_date', $now->toDateString())
             ->latest()
             ->first();
-        $canPunchOut = $todayRecord && !$todayRecord->clock_out
-            && $now->copy()->setTime(19, 0, 0)->lte($now);
         $settings = AppSetting::current();
+        $punchOutAfterHours = (int)($settings->punch_out_after_hours ?? 8);
+        $canPunchOut = false;
+        if ($todayRecord && !$todayRecord->clock_out && $todayRecord->clock_in) {
+            $clockIn = Carbon::parse($todayRecord->clock_in)->timezone($timezone);
+            $availableAt = $clockIn->copy()->addHours($punchOutAfterHours);
+            $canPunchOut = $now->gte($availableAt);
+        }
         $breakLimit = (int)($settings->break_duration_minutes ?? 30);
+        $breakOptions = [30, 60, 90, 120];
         $breakUsed = (int)($todayRecord?->break_minutes_used ?? 0);
         $breakActive = $todayRecord && $todayRecord->lunch_start && !$todayRecord->lunch_end;
         if ($breakActive) {
@@ -107,6 +113,9 @@ class AttendanceController extends Controller
             'breakLimit' => $breakLimit,
             'breakUsed' => $breakUsed,
             'breakActive' => $breakActive,
+            'settings' => $settings,
+            'breakOptions' => $breakOptions,
+            'punchOutAfterHours' => $punchOutAfterHours,
         ]);
     }
 
@@ -143,12 +152,16 @@ class AttendanceController extends Controller
         $settings = AppSetting::current();
         $timezone = $settings->timezone ?? 'Asia/Kolkata';
         $now = Carbon::now($timezone);
-        $cutoff = $now->copy()->setTime(19, 0, 0);
+        $punchOutAfterHours = (int)($settings->punch_out_after_hours ?? 8);
 
         $open = AttendanceRecord::where('user_id', $user->id)->whereNull('clock_out')->latest()->first();
         if ($open) {
-            if ($now->lt($cutoff)) {
-                return back()->withErrors('Punch out is available after 7:00 PM.');
+            $clockIn = $open->clock_in ? Carbon::parse($open->clock_in)->timezone($timezone) : null;
+            if ($clockIn) {
+                $availableAt = $clockIn->copy()->addHours($punchOutAfterHours);
+                if ($now->lt($availableAt)) {
+                    return back()->withErrors('Punch out is available after '.$punchOutAfterHours.' hours of punching in.');
+                }
             }
             if ($open->lunch_start && !$open->lunch_end) {
                 $limit = (int)($settings->break_duration_minutes ?? 30);

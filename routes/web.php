@@ -88,6 +88,8 @@ Route::post('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->middleware('admin')->name('settings.update');
+    Route::post('/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications');
+    Route::post('/settings/timezone', [SettingsController::class, 'updateTimezone'])->middleware('admin')->name('settings.timezone');
     Route::delete('/account', [ProfileController::class, 'destroy'])->name('account.destroy');
 
     Route::get('/leaves', [LeaveController::class, 'index'])->name('leaves.index');
