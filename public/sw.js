@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bakespaze-pwa-v4';
+const CACHE_NAME = 'bakespaze-pwa-v5';
 const PRECACHE_URLS = [
   '/',
   '/manifest.webmanifest',
@@ -70,6 +70,17 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/';
-  event.waitUntil(clients.openWindow(url));
+  const payload = event.notification.data || {};
+  const url = payload.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      const client = clientList[0];
+      if (client) {
+        client.focus();
+        client.postMessage({ type: 'notification-click', payload });
+        return;
+      }
+      return clients.openWindow(url);
+    })
+  );
 });

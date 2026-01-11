@@ -438,6 +438,40 @@
         fetchNotifications();
       }
 
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (!event.data || event.data.type !== 'notification-click') return;
+          const payload = event.data.payload || {};
+          const type = payload.type || '';
+          const taskId = payload.task_id;
+          const workspaceId = payload.workspace_id;
+          const url = payload.url || '';
+          if (type === 'task_assigned' && taskId) {
+            openNotifyModal('New task assigned', 'Do you want to accept this task now?', [
+              { label: 'Accept Task', action: 'accept-task', id: taskId },
+              { label: 'View Tasks', url },
+            ]);
+            return;
+          }
+          if (type === 'workspace_invite' && workspaceId) {
+            openNotifyModal('Workspace invitation', 'Do you want to accept this workspace invitation?', [
+              { label: 'Accept Workspace', action: 'accept-workspace', id: workspaceId },
+              { label: 'View Workspaces', url },
+            ]);
+            return;
+          }
+          if (type === 'task_completed') {
+            openNotifyModal('Task completed', 'A task was marked completed.', [
+              { label: 'View Tasks', url },
+            ]);
+            return;
+          }
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      }
+
       const openNotifyModal = (title, body, actions) => {
         if (!notifyModal || !notifyModalTitle || !notifyModalBody || !notifyModalActions) return;
         notifyModalTitle.textContent = title;

@@ -30,6 +30,8 @@ class TaskCompletedNotification extends Notification
             ->body(trim($this->task->title.$by))
             ->data([
                 'url' => route('tasks.index'),
+                'type' => 'task_completed',
+                'task_id' => $this->task->id,
             ]);
     }
 

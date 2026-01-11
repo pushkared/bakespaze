@@ -305,7 +305,7 @@ input, select, textarea, button{
 
 .top-left{display:flex;align-items:center;gap:var(--topbar-gap)}
 .top-right{display:flex;align-items:center;gap:var(--topbar-gap)}
-.notify-wrap{position:relative;display:flex;align-items:center}
+.notify-wrap{position:relative;display:flex;align-items:center;z-index:260}
 .notify-bell{
   width:28px;
   height:28px;
@@ -355,6 +355,7 @@ input, select, textarea, button{
   gap:8px;
   z-index:300;
   box-shadow:0 16px 32px rgba(0,0,0,0.45);
+  pointer-events:auto;
 }
 .notify-panel.open{display:flex}
 .notify-head{

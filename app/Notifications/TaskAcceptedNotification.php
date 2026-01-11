@@ -31,6 +31,8 @@ class TaskAcceptedNotification extends Notification
             ->body($this->task->title.' - '.$due)
             ->data([
                 'url' => route('tasks.index'),
+                'type' => 'task_accepted',
+                'task_id' => $this->task->id,
             ]);
     }
 

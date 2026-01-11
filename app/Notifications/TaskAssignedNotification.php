@@ -29,6 +29,8 @@ class TaskAssignedNotification extends Notification
             ->body(trim($this->task->title.' - from '.($this->assignerName ?: 'a teammate')))
             ->data([
                 'url' => route('tasks.index'),
+                'type' => 'task_assigned',
+                'task_id' => $this->task->id,
             ]);
     }
 

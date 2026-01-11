@@ -29,6 +29,8 @@ class WorkspaceInviteNotification extends Notification
             ->body('Tap to accept your invitation to '.$this->workspace->name)
             ->data([
                 'url' => route('workspaces.index'),
+                'type' => 'workspace_invite',
+                'workspace_id' => $this->workspace->id,
             ]);
     }
 
