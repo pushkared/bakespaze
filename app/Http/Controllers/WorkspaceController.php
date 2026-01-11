@@ -6,6 +6,7 @@ use App\Models\Workspace;
 use App\Models\Membership;
 use App\Models\User;
 use App\Models\Organization;
+use App\Notifications\WorkspaceInviteAcceptedNotification;
 use App\Notifications\WorkspaceInviteNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -174,6 +175,21 @@ class WorkspaceController extends Controller
 
         if (!session('current_workspace_id')) {
             session(['current_workspace_id' => $workspace->id]);
+        }
+
+        $admins = $workspace->memberships()
+            ->whereIn('role', $this->workspaceAdminRoles)
+            ->where('user_id', '!=', $user->id)
+            ->with('user')
+            ->get()
+            ->pluck('user')
+            ->filter();
+
+        if ($admins->isNotEmpty()) {
+            \Illuminate\Support\Facades\Notification::send(
+                $admins,
+                new WorkspaceInviteAcceptedNotification($workspace, $user)
+            );
         }
 
         return back()->with('status', 'Workspace invitation accepted.');
