@@ -91,6 +91,8 @@
           </button>
         </div>
         <div class="top-right">
+          <button class="create-task">+ Create Task</button>
+          <div class="top-date">{{ \Carbon\Carbon::now()->format('D d M') }}</div>
           <div class="notify-wrap">
             <button class="notify-bell" id="notify-bell" aria-label="Notifications">
               <span class="icon-bell" aria-hidden="true"></span>
@@ -104,12 +106,6 @@
               <div class="notify-list" id="notify-list"></div>
             </div>
           </div>
-          <button class="create-task">+ Create Task</button>
-          <div class="top-date">{{ \Carbon\Carbon::now()->format('D d M') }}</div>
-          <div class="top-logo">
-            <img src="{{ asset('images/BakeSapze - Mobile - Logo.png') }}" alt="Logo">
-          </div>
-          
         </div>
       </header>
 
