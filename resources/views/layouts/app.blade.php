@@ -86,13 +86,13 @@
               <a class="workspace-manage" href="{{ route('workspaces.index') }}">Manage workspaces</a>
             </div>
           </div>
-          <button class="mobile-search-btn" type="button" aria-label="Open search" id="mobile-search-btn">
+          <button class="mobile-search-btn" type="button" aria-label="Open search" id="mobile-search-btn" onclick="document.getElementById('mobile-search-overlay')?.classList.add('open')">
             <span class="icon-search" aria-hidden="true"></span>
           </button>
         </div>
         <div class="top-right">
           <div class="notify-wrap">
-            <button class="notify-bell" id="notify-bell" aria-label="Notifications">
+            <button class="notify-bell" id="notify-bell" aria-label="Notifications" onclick="window.__toggleNotifyPanel && window.__toggleNotifyPanel()">
               <span class="icon-bell" aria-hidden="true"></span>
               <span class="notify-count" id="notify-count" hidden>0</span>
             </button>
@@ -371,6 +371,7 @@
           })
           .catch(() => {});
       };
+      window.__fetchNotifications = fetchNotifications;
 
       if (notifyBell && notifyPanel) {
         notifyBell.addEventListener('click', (e) => {
@@ -392,6 +393,17 @@
           }
         });
       }
+
+      window.__toggleNotifyPanel = () => {
+        if (!notifyPanel) return;
+        notifyPanel.classList.toggle('open');
+        if (notifyPanel.classList.contains('open')) {
+          notifyPanel.style.display = 'flex';
+          fetchNotifications();
+        } else {
+          notifyPanel.style.removeProperty('display');
+        }
+      };
 
       if (notifyList) {
         notifyList.addEventListener('click', (e) => {
